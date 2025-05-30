@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  console.log('Navbar user:', user);
 
   return (
     <nav className="flex justify-between p-4 bg-blue-700 text-white">
