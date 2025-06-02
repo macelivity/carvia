@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Reservations from './pages/Reservations';
 import Vehicles from './pages/Vehicles';
+import Homepage from './pages/Homepage';
 
 
 export default function App() {
@@ -15,7 +16,7 @@ export default function App() {
 				<Navbar />
 
 				<Routes>
-					<Route path="/" element={<Dashboard />} />
+					<Route path="/" element={<Homepage />} />
 					<Route path="/login" element={<Login />} />
 					<Route path="/register" element={<Register />} />
 					<Route path="/reservations" element={<Reservations />} />
