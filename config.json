@@ -1,0 +1,7 @@
+{
+    "ENV_TYPE" : "Dev",
+    "DATABASE_URI": "sqlite:///movies.db",
+    "POSTGRES_URI": "postgresql://user:password@localhost/dbname",
+    "LOG_LEVEL": "DEBUG",
+    "SECRET_KEY": "your-secret-key"
+}
