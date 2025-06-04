@@ -1,6 +1,6 @@
 from app.db import get_db
 
-class GeoDatumOps:
+class GeodatumOps:
     @staticmethod
     def get_all():
         """Holt alle GeoDaten aus der Datenbank"""
@@ -14,26 +14,26 @@ class GeoDatumOps:
         with get_db() as conn:
             result = conn.execute("SELECT * FROM GeoDatum WHERE GeoDatumID = ?", (geodatum_id,)).fetchone()
         return dict(result) if result else None
-
     @staticmethod
-    def create(längengrad, breitengrad, zeit):
+    def create(longitude, latitude, zeit):
         """Erstellt ein neues GeoDatum"""
         with get_db() as conn:
-            conn.execute("""
-                INSERT INTO GeoDatum (Längengrad, Breitengrad, Zeit)
+            cursor = conn.execute("""
+                INSERT INTO GeoDatum (Longitude, Latitude, Zeit)
                 VALUES (?, ?, ?)
-            """, (längengrad, breitengrad, zeit))
+            """, (longitude, latitude, zeit))
+            geodatum_id = cursor.lastrowid
             conn.commit()
-
+            return geodatum_id
     @staticmethod
-    def update(geodatum_id, längengrad, breitengrad, zeit):
+    def update(geodatum_id, longitude, latitude, zeit):
         """Aktualisiert ein GeoDatum"""
         with get_db() as conn:
             conn.execute("""
                 UPDATE GeoDatum
-                SET Längengrad = ?, Breitengrad = ?, Zeit = ?
+                SET Longitude = ?, Latitude = ?, Zeit = ?
                 WHERE GeoDatumID = ?
-            """, (längengrad, breitengrad, zeit, geodatum_id))
+            """, (longitude, latitude, zeit, geodatum_id))
             conn.commit()
 
     @staticmethod

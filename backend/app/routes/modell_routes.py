@@ -1,29 +1,29 @@
 from flask import Blueprint, request, jsonify
 from app.models.modell_ops import ModellOps
 
-modell_bp = Blueprint("modell", __name__)
+bp = Blueprint("modell", __name__)
 
-@modell_bp.route("/", methods=["GET"])
+@bp.route("/", methods=["GET"])
 def list_modells():
     modells = ModellOps.get_all()
     return jsonify(modells)
 
-@modell_bp.route("/", methods=["POST"])
+@bp.route("/", methods=["POST"])
 def create_modell():
     data = request.get_json()
-    ModellOps.create(data["ModellName"], data["Hersteller"], data["Fahrzeugtyp"], data["Getriebeart"], 
+    modell_id = ModellOps.create(data["ModellName"], data["Hersteller"], data["Fahrzeugtyp"], data["Getriebeart"], 
                      data["Kraftstoffart"], data["Leistung"], data["Türen"], data["Sitze"], 
                      data["Kofferraumvolumen"], data["Stundenpreis"])
-    return jsonify({"msg": "Modell added"}), 201
+    return jsonify({"msg": f"Modell with ID {modell_id} added", "id": modell_id}), 201
 
-@modell_bp.route("/<int:modell_id>", methods=["GET"])
+@bp.route("/<int:modell_id>", methods=["GET"])
 def get_modell(modell_id):
     modell = ModellOps.get_by_id(modell_id)
     if not modell:
         return jsonify({"error": "Not found"}), 404
     return jsonify(modell)
 
-@modell_bp.route("/<int:modell_id>", methods=["PUT"])
+@bp.route("/<int:modell_id>", methods=["PUT"])
 def update_modell(modell_id):
     data = request.get_json()
     if not ModellOps.get_by_id(modell_id):
@@ -33,7 +33,7 @@ def update_modell(modell_id):
                      data["Sitze"], data["Kofferraumvolumen"], data["Stundenpreis"])
     return jsonify({"msg": "Modell updated"})
 
-@modell_bp.route("/<int:modell_id>", methods=["DELETE"])
+@bp.route("/<int:modell_id>", methods=["DELETE"])
 def delete_modell(modell_id):
     if not ModellOps.get_by_id(modell_id):
         return jsonify({"error": "Not found"}), 404

@@ -19,11 +19,13 @@ class FahrzeugOps:
     def create(modell_id, kennzeichen, reperaturzustand, aktiv, reifen, kilometerstand, letzter_service, tuev_datum, erstzulassungs_datum):
         """Erstellt ein neues Fahrzeug"""
         with get_db() as conn:
-            conn.execute("""
+            cursor = conn.execute("""
                 INSERT INTO Fahrzeug (ModellID, Kennzeichen, Reperaturzustand, Aktiv, Reifen, Kilometerstand, LetzterService, TuevDatum, ErstzulassungsDatum)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (modell_id, kennzeichen, reperaturzustand, aktiv, reifen, kilometerstand, letzter_service, tuev_datum, erstzulassungs_datum))
+            fahrzeug_id = cursor.lastrowid
             conn.commit()
+            return fahrzeug_id
 
     @staticmethod
     def update(fahrzeug_id, modell_id, kennzeichen, reperaturzustand, aktiv, reifen, kilometerstand, letzter_service, tuev_datum, erstzulassungs_datum):

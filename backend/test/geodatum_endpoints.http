@@ -1,0 +1,38 @@
+### GeoDatum Endpoints
+
+# GET all geodatums
+GET http://127.0.0.1:5000/geodatum/
+
+###
+
+# POST create new geodatum
+POST http://127.0.0.1:5000/geodatum/
+Content-Type: application/json
+
+{
+  "Longitude": 8.8017,
+  "Latitude": 53.0793,
+  "Zeit": "2024-06-04T10:30:00"
+}
+
+###
+
+# GET specific geodatum
+GET http://127.0.0.1:5000/geodatum/1
+
+###
+
+# PUT update geodatum
+PUT http://127.0.0.1:5000/geodatum/1
+Content-Type: application/json
+
+{
+  "Longitude": 8.8020,
+  "Latitude": 53.0795,
+  "Zeit": "2024-06-04T10:35:00"
+}
+
+###
+
+# DELETE geodatum
+DELETE http://127.0.0.1:5000/geodatum/1

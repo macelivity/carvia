@@ -1,0 +1,50 @@
+### Fahrzeug Endpoints
+
+# GET all fahrzeugs
+GET http://127.0.0.1:5000/fahrzeug/
+
+###
+
+# POST create new fahrzeug
+POST http://127.0.0.1:5000/fahrzeug/
+Content-Type: application/json
+
+{
+  "ModellID": 1,
+  "Kennzeichen": "HB-AX 123",
+  "Reperaturzustand": "Gut",
+  "Aktiv": true,
+  "Reifen": "Winterreifen",
+  "Kilometerstand": 50000,
+  "LetzterService": "2024-01-15",
+  "TuevDatum": "2025-12-31",
+  "ErstzulassungsDatum": "2020-03-01"
+}
+
+###
+
+# GET specific fahrzeug
+GET http://127.0.0.1:5000/fahrzeug/1
+
+###
+
+# PUT update fahrzeug
+PUT http://127.0.0.1:5000/fahrzeug/1
+Content-Type: application/json
+
+{
+  "ModellID": 1,
+  "Kennzeichen": "HB-AX 123",
+  "Reperaturzustand": "Sehr gut",
+  "Aktiv": true,
+  "Reifen": "Sommerreifen",
+  "Kilometerstand": 52000,
+  "LetzterService": "2024-06-15",
+  "TuevDatum": "2025-12-31",
+  "ErstzulassungsDatum": "2020-03-01"
+}
+
+###
+
+# DELETE fahrzeug
+DELETE http://127.0.0.1:5000/fahrzeug/1
