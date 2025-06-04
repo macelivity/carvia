@@ -4,7 +4,8 @@ import psycopg2
 import json
 from flask import g
 
-DB_FILENAME = "database.db"
+# Use absolute path to ensure database is always in the backend directory
+DB_FILENAME = os.path.join(os.path.dirname(__file__), "..", "database.db")
 
 # Load configuration from config.json
 with open(os.path.join(os.path.dirname(__file__), "../../config.json")) as config_file:
@@ -109,13 +110,13 @@ def init_db():
             RolleID {primary_key},
             Bedeutung TEXT NOT NULL
         );
-        """)
-
-        # Tabelle: Nutzer
+        """)        # Tabelle: Nutzer
         db.execute(f"""
         CREATE TABLE IF NOT EXISTS Nutzer (
             UserID {primary_key},
             RolleID INTEGER NOT NULL,
+            Username TEXT UNIQUE NOT NULL,
+            PasswordHash TEXT NOT NULL,
             Vorname TEXT NOT NULL,
             Nachname TEXT NOT NULL,
             Geburtsdatum {date_type} NOT NULL,
@@ -148,9 +149,7 @@ def init_db():
             Bezahlt {boolean_type},
             Austellungsdatum {date_type}
         );
-        """)
-
-        # Tabelle: Reservierung
+        """)        # Tabelle: Reservierung
         db.execute(f"""
         CREATE TABLE IF NOT EXISTS Reservierung (
             ReservierungID {primary_key},
@@ -162,6 +161,12 @@ def init_db():
             EndDatum {date_type} NOT NULL
         );
         """)
+        
+        # Insert default roles if they don't exist
+        db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (1, 'User')")
+        db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (2, 'Admin')")
+        db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (3, 'Manager')")
+        db.commit()
     db.close()
 
 def init_app(app):

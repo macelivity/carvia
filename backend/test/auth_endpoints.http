@@ -1,0 +1,71 @@
+### Auth Endpoints
+
+# Register a new user
+POST http://127.0.0.1:5000/auth/register
+Content-Type: application/json
+
+{
+  "username": "test",
+  "password": "password123",
+  "vorname": "Max",
+  "nachname": "Mustermann",
+  "geburtsdatum": "1990-01-01",
+  "rolle_id": 1,
+  "hausnummer": "123",
+  "plz": "12345",
+  "ort": "Berlin",
+  "strasse": "Musterstraße"
+}
+
+###
+
+# Login user
+POST http://127.0.0.1:5000/auth/login
+Content-Type: application/json
+
+{
+  "username": "test",
+  "password": "newpassword123"
+}
+
+###
+
+# Get user profile (requires JWT token - replace YOUR_TOKEN_HERE with actual token)
+GET http://127.0.0.1:5000/auth/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0OTA3MDQxNiwianRpIjoiMzg5OTY1MDctMTk4NS00OGIyLTgyMTktZjBkMTgyOTM2NTlmIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjEiLCJuYmYiOjE3NDkwNzA0MTYsImNzcmYiOiJjOTUzOTY0MC0wOWEzLTQ0YWUtYmFlNC02NzA4NmU0N2M0N2YiLCJleHAiOjE3NDkwNzQwMTZ9.BuMUFti6zva1xXvxa43h2H0OeXue3WudzeO_AUqM4AE
+
+###
+
+# Update user profile (requires JWT token)
+PUT http://127.0.0.1:5000/auth/profile
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0OTA3MDQxNiwianRpIjoiMzg5OTY1MDctMTk4NS00OGIyLTgyMTktZjBkMTgyOTM2NTlmIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjEiLCJuYmYiOjE3NDkwNzA0MTYsImNzcmYiOiJjOTUzOTY0MC0wOWEzLTQ0YWUtYmFlNC02NzA4NmU0N2M0N2YiLCJleHAiOjE3NDkwNzQwMTZ9.BuMUFti6zva1xXvxa43h2H0OeXue3WudzeO_AUqM4AE
+
+{
+  "Vorname": "Maximilian",
+  "Nachname": "Mustermann"
+}
+
+###
+
+# Change password (requires JWT token)
+PUT http://127.0.0.1:5000/auth/change-password
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0OTA3MDQxNiwianRpIjoiMzg5OTY1MDctMTk4NS00OGIyLTgyMTktZjBkMTgyOTM2NTlmIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjEiLCJuYmYiOjE3NDkwNzA0MTYsImNzcmYiOiJjOTUzOTY0MC0wOWEzLTQ0YWUtYmFlNC02NzA4NmU0N2M0N2YiLCJleHAiOjE3NDkwNzQwMTZ9.BuMUFti6zva1xXvxa43h2H0OeXue3WudzeO_AUqM4AE
+
+{
+  "current_password": "password123",
+  "new_password": "newpassword123"
+}
+
+###
+
+# Refresh token (requires refresh token)
+POST http://127.0.0.1:5000/auth/refresh
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0OTA3MDYzMCwianRpIjoiMDY4MzY4ZDktMDgwNy00YmVmLTkxYzMtZjA3ZmY5ODRkM2M0IiwidHlwZSI6InJlZnJlc2giLCJzdWIiOiIxIiwibmJmIjoxNzQ5MDcwNjMwLCJjc3JmIjoiNDE1YTlkMWUtZmI5My00ODk2LTk0ZjgtZDUwYzVmYTgxNjgxIiwiZXhwIjoxNzUxNjYyNjMwfQ.TWuhnE4Jum4rdT0BLQevUundWnX9UxOJZ124oWcwGso
+
+###
+
+# Protected route example (requires JWT token)
+GET http://127.0.0.1:5000/auth/protected
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0OTA3MDY0NCwianRpIjoiNTUwOTk1ZDEtZTE0Ni00OTQ1LWI3YzktOGViM2U4OGU2NGNjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjEiLCJuYmYiOjE3NDkwNzA2NDQsImNzcmYiOiJlY2VlYzk4OC0yMGVhLTQ4YWItOGM2Mi1jNDdlY2MzYTcwOWEiLCJleHAiOjE3NDkwNzQyNDR9.pcTgL_FFZv9tM4ojg5bUGMm1ijC6l-eOGk37-SsUMCY
