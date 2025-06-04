@@ -1,0 +1,52 @@
+### Modell Endpoints
+
+# GET all modells
+GET http://127.0.0.1:5000/modell/
+
+###
+
+# POST create new modell
+POST http://127.0.0.1:5000/modell/
+Content-Type: application/json
+
+{
+  "ModellName": "Golf",
+  "Hersteller": "Volkswagen",
+  "Fahrzeugtyp": "Kompaktwagen",
+  "Getriebeart": "Manuell",
+  "Kraftstoffart": "Benzin",
+  "Leistung": 150,
+  "Türen": 5,
+  "Sitze": 5,
+  "Kofferraumvolumen": 380,
+  "Stundenpreis": 25.50
+}
+
+###
+
+# GET specific modell
+GET http://127.0.0.1:5000/modell/1
+
+###
+
+# PUT update modell
+PUT http://127.0.0.1:5000/modell/1
+Content-Type: application/json
+
+{
+  "ModellName": "Golf GTI",
+  "Hersteller": "Volkswagen",
+  "Fahrzeugtyp": "Kompaktwagen",
+  "Getriebeart": "Automatik",
+  "Kraftstoffart": "Benzin",
+  "Leistung": 245,
+  "Türen": 5,
+  "Sitze": 5,
+  "Kofferraumvolumen": 380,
+  "Stundenpreis": 35.00
+}
+
+###
+
+# DELETE modell
+DELETE http://127.0.0.1:5000/modell/1

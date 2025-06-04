@@ -1,0 +1,36 @@
+### Schaden Endpoints
+
+# GET all schadens
+GET http://127.0.0.1:5000/schaden/
+
+###
+
+# POST create new schaden
+POST http://127.0.0.1:5000/schaden/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 1,
+  "Beschreibung": "Kratzer am Kotflügel"
+}
+
+###
+
+# GET specific schaden
+GET http://127.0.0.1:5000/schaden/1
+
+###
+
+# PUT update schaden
+PUT http://127.0.0.1:5000/schaden/1
+Content-Type: application/json
+
+{
+  "FahrzeugID": 1,
+  "Beschreibung": "Großer Kratzer am Kotflügel"
+}
+
+###
+
+# DELETE schaden
+DELETE http://127.0.0.1:5000/schaden/1

@@ -4,7 +4,7 @@ import psycopg2
 import json
 from flask import g
 
-DB_FILENAME = "movies.db"
+DB_FILENAME = "database.db"
 
 # Load configuration from config.json
 with open(os.path.join(os.path.dirname(__file__), "../../config.json")) as config_file:
@@ -32,13 +32,30 @@ def init_db():
     """Erstellt die Tabellen, falls sie nicht existieren"""
     
     # get DB connection
-    db= get_db()
+    db = get_db()
+    env_type = config.get("ENV_TYPE", "Dev")
+
+    # Use different SQL syntax based on database type
+    if env_type in ["Dev", "Test"]:  # SQLite
+        primary_key = "INTEGER PRIMARY KEY AUTOINCREMENT"
+        boolean_type = "INTEGER"  # SQLite doesn't have native BOOLEAN
+        numeric_type = "REAL"
+        double_precision = "REAL"
+        timestamp_type = "TEXT"  # SQLite stores dates as TEXT
+        date_type = "TEXT"
+    else:  # PostgreSQL
+        primary_key = "SERIAL PRIMARY KEY"
+        boolean_type = "BOOLEAN"
+        numeric_type = "NUMERIC"
+        double_precision = "DOUBLE PRECISION"
+        timestamp_type = "TIMESTAMP"
+        date_type = "DATE"
 
     with db:
-        db.execute(""" 
-        -- Tabelle: Modell
+        # Tabelle: Modell
+        db.execute(f"""
         CREATE TABLE IF NOT EXISTS Modell (
-            ModellID SERIAL PRIMARY KEY,
+            ModellID {primary_key},
             ModellName TEXT,
             Hersteller TEXT,
             Fahrzeugtyp TEXT,
@@ -48,65 +65,61 @@ def init_db():
             Türen INTEGER,
             Sitze INTEGER,
             Kofferraumvolumen INTEGER,
-            Stundenpreis NUMERIC NOT NULL
+            Stundenpreis {numeric_type} NOT NULL
         );
-        -- Tabelle: Schaden
-        CREATE TABLE IF NOT EXISTS Schaden (
-            SchadenID SERIAL PRIMARY KEY,
-            FahrzeugID INTEGER NOT NULL REFERENCES Fahrzeug(FahrzeugID) ON DELETE RESTRICT ON UPDATE CASCADE,
-            Beschreibung TEXT   
-        );
+        """)
 
-        -- Tabelle: Fahrzeug
+        # Tabelle: Fahrzeug
+        db.execute(f"""
         CREATE TABLE IF NOT EXISTS Fahrzeug (
-            FahrzeugID SERIAL PRIMARY KEY,
-            ModellID INTEGER NOT NULL REFERENCES Modell(ModellID) ON DELETE RESTRICT ON UPDATE CASCADE,
+            FahrzeugID {primary_key},
+            ModellID INTEGER NOT NULL,
             Kennzeichen TEXT UNIQUE,
             Reperaturzustand TEXT,
-            Aktiv BOOLEAN NOT NULL,
+            Aktiv {boolean_type} NOT NULL,
             Reifen TEXT,
             Kilometerstand INTEGER NOT NULL,
-            LetzterService DATE,
-            TuevDatum DATE,
-            ErstzulassungsDatum DATE
+            LetzterService {date_type},
+            TuevDatum {date_type},
+            ErstzulassungsDatum {date_type}
         );
-        -- Tabelle: GeoDatum
+        """)
+
+        # Tabelle: Schaden
+        db.execute(f"""
+        CREATE TABLE IF NOT EXISTS Schaden (
+            SchadenID {primary_key},
+            FahrzeugID INTEGER NOT NULL,
+            Beschreibung TEXT
+        );
+        """)
+        # Tabelle: GeoDatum
+        db.execute(f"""
         CREATE TABLE IF NOT EXISTS GeoDatum (
-            GeoDatumID SERIAL PRIMARY KEY,
-            Längengrad DOUBLE PRECISION,
-            Breitengrad DOUBLE PRECISION,
-            Zeit TIMESTAMP
-        );               
-
-        -- Tabelle: Rechnung
-        CREATE TABLE IF NOT EXISTS Rechnung (
-            RechnungID SERIAL PRIMARY KEY,
-            FahrzeugID INTEGER NOT NULL REFERENCES Fahrzeug(FahrzeugID) ON DELETE RESTRICT ON UPDATE CASCADE,
-            Bezahlt BOOLEAN,
-            Austellungsdatum DATE
+            GeoDatumID {primary_key},
+            Longitude {double_precision},
+            Latitude {double_precision},
+            Zeit {timestamp_type}
         );
+        """)
 
-        -- Tabelle: Tarif
-        CREATE TABLE IF NOT EXISTS Tarif (
-            TarifID SERIAL PRIMARY KEY,
-            Name TEXT NOT NULL,
-            Freikilometer INTEGER NOT NULL,
-            Versicherungsschutz TEXT NOT NULL
-        );
-                   
-        -- Tabelle: Rolle
+        # Tabelle: Rolle
+        db.execute(f"""
         CREATE TABLE IF NOT EXISTS Rolle (
-            RolleID SERIAL PRIMARY KEY,
+            RolleID {primary_key},
             Bedeutung TEXT NOT NULL
         );
-        -- Tabelle: User
+        """)
+
+        # Tabelle: Nutzer
+        db.execute(f"""
         CREATE TABLE IF NOT EXISTS Nutzer (
-            UserID SERIAL PRIMARY KEY,
-            RolleID INTEGER NOT NULL REFERENCES Rolle(RolleID) ON DELETE RESTRICT ON UPDATE CASCADE,
+            UserID {primary_key},
+            RolleID INTEGER NOT NULL,
             Vorname TEXT NOT NULL,
             Nachname TEXT NOT NULL,
-            Geburtsdatum DATE NOT NULL,
-            BeitrittsDatum DATE NOT NULL,
+            Geburtsdatum {date_type} NOT NULL,
+            BeitrittsDatum {date_type} NOT NULL,
             Führerschein TEXT,
             IBAN TEXT,
             BIC TEXT,
@@ -115,18 +128,40 @@ def init_db():
             Ort TEXT NOT NULL,
             Strasse TEXT NOT NULL
         );
+        """)
 
-        -- Tabelle: Reservierung
+        # Tabelle: Tarif
+        db.execute(f"""
+        CREATE TABLE IF NOT EXISTS Tarif (
+            TarifID {primary_key},
+            Name TEXT NOT NULL,
+            Freikilometer INTEGER NOT NULL,
+            Versicherungsschutz TEXT NOT NULL
+        );
+        """)
+
+        # Tabelle: Rechnung
+        db.execute(f"""
+        CREATE TABLE IF NOT EXISTS Rechnung (
+            RechnungID {primary_key},
+            FahrzeugID INTEGER NOT NULL,
+            Bezahlt {boolean_type},
+            Austellungsdatum {date_type}
+        );
+        """)
+
+        # Tabelle: Reservierung
+        db.execute(f"""
         CREATE TABLE IF NOT EXISTS Reservierung (
-            ReservierungID SERIAL PRIMARY KEY,
-            FahrzeugID INTEGER NOT NULL REFERENCES Fahrzeug(FahrzeugID) ON DELETE RESTRICT ON UPDATE CASCADE,
-            UserID INTEGER NOT NULL REFERENCES Nutzer(UserID) ON DELETE RESTRICT ON UPDATE CASCADE,
-            RechnungID INTEGER NOT NULL REFERENCES Rechnung(RechnungID) ON DELETE RESTRICT ON UPDATE CASCADE,
-            TarifID INTEGER NOT NULL REFERENCES Tarif(TarifID) ON DELETE RESTRICT ON UPDATE CASCADE,
-            StartDatum DATE NOT NULL,
-            EndDatum DATE NOT NULL       
-        );"""
-)
+            ReservierungID {primary_key},
+            FahrzeugID INTEGER NOT NULL,
+            UserID INTEGER NOT NULL,
+            RechnungID INTEGER NOT NULL,
+            TarifID INTEGER NOT NULL,
+            StartDatum {date_type} NOT NULL,
+            EndDatum {date_type} NOT NULL
+        );
+        """)
     db.close()
 
 def init_app(app):

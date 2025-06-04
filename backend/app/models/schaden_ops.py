@@ -14,16 +14,18 @@ class SchadenOps:
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Schaden WHERE SchadenID = ?", (schaden_id,)).fetchone()
         return dict(result) if result else None
-
+    
     @staticmethod
     def create(fahrzeug_id, beschreibung):
         """Erstellt einen neuen Schaden"""
         with get_db() as conn:
-            conn.execute("""
+            cursor = conn.execute("""
                 INSERT INTO Schaden (FahrzeugID, Beschreibung)
                 VALUES (?, ?)
             """, (fahrzeug_id, beschreibung))
+            schaden_id = cursor.lastrowid
             conn.commit()
+            return schaden_id
 
     @staticmethod
     def update(schaden_id, fahrzeug_id, beschreibung):
