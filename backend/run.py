@@ -1,6 +1,10 @@
 from app import create_app
+import logging
+
+# Enable debug logging
+logging.basicConfig(level=logging.DEBUG)
 
 app = create_app()
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
