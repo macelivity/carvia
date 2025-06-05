@@ -10,7 +10,7 @@ POST http://127.0.0.1:5000/modell/
 Content-Type: application/json
 
 {
-  "ModellName": "Golf",
+  "ModellName": "Golf 8",
   "Hersteller": "Volkswagen",
   "Fahrzeugtyp": "Kompaktwagen",
   "Getriebeart": "Manuell",

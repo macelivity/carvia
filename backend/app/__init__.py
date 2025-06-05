@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 import logging
 from .db import init_app as init_db
 from .routes.schaden_routes import bp as schaden_bp
@@ -8,7 +9,8 @@ from .routes.geodatum_routes import bp as geodatum_bp
 
 def create_app():
     app = Flask(__name__)
-    
+    CORS(app)
+
     # Configure logging
     logging.basicConfig(level=logging.DEBUG)
     
