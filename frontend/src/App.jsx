@@ -3,7 +3,6 @@ import { AuthProvider } from './context/AuthContext'
 import Navbar from './components/Navbar'
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
 import Reservations from './pages/Reservations';
 import Vehicles from './pages/Vehicles';
 import Homepage from './pages/Homepage';

@@ -1,0 +1,26 @@
+Pfad									Min. Berechtigung
+
+/										NULL
+/support
+/register
+/login				
+/vehicles
+
+/account								Mitglied, Mitarbeiter, Admin
+
+/vehicles/{model_id}					Mitglied
+/vehicles/{model_id}/reserve			Mitglied
+/reservations							Mitglied
+/invoices								Mitglied
+ 
+/management/members						Mitarbeiter
+/management/vehicles					Mitarbeiter
+/management/vehicles/{id}				Mitarbeiter
+/management/reservations				Mitarbeiter
+/management/invoices					Mitarbeiter
+
+/admin/employees						Admin
+
+/privacy-policy
+/legal-disclosure
+/sitemap
