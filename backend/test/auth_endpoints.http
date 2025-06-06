@@ -1,5 +1,10 @@
 ### Auth Endpoints
 
+
+GET http://127.0.0.1:5000/auth/users
+
+###
+
 # Register a new user
 POST http://127.0.0.1:5000/auth/register
 Content-Type: application/json

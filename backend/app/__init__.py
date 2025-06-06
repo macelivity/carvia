@@ -1,8 +1,9 @@
 from flask import Flask, jsonify
-from flask_cors import CORS
 import logging
 import json
 import os
+
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from .db import init_app as init_db
 from .routes.schaden_routes import bp as schaden_bp
@@ -13,8 +14,21 @@ from .routes.auth_routes import bp as auth_bp
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
 
+    CORS(app)
+    
+    # Load configuration
+    config_path = os.path.join(os.path.dirname(__file__), "../../config.json")
+    with open(config_path) as config_file:
+        config = json.load(config_file)
+    
+    # Configure Flask-JWT-Extended
+    app.config["JWT_SECRET_KEY"] = config.get("JWT_SECRET_KEY")
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False  # Tokens won't expire (customize as needed)
+    
+    # Initialize JWT Manager
+    jwt = JWTManager(app)
+    
     # Configure logging
     logging.basicConfig(level=logging.DEBUG)
     
