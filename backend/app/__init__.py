@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Blueprint, Flask, jsonify
 import logging
 import json
 import os
@@ -8,6 +8,7 @@ from flask_jwt_extended import JWTManager
 from .db import init_app as init_db
 from .routes.schaden_routes import bp as schaden_bp
 from .routes.fahrzeug_routes import bp as fahrzeug_bp
+from .routes.reservierung_routes import bp as reservierung_bp
 from .routes.modell_routes import bp as modell_bp
 from .routes.geodatum_routes import bp as geodatum_bp
 from .routes.auth_routes import bp as auth_bp
@@ -15,7 +16,7 @@ from .routes.auth_routes import bp as auth_bp
 def create_app():
     app = Flask(__name__)
 
-    CORS(app)
+    CORS(app, supports_credentials=True)
     
     # Load configuration
     config_path = os.path.join(os.path.dirname(__file__), "../../config.json")
@@ -45,6 +46,10 @@ def create_app():
     def missing_token_callback(error):
         return jsonify({"msg": "Authorization token is required"}), 401
     
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return jsonify({"error": "Not found"}), 404
+
     # Central error handler
     @app.errorhandler(Exception)
     def handle_exception(e):
@@ -54,10 +59,13 @@ def create_app():
     init_db(app)
     
     # Register all blueprints
-    app.register_blueprint(auth_bp)  # Auth routes at /auth
-    app.register_blueprint(schaden_bp, url_prefix="/schaden")
-    app.register_blueprint(fahrzeug_bp, url_prefix="/fahrzeug")
-    app.register_blueprint(modell_bp, url_prefix="/modell")
-    app.register_blueprint(geodatum_bp, url_prefix="/geodatum")
+    api = Blueprint("api", __name__, url_prefix="/api")
+    api.register_blueprint(auth_bp, url_prefix="/auth")
+    api.register_blueprint(schaden_bp, url_prefix="/schaden")
+    api.register_blueprint(fahrzeug_bp, url_prefix="/fahrzeug")
+    api.register_blueprint(reservierung_bp, url_prefix="/reservations")
+    api.register_blueprint(modell_bp, url_prefix="/modell")
+    api.register_blueprint(geodatum_bp, url_prefix="/geodatum")
+    app.register_blueprint(api)
 
     return app

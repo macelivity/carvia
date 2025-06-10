@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.models.fahrzeug_ops import FahrzeugOps
 
 # Expose the blueprint as 'bp' for test imports
-bp = Blueprint("fahrzeug", __name__)
+bp = Blueprint("fahrzeug", __name__, url_prefix="/fahrzeug")
 
 @bp.route("/", methods=["GET"])
 def list_fahrzeugs():
