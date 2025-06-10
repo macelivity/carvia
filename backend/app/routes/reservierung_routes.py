@@ -10,14 +10,16 @@ def create_reservation():
     data = request.get_json()
 
     # Grundlegende Prüfung auf erforderliche Felder
-    required_fields = ["UserID", "FahrzeugID", "Reservierungsbeginn", "Reservierungsende"]
+    required_fields = ["UserID", "FahrzeugID", "Reservierungsbeginn", "Reservierungsende", "RechnungID", "TarifID"]
     for field in required_fields:
         if field not in data:
             return jsonify({"msg": f"Missing required field: {field}"}), 400
 
     user_id = data["UserID"]
     fahrzeug_id = data["FahrzeugID"]
-    
+    rechnung_id = data["RechnungID"]
+    tarif_id = data["TarifID"]
+
     try:
         reservierungsbeginn_str = data["Reservierungsbeginn"]
         reservierungsende_str = data["Reservierungsende"]
@@ -33,10 +35,10 @@ def create_reservation():
     reservierungs_id = ReservierungOps.create(
         user_id=user_id,
         fahrzeug_id=fahrzeug_id,
-        reservierungsbeginn=reservierungsbeginn,
-        reservierungsende=reservierungsende,
-        status=data.get('Status', 'bestätigt'), # Optional Status aus Request oder Default
-        gesamtkosten=data.get('Gesamtkosten') # Optional Gesamtkosten aus Request
+        start_datum=reservierungsbeginn,
+        end_datum=reservierungsende,
+        rechnung_id=rechnung_id,
+        tarif_id=tarif_id
     )
     if reservierungs_id:
         return jsonify({"msg": "Reservation created successfully", "ReservierungsID": reservierungs_id}), 201
@@ -76,14 +78,24 @@ def update_reservation(reservierungs_id):
             update_data["reservierungsende"] = datetime.fromisoformat(data["Reservierungsende"])
         except (ValueError, TypeError):
             return jsonify({"msg": "Invalid Reservierungsende format."}), 400
-    if "Status" in data: update_data["status"] = data["Status"]
-    if "Gesamtkosten" in data: update_data["gesamtkosten"] = data["Gesamtkosten"]
+    if "RechnungID" in data: update_data["rechnung_id"] = data["RechnungID"]
+    if "TarifID" in data: update_data["tarif_id"] = data["TarifID"]
 
     if not update_data:
         return jsonify({"msg": "No fields to update provided"}), 400
 
-    updated_reservation = ReservierungOps.get_by_id(reservierungs_id)
-    return jsonify({"msg": "Reservation updated successfully", "reservation": updated_reservation}), 200
+    update_successful = ReservierungOps.update(
+        reservierungs_id,
+        user_id=update_data.get("user_id"),
+        fahrzeug_id=update_data.get("fahrzeug_id"),
+        start_datum=update_data.get("reservierungsbeginn"),
+        end_datum=update_data.get("reservierungsende"),
+        rechnung_id=update_data.get("rechnung_id"),
+        tarif_id=update_data.get("tarif_id")
+    )
+    if update_successful:
+        return jsonify({"msg": "Reservation updated successfully"}), 200
+    return jsonify({"msg": "Failed to update reservation"}), 400
 
 @bp.route("/<int:reservierungs_id>", methods=["DELETE"])
 def delete_reservation(reservierungs_id):

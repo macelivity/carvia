@@ -27,7 +27,7 @@ class ReservierungOps:
         """Holt eine Reservierung anhand ihrer ID."""
         try:
             with get_db() as conn:
-                result = conn.execute("SELECT * FROM Reservierung WHERE ReservierungsID = ?", (reservierungs_id,)).fetchone()
+                result = conn.execute("SELECT * FROM Reservierung WHERE ReservierungID = ?", (reservierungs_id,)).fetchone()
             return dict(result) if result else None
         except sqlite3.Error as e:
             print(f"Datenbankfehler beim Abrufen der Reservierung (ID: {reservierungs_id}): {e}")
@@ -93,7 +93,8 @@ class ReservierungOps:
 
         try:
             with get_db() as conn:
-                conn.execute(f"UPDATE Reservierung SET {set_clause} WHERE ReservierungsID = ?", tuple(values))
+                print(f"Update SQL: UPDATE Reservierung SET {set_clause} WHERE ReservierungID = ?", tuple(values))
+                conn.execute(f"UPDATE Reservierung SET {set_clause} WHERE ReservierungID = ?", tuple(values))
                 conn.commit()
                 return True
         except sqlite3.Error as e:
@@ -105,7 +106,7 @@ class ReservierungOps:
         """Löscht eine Reservierung anhand ihrer ID."""
         try:
             with get_db() as conn:
-                conn.execute("DELETE FROM Reservierung WHERE ReservierungsID = ?", (reservierungs_id,))
+                conn.execute("DELETE FROM Reservierung WHERE ReservierungID = ?", (reservierungs_id,))
                 conn.commit()
                 return True
         except sqlite3.Error as e:
