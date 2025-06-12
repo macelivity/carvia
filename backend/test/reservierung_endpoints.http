@@ -1,0 +1,69 @@
+### Reservierung Endpoints
+
+# Get all Reservierungen
+GET http://127.0.0.1:5000/reservierung/
+
+###
+
+# Create a new Reservierung
+POST http://127.0.0.1:5000/reservierung/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 1,
+  "UserID": 1,
+  "RechnungID": 1,
+  "TarifID": 1,
+  "StartDatum": "2024-12-10",
+  "EndDatum": "2024-12-12"
+}
+
+###
+
+# Create another Reservierung
+POST http://127.0.0.1:5000/reservierung/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 2,
+  "UserID": 1,
+  "RechnungID": 2,
+  "TarifID": 1,
+  "StartDatum": "2024-12-15",
+  "EndDatum": "2024-12-17"
+}
+
+###
+
+# Get specific Reservierung by ID
+GET http://127.0.0.1:5000/reservierung/1
+
+###
+
+# Update specific Reservierung
+PUT http://127.0.0.1:5000/reservierung/1
+Content-Type: application/json
+
+{
+  "FahrzeugID": 1,
+  "UserID": 1,
+  "RechnungID": 1,
+  "TarifID": 2,
+  "StartDatum": "2024-12-10",
+  "EndDatum": "2024-12-13"
+}
+
+###
+
+# Get all Reservierungen for a specific User
+GET http://127.0.0.1:5000/reservierung/user/1
+
+###
+
+# Get all Reservierungen for a specific Fahrzeug
+GET http://127.0.0.1:5000/reservierung/fahrzeug/1
+
+###
+
+# Delete specific Reservierung
+DELETE http://127.0.0.1:5000/reservierung/2
