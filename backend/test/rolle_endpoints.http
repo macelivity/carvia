@@ -1,0 +1,34 @@
+### Rolle Endpoints
+
+# Get all Rollen
+GET http://127.0.0.1:5000/rolle/
+
+###
+
+# Create a new Rolle
+POST http://127.0.0.1:5000/rolle/
+Content-Type: application/json
+
+{
+  "Bedeutung": "Customer Support"
+}
+
+###
+
+# Get specific Rolle by ID
+GET http://127.0.0.1:5000/rolle/1
+
+###
+
+# Update specific Rolle
+PUT http://127.0.0.1:5000/rolle/1
+Content-Type: application/json
+
+{
+  "Bedeutung": "Administrator"
+}
+
+###
+
+# Delete specific Rolle
+DELETE http://127.0.0.1:5000/rolle/4

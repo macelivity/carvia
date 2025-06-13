@@ -1,0 +1,55 @@
+### Rechnung Endpoints
+
+# Get all Rechnungen
+GET http://127.0.0.1:5000/rechnung/
+
+###
+
+# Create a new Rechnung
+POST http://127.0.0.1:5000/rechnung/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 1,
+  "Bezahlt": 0,
+  "Austellungsdatum": "2024-12-06"
+}
+
+###
+
+# Create another Rechnung
+POST http://127.0.0.1:5000/rechnung/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 2,
+  "Bezahlt": 1,
+  "Austellungsdatum": "2024-12-05"
+}
+
+###
+
+# Get specific Rechnung by ID
+GET http://127.0.0.1:5000/rechnung/1
+
+###
+
+# Update specific Rechnung (mark as paid)
+PUT http://127.0.0.1:5000/rechnung/1
+Content-Type: application/json
+
+{
+  "FahrzeugID": 1,
+  "Bezahlt": 1,
+  "Austellungsdatum": "2024-12-06"
+}
+
+###
+
+# Get all Rechnungen for a specific Fahrzeug
+GET http://127.0.0.1:5000/rechnung/fahrzeug/1
+
+###
+
+# Delete specific Rechnung
+DELETE http://127.0.0.1:5000/rechnung/2
