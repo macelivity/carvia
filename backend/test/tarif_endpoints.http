@@ -1,0 +1,50 @@
+### Tarif Endpoints
+
+# Get all Tarife
+GET http://127.0.0.1:5000/tarif/
+
+###
+
+# Create a new Tarif
+POST http://127.0.0.1:5000/tarif/
+Content-Type: application/json
+
+{
+  "Name": "Basic Tarif",
+  "Freikilometer": 100,
+  "Versicherungsschutz": "Vollkasko"
+}
+
+###
+
+# Create another Tarif
+POST http://127.0.0.1:5000/tarif/
+Content-Type: application/json
+
+{
+  "Name": "Premium Tarif",
+  "Freikilometer": 500,
+  "Versicherungsschutz": "Vollkasko Plus"
+}
+
+###
+
+# Get specific Tarif by ID
+GET http://127.0.0.1:5000/tarif/1
+
+###
+
+# Update specific Tarif
+PUT http://127.0.0.1:5000/tarif/1
+Content-Type: application/json
+
+{
+  "Name": "Basic Tarif Updated",
+  "Freikilometer": 150,
+  "Versicherungsschutz": "Teilkasko"
+}
+
+###
+
+# Delete specific Tarif
+DELETE http://127.0.0.1:5000/tarif/2
