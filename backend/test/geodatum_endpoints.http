@@ -1,12 +1,18 @@
-### GeoDatum Endpoints
+# GeoDatum Endpoints
+
+@host = http://127.0.0.1:5000
+@baseUrl = {{host}}/api
+
+
+###
 
 # GET all geodatums
-GET http://127.0.0.1:5000/geodatum/
+GET {{baseUrl}}/geodatum/
 
 ###
 
 # POST create new geodatum
-POST http://127.0.0.1:5000/geodatum/
+POST {{baseUrl}}/geodatum/
 Content-Type: application/json
 
 {
@@ -18,12 +24,12 @@ Content-Type: application/json
 ###
 
 # GET specific geodatum
-GET http://127.0.0.1:5000/geodatum/1
+GET {{baseUrl}}/geodatum/1
 
 ###
 
 # PUT update geodatum
-PUT http://127.0.0.1:5000/geodatum/1
+PUT {{baseUrl}}/geodatum/1
 Content-Type: application/json
 
 {
@@ -35,4 +41,4 @@ Content-Type: application/json
 ###
 
 # DELETE geodatum
-DELETE http://127.0.0.1:5000/geodatum/1
+DELETE {{baseUrl}}/geodatum/1

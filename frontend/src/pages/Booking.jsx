@@ -254,7 +254,7 @@ export default function Booking() {
         <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50"
           disabled={loadingVehicle || loadingTariffs || !vehicle || !model || tariffs.length === 0}
         >
-          Jetzt kostenpflichtig buchen
+          Jetzt kostenpflichtig reservieren
         </button>
       </form>
     </div>

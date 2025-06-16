@@ -1,12 +1,18 @@
-### Fahrzeug Endpoints
+# Fahrzeug Endpoints
+
+@host = http://127.0.0.1:5000
+@baseUrl = {{host}}/api
+
+
+###
 
 # GET all fahrzeugs
-GET http://127.0.0.1:5000/fahrzeug/
+GET {{baseUrl}}/fahrzeug/
 
 ###
 
 # POST create new fahrzeug
-POST http://127.0.0.1:5000/fahrzeug/
+POST {{baseUrl}}/fahrzeug/
 Content-Type: application/json
 
 {
@@ -24,12 +30,12 @@ Content-Type: application/json
 ###
 
 # GET specific fahrzeug
-GET http://127.0.0.1:5000/fahrzeug/1
+GET {{baseUrl}}/fahrzeug/1
 
 ###
 
 # PUT update fahrzeug
-PUT http://127.0.0.1:5000/fahrzeug/1
+PUT {{baseUrl}}/fahrzeug/1
 Content-Type: application/json
 
 {
@@ -47,4 +53,4 @@ Content-Type: application/json
 ###
 
 # DELETE fahrzeug
-DELETE http://127.0.0.1:5000/fahrzeug/1
+DELETE {{baseUrl}}/fahrzeug/1

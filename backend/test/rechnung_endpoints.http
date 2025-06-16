@@ -1,12 +1,18 @@
-### Rechnung Endpoints
+# Rechnung Endpoints
+
+@host = http://127.0.0.1:5000
+@baseUrl = {{host}}/api
+
+
+###
 
 # Get all Rechnungen
-GET http://127.0.0.1:5000/rechnung/
+GET {{baseUrl}}/rechnung/
 
 ###
 
 # Create a new Rechnung
-POST http://127.0.0.1:5000/rechnung/
+POST {{baseUrl}}/rechnung/
 Content-Type: application/json
 
 {
@@ -18,7 +24,7 @@ Content-Type: application/json
 ###
 
 # Create another Rechnung
-POST http://127.0.0.1:5000/rechnung/
+POST {{baseUrl}}/rechnung/
 Content-Type: application/json
 
 {
@@ -30,12 +36,12 @@ Content-Type: application/json
 ###
 
 # Get specific Rechnung by ID
-GET http://127.0.0.1:5000/rechnung/1
+GET {{baseUrl}}/rechnung/1
 
 ###
 
 # Update specific Rechnung (mark as paid)
-PUT http://127.0.0.1:5000/rechnung/1
+PUT {{baseUrl}}/rechnung/1
 Content-Type: application/json
 
 {
@@ -47,9 +53,9 @@ Content-Type: application/json
 ###
 
 # Get all Rechnungen for a specific Fahrzeug
-GET http://127.0.0.1:5000/rechnung/fahrzeug/1
+GET {{baseUrl}}/rechnung/fahrzeug/1
 
 ###
 
 # Delete specific Rechnung
-DELETE http://127.0.0.1:5000/rechnung/2
+DELETE {{baseUrl}}/rechnung/2

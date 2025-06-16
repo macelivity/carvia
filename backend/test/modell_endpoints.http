@@ -1,12 +1,18 @@
-### Modell Endpoints
+# Modell Endpoints
+
+@host = http://127.0.0.1:5000
+@baseUrl = {{host}}/api
+
+
+###
 
 # GET all modells
-GET http://127.0.0.1:5000/modell/
+GET {{baseUrl}}/modell/
 
 ###
 
 # POST create new modell
-POST http://127.0.0.1:5000/modell/
+POST {{baseUrl}}/modell/
 Content-Type: application/json
 
 {
@@ -25,12 +31,12 @@ Content-Type: application/json
 ###
 
 # GET specific modell
-GET http://127.0.0.1:5000/modell/1
+GET {{baseUrl}}/modell/1
 
 ###
 
 # PUT update modell
-PUT http://127.0.0.1:5000/modell/1
+PUT {{baseUrl}}/modell/1
 Content-Type: application/json
 
 {
@@ -49,4 +55,4 @@ Content-Type: application/json
 ###
 
 # DELETE modell
-DELETE http://127.0.0.1:5000/modell/1
+DELETE {{baseUrl}}/modell/1

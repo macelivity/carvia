@@ -11,6 +11,10 @@ def list_reservierungen():
 @bp.route("/", methods=["POST"])
 def create_reservierung():
     data = request.get_json()
+
+    if not data["UserID"]:
+        return jsonify({"error": "Sie sind nicht angemeldet"}), 401
+
     reservierung_id = ReservierungOps.create(
         data["FahrzeugID"], 
         data["UserID"], 
