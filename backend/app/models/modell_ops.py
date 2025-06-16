@@ -6,14 +6,14 @@ class ModellOps:
         """Holt alle Modelle aus der Datenbank"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Modell").fetchall()
-        return [dict(row) for row in result]
+            return [dict(row) for row in result]
 
     @staticmethod
     def get_by_id(modell_id):
         """Holt ein Modell nach ID"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Modell WHERE ModellID = ?", (modell_id,)).fetchone()
-        return dict(result) if result else None
+            return dict(result) if result else None
         
     @staticmethod
     def create(modell_name, hersteller, fahrzeugtyp, getriebeart, kraftstoffart, leistung, türen, sitze, kofferraumvolumen, stundenpreis):

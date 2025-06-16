@@ -94,6 +94,29 @@ def login():
         }
     }), 200
 
+@bp.route("/users", methods=["GET"])
+def get_all_users():
+    """Gibt eine Liste aller Nutzer zurück (geschützt)"""
+    # Hier könnte eine Rollenprüfung hinzugefügt werden, z.B. nur für Admins
+    # current_user_id = get_jwt_identity()
+    # current_user = UserOps.get_user_by_id(int(current_user_id))
+    # if not current_user or current_user['RolleID'] != 2: # Annahme: RolleID 2 = Admin
+    #     return jsonify({"msg": "Unauthorized"}), 403
+
+    try:
+        users = UserOps.get_all_users()  # Annahme: Diese Methode existiert in UserOps
+        
+        # Entferne sensible Informationen und bereite die Ausgabe vor
+        user_list = []
+        for user in users:
+            user_data = user.copy()
+            user_data.pop("PasswordHash", None) # Passwort-Hash entfernen
+            user_list.append(user_data)
+            
+        return jsonify(user_list), 200
+    except Exception as e:
+        return jsonify({"msg": "Error retrieving users", "error": str(e)}), 500
+
 @bp.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh():

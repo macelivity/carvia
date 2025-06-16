@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.models.modell_ops import ModellOps
 
-bp = Blueprint("modell", __name__)
+bp = Blueprint("modell", __name__, url_prefix="/modell")
 
 @bp.route("/", methods=["GET"])
 def list_modells():
