@@ -196,6 +196,29 @@ def change_password():
     except Exception as e:
         return jsonify({"msg": "Error changing password", "error": str(e)}), 500
 
+@bp.route("/user/<int:user_id>", methods=["PUT"])
+@jwt_required()
+def update_user_by_id(user_id):
+    """Aktualisiert die Daten eines Nutzers (nur für Admin/Mitarbeiter)"""
+    current_user_id = int(get_jwt_identity())
+    current_user = UserOps.get_user_by_id(current_user_id)
+    # Rollenprüfung: z.B. RolleID 2 = Admin, 3 = Mitarbeiter
+    if not current_user or current_user["RolleID"] not in [2, 3]:
+        return jsonify({"msg": "Nicht autorisiert"}), 403
+
+    data = request.get_json()
+    data.pop("UserID", None)
+    data.pop("PasswordHash", None)
+
+    try:
+        success = UserOps.update_user(user_id, **data)
+        if success:
+            return jsonify({"msg": "User updated successfully"}), 200
+        else:
+            return jsonify({"msg": "No valid fields to update"}), 400
+    except Exception as e:
+        return jsonify({"msg": "Error updating user", "error": str(e)}), 500
+
 # Protected route example
 @bp.route("/protected", methods=["GET"])
 @jwt_required()
