@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.models.geodatum_ops import GeodatumOps
 
-bp = Blueprint("geodatum", __name__)
+bp = Blueprint("geodatum", __name__, url_prefix="/geodatum")
 
 @bp.route("/", methods=["GET"])
 def list_geodatums():

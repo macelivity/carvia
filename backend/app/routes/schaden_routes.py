@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.models.schaden_ops import SchadenOps
 
-bp = Blueprint("schaden", __name__)
+bp = Blueprint("schaden", __name__, url_prefix="/schaden")
 
 @bp.route("/", methods=["GET"])
 def list_schadens():
