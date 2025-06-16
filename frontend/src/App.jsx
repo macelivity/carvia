@@ -20,6 +20,7 @@ export default function App() {
 					<Route path="/register" element={<Register />} />
 					<Route path="/reservations" element={<Reservations />} />
 					<Route path="/vehicles" element={<Vehicles />} />
+					<Route path="/account" element={<Account />} />
 				</Routes>
 			</BrowserRouter>
 		</AuthProvider>
