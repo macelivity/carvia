@@ -118,3 +118,16 @@ class FahrzeugOps:
                     available_vehicles.append(vehicle)
 
             return available_vehicles
+        
+    #TODO: Implementierung der Fahrzeugortung für zukünftige Abholorte
+    # PLZ und Ort müssen in Reservierungstabelle gespeichert werden
+    @staticmethod
+    def get_target_destination(fahrzeug_id, date):
+        """Holt den erwarteten Standort eines Fahrzeugs an einem bestimmten Datum"""
+        with get_db() as conn:
+            result = conn.execute("""
+                SELECT Zielort FROM Reservierung
+                WHERE FahrzeugID = ? AND EndDatum >= ? AND EndDatum <= ?
+                ORDER BY EndDatum DESC
+            """, (fahrzeug_id, date, date)).fetchone()
+        return result['Zielort'] if result else None

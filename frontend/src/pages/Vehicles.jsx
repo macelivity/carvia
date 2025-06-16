@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet'; // Import Circle
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.webpack.css';
 import 'leaflet-defaulticon-compatibility';
-import { getFilteredVehicles, getVehicleLocation } from '../api/api';
-import { Icon } from 'leaflet';
+import { getCoordinatesFromPostalCodeAndCity, getFilteredVehicles, getVehicleLocation } from '../api/api';
+import L, { Icon, latLng } from 'leaflet'; // Import latLng and L
 
 // OptionalFilterModal außerhalb der Vehicles-Komponente definieren
 const OptionalFilterModal = ({
@@ -22,44 +21,48 @@ const OptionalFilterModal = ({
 		return null;
 	}
 
-	return (
-		<div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex justify-center items-center">
-			<div className="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
-				<div className="mt-3">
-					<h3 className="text-lg leading-6 font-medium text-gray-900 mb-4 text-center">Optionale Fahrzeugfilter</h3>
-					<form className="space-y-4 text-left">
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<div>
-								<label htmlFor="modal_hersteller" className="block text-sm font-medium text-gray-700">Hersteller</label>
-								<input type="text" name="hersteller" id="modal_hersteller" value={currentFilters.hersteller || ''} onChange={onFilterChange} placeholder="z.B. BMW" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-							</div>
-							<div>
-								<label htmlFor="modal_fahrzeugtyp" className="block text-sm font-medium text-gray-700">Fahrzeugtyp</label>
-								<input type="text" name="fahrzeugtyp" id="modal_fahrzeugtyp" value={currentFilters.fahrzeugtyp || ''} onChange={onFilterChange} placeholder="z.B. SUV" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-							</div>
-							<div>
-								<label htmlFor="modal_getriebeart" className="block text-sm font-medium text-gray-700">Getriebeart</label>
-								<input type="text" name="getriebeart" id="modal_getriebeart" value={currentFilters.getriebeart || ''} onChange={onFilterChange} placeholder="z.B. Automatik" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-							</div>
-							<div>
-								<label htmlFor="modal_sitze" className="block text-sm font-medium text-gray-700">Sitze (mind.)</label>
-								<input type="number" name="sitze" id="modal_sitze" value={currentFilters.sitze || ''} onChange={onFilterChange} placeholder="z.B. 5" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-							</div>
+    return (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex justify-center items-center">
+            <div className="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+                <div className="mt-3">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4 text-center">Optionale Fahrzeugfilter</h3>
+                    <form className="space-y-4 text-left">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="modal_hersteller" className="block text-sm font-medium text-gray-700">Hersteller</label>
+                                <input type="text" name="hersteller" id="modal_hersteller" value={currentFilters.hersteller || ''} onChange={onFilterChange} placeholder="z.B. BMW" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
+                            </div>
+                            <div>
+                                <label htmlFor="modal_fahrzeugtyp" className="block text-sm font-medium text-gray-700">Fahrzeugtyp</label>
+                                <input type="text" name="fahrzeugtyp" id="modal_fahrzeugtyp" value={currentFilters.fahrzeugtyp || ''} onChange={onFilterChange} placeholder="z.B. SUV" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
+                            </div>
+                            <div>
+                                <label htmlFor="modal_getriebeart" className="block text-sm font-medium text-gray-700">Getriebeart</label>
+                                <input type="text" name="getriebeart" id="modal_getriebeart" value={currentFilters.getriebeart || ''} onChange={onFilterChange} placeholder="z.B. Automatik" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
+                            </div>
+                            <div>
+                                <label htmlFor="modal_sitze" className="block text-sm font-medium text-gray-700">Sitze (mind.)</label>
+                                <input type="number" name="sitze" id="modal_sitze" value={currentFilters.sitze || ''} onChange={onFilterChange} placeholder="z.B. 5" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label htmlFor="modal_stundenpreis" className="block text-sm font-medium text-gray-700">Max. Preis/Stunde (€)</label>
+                                <input type="number" step="0.01" name="stundenpreis" id="modal_stundenpreis" value={currentFilters.stundenpreis || ''} onChange={onFilterChange} placeholder="z.B. 15.50" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
+                            </div>
 							<div className="md:col-span-2">
-								<label htmlFor="modal_stundenpreis" className="block text-sm font-medium text-gray-700">Max. Preis/Stunde (€)</label>
-								<input type="number" step="0.01" name="stundenpreis" id="modal_stundenpreis" value={currentFilters.stundenpreis || ''} onChange={onFilterChange} placeholder="z.B. 15.50" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
+								<label htmlFor="modal_radius" className="block text-sm font-medium text-gray-700">Max. Umkreis vom Startort (km)</label>
+								<input type="number" step="1" min={1} name="radius" id="modal_radius" value={currentFilters.radius || ''} onChange={onFilterChange} placeholder="z.B. 10" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
 							</div>
-						</div>
-						<div className="items-center px-4 py-3 space-x-2 flex justify-end border-t mt-6">
-							<button type="button" onClick={onReset} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none">Zurücksetzen</button>
-							<button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none">Abbrechen</button>
-							<button type="button" onClick={onApply} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none">Anwenden</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-	);
+                        </div>
+                        <div className="items-center px-4 py-3 space-x-2 flex justify-end border-t mt-6">
+                            <button type="button" onClick={onReset} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none">Zurücksetzen</button>
+                            <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none">Abbrechen</button>
+                            <button type="button" onClick={onApply} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none">Anwenden</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 const ChangeView = ({ markers, zoomToWorld }) => {
@@ -88,6 +91,7 @@ export default function Vehicles() {
     const { user } = useAuth(); // Auth context for JWT
 
     const [vehicles, setVehicles] = useState([]);
+	const [pickupLocationCoords, setPickupLocationCoords] = useState(null); // For "Jetzt" search
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 	const [hasSearched, setHasSearched] = useState(false);
@@ -103,17 +107,21 @@ export default function Vehicles() {
         setError('');
         setVehicles([]);
 
-		// Append all valid filters to URLSearchParams
         const params = new URLSearchParams();
+        // Radius is a frontend filter, not sent to backend
         ['start_datum', 'end_datum', 'hersteller', 'fahrzeugtyp', 'getriebeart', 'sitze', 'stundenpreis'].forEach(key => {
             if (filtersToUse[key]) {
                 params.append(key, filtersToUse[key]);
             }
         });
 
+
         getFilteredVehicles(params)
             .then(async res => {
+				console.log(filtersToUse)
                 let fetchedVehicles = res.data;
+
+                var vehiclesToDisplay = []; // Initialize with an empty array
 
                 if (searchNowAvailable && fetchedVehicles.length > 0 && user) {
                     try {
@@ -127,32 +135,49 @@ export default function Vehicles() {
                         );
                         const locationResults = await Promise.all(locationPromises);
 
-                        const vehiclesWithLocation = fetchedVehicles.map(car => {
-                            const result = locationResults.find(r => r.car.FahrzeugID === car.FahrzeugID);
-                            if (result && result.location) {
-                                return {
-                                    ...car,
-                                    latitude: result.location.Latitude,
-                                    longitude: result.location.Longitude,
-                                };
-                            }
-                            return car;
-                        });
-                        setVehicles(vehiclesWithLocation);
-                    } catch (e) {
+                        vehiclesToDisplay = [];
+						for (const vehicle of fetchedVehicles) {
+                            const locationResult = locationResults.find(r => r.car.FahrzeugID === vehicle.FahrzeugID);
+                            if (locationResult && locationResult.location) {
+								const car = {
+									...vehicle,
+									latitude: locationResult.location.Latitude,
+									longitude: locationResult.location.Longitude,
+								}
+								// Apply radius filter if searchNowAvailable, radius is set, and start coordinates are available
+								if (filtersToUse.radius && pickupLocationCoords) {
+									if (!isNaN(pickupLocationCoords.lat) && !isNaN(pickupLocationCoords.lon)) {
+										const pickupLocation = latLng(pickupLocationCoords.lat, pickupLocationCoords.lon);
+										const radiusInMeters = parseFloat(filtersToUse.radius) * 1000;
+
+										const vehicleLocation = latLng(car.latitude, car.longitude);
+										const distance = pickupLocation.distanceTo(vehicleLocation);
+										if (distance <= radiusInMeters) {
+											vehiclesToDisplay.push(car);
+										}
+									} else {
+										console.warn("Ungültige Koordinaten für Radiusfilter:", filtersToUse.abholort_latitude, filtersToUse.abholort_longitude);
+									}
+								}
+								else if(car.latitude && car.longitude) {
+									vehiclesToDisplay.push(car);
+								}
+							}
+						}
+					} catch (e) {
                         console.error("Fehler beim Abrufen der Echtzeit-Fahrzeugpositionen:", e);
-                        setVehicles(fetchedVehicles); // Fallback
                     }
-                } else {
-                    setVehicles(fetchedVehicles);
                 }
-				setHasSearched(true);
+
+
+                setVehicles(vehiclesToDisplay);
+                setHasSearched(true);
             })
             .catch(err => {
                 console.error("Fehler beim Laden der Fahrzeuge:", err);
                 setError(err.response?.data?.error || 'Fahrzeuge konnten nicht geladen werden oder keine Fahrzeuge für die Kriterien gefunden.');
                 setVehicles([]);
-				setHasSearched(true);
+                setHasSearched(true);
             })
             .finally(() => setLoading(false));
     };
@@ -169,12 +194,21 @@ export default function Vehicles() {
 			let initialFiltersForFetch = { ...searchFilter };
 
 			setCurrentActiveFilters(initialFiltersForFetch);
-			executeFetchVehicles(initialFiltersForFetch, searchNowAvailable);
+			getCoordinatesFromPostalCodeAndCity(searchFilter.abholort_plz, searchFilter.abholort_stadt)
+				.then(coords => {
+					if (coords) {
+						setPickupLocationCoords(coords);
+					} else {
+						console.warn("Keine Koordinaten für Abholort gefunden, Suche ohne Radiusfilter.");
+						setPickupLocationCoords(null);
+					}
+					executeFetchVehicles(initialFiltersForFetch, searchNowAvailable);
+				})
 		} else {
 			setVehicles([]);
 			setHasSearched(false);
 		}
-    }, [location.state, user]); // Added user to dependency array
+    }, [location.state, user]);
 
     const handleOptionalFilterChange = (e) => {
         setCurrentActiveFilters(prev => ({
@@ -190,6 +224,7 @@ export default function Vehicles() {
             getriebeart: currentActiveFilters.getriebeart || '',
             sitze: currentActiveFilters.sitze || 0,
             stundenpreis: currentActiveFilters.stundenpreis || 0,
+            radius: currentActiveFilters.radius || undefined, // Add radius to modal initial state
         });
         setIsFilterModalOpen(true);
     };
@@ -197,7 +232,7 @@ export default function Vehicles() {
     const handleCancelFilter = () => {
         setCurrentActiveFilters(prev => ({
             ...prev,
-            ...modalInitialFilters
+            ...modalInitialFilters // Revert to filters state before opening modal
         }));
         setIsFilterModalOpen(false);
     };
@@ -208,14 +243,19 @@ export default function Vehicles() {
     };
 
     const handleResetOptionalFiltersInModal = () => {
-        setCurrentActiveFilters(prev => ({
-            ...prev,
+        const newFilters = { // Keep mandatory filters like dates and location details
+            ...currentActiveFilters, // Start with all current filters
             hersteller: '',
             fahrzeugtyp: '',
             getriebeart: '',
             sitze: 0,
             stundenpreis: 0,
-        }));
+            radius: undefined, // Reset radius
+        };
+        // Only remove abholort_latitude and abholort_longitude if they are not part of the original search criteria for "Jetzt"
+        // However, for simplicity in this modal, we only reset optional visual filters.
+        // The core search (dates, initial location for "Jetzt") remains.
+        setCurrentActiveFilters(newFilters);
     };
 
     const validMarkers = vehicles.filter(v => typeof v.latitude === 'number' && typeof v.longitude === 'number');
@@ -230,6 +270,7 @@ export default function Vehicles() {
 				onReset={handleResetOptionalFiltersInModal}
 				onCancel={handleCancelFilter}
 				onApply={handleApplyFilter}
+				searchNowAvailable={searchNowAvailable} // Pass state to modal
 			/>
 
 			<div className={`w-full ${user.role !== "guest" ? 'md:w-3/5 lg:w-2/3' : 'md:w-full'} p-6 overflow-y-auto`}>
@@ -284,9 +325,9 @@ export default function Vehicles() {
 									<h3 className="font-semibold text-lg mb-1 text-blue-700">{car.ModellName || 'Unbekanntes selectedVehicleModell'}</h3>
 									<p className="text-sm text-gray-600">Hersteller: {car.Hersteller}</p>
 									<p className="text-sm text-gray-600">Typ: {car.Fahrzeugtyp}</p>
-									<p className="text-sm text-gray-600">Standort: NAN</p>
-									{car.latitude && car.longitude && ( // Added user check
-										<p className="text-xs text-gray-500">Geo: {car.latitude.toFixed(4)}, {car.longitude.toFixed(4)} (Exakte Position)</p>
+									<p className="text-sm text-gray-600">Standort: {car.latitude && car.longitude ? 'Echtzeit-Position' : 'Nicht verfügbar'}</p>
+									{car.latitude && car.longitude && ( 
+										<p className="text-xs text-gray-500">Geo: {car.latitude.toFixed(4)}, {car.longitude.toFixed(4)}</p>
 									)}
 								</div>
 								<Link
@@ -312,14 +353,38 @@ export default function Vehicles() {
 
 			{user.role !== "guest" && (
 				<div className="w-full md:w-2/5 lg:w-1/3 h-64 md:h-full sticky top-0">
-					<MapContainer center={[53.0793, 8.8017]} zoom={10} scrollWheelZoom={true} style={{ height: "100%", width: "100%" }}>
+					<MapContainer center={(pickupLocationCoords && searchNowAvailable) ? [pickupLocationCoords.lat, pickupLocationCoords.lon] : [53.0793, 8.8017]} zoom={10} scrollWheelZoom={true} style={{ height: "100%", width: "100%" }}>
 						<TileLayer
 							attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 							url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 						/>
-						<ChangeView markers={validMarkers} zoomToWorld={searchNowAvailable && vehicles.length > 0} />
-						{validMarkers.map(car => {
-							let popupLocationText = `${car.latitude} ${car.longitude}`;
+						<ChangeView markers={validMarkers} zoomToWorld={searchNowAvailable && vehicles.length > 0 && (!currentActiveFilters.radius || parseFloat(currentActiveFilters.radius) <= 0) && !pickupLocationCoords} />
+						
+						{/* Marker for pickup location */}
+						{searchNowAvailable && pickupLocationCoords && (
+							<Marker 
+								position={[pickupLocationCoords.lat, pickupLocationCoords.lon]}
+								icon={L.icon({
+									iconUrl: '/icons/pickup-marker.svg', // Ensure you have this icon
+									iconSize: [64, 64],
+									iconAnchor: [32, 48]
+								})}
+							>
+								<Popup>Abholort: {currentActiveFilters.abholort_stadt}, {currentActiveFilters.abholort_plz}</Popup>
+							</Marker>
+						)}
+
+						{/* Circle for radius */}
+						{searchNowAvailable && pickupLocationCoords && currentActiveFilters.radius && parseFloat(currentActiveFilters.radius) > 0 && (
+							<Circle
+								center={[pickupLocationCoords.lat, pickupLocationCoords.lon]}
+								radius={parseFloat(currentActiveFilters.radius) * 1000} // Radius in meters
+								pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.1 }}
+							/>
+						)}
+
+                        {validMarkers.map(car => {
+                            let popupLocationText = `${car.latitude.toFixed(4)} ${car.longitude.toFixed(4)}`;
 
 							return (
 								<Marker key={car.FahrzeugID} position={[car.latitude, car.longitude]} icon={L.icon({
