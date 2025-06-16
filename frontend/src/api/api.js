@@ -25,4 +25,7 @@ export const getProfile = () => API.get('/auth/profile'); // Neuer Endpunkt für
 export const getReservations = () => API.get('/reservations');
 export const createReservation = (data) => API.post('/reservations', data);
 
+export const getFilteredVehicles = (params) => API.get(`/fahrzeug/filter?${params.toString()}`)
+export const getVehicleLocation = (vehicle_id) => API.get(`/fahrzeug/${vehicle_id}/location`)
+
 export default API;

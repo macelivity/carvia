@@ -14,26 +14,50 @@ class GeodatumOps:
         with get_db() as conn:
             result = conn.execute("SELECT * FROM GeoDatum WHERE GeoDatumID = ?", (geodatum_id,)).fetchone()
         return dict(result) if result else None
+    
     @staticmethod
-    def create(longitude, latitude, zeit):
+    def get_location_of_vehicle(fahrzeug_id):
+        with get_db() as conn:
+            result = conn.execute("""
+                SELECT * FROM GeoDatum
+                WHERE FahrzeugID = ?
+                AND Zeit = (
+                    SELECT MAX(Zeit) FROM GeoDatum
+                    WHERE FahrzeugID = ?
+                )
+                """, (fahrzeug_id, fahrzeug_id)).fetchone()
+        return dict(result) if result else None
+
+    @staticmethod
+    def get_by_vehicle_id(fahrzeug_id):
+        """Holt GeoDaten für ein bestimmtes Fahrzeug"""
+        with get_db() as conn:
+            result = conn.execute("""
+                SELECT * FROM GeoDatum
+                WHERE FahrzeugID = ?
+            """, (fahrzeug_id,)).fetchall()
+        return [dict(row) for row in result]
+
+    @staticmethod
+    def create(vehicle_id, longitude, latitude, zeit):
         """Erstellt ein neues GeoDatum"""
         with get_db() as conn:
             cursor = conn.execute("""
-                INSERT INTO GeoDatum (Longitude, Latitude, Zeit)
-                VALUES (?, ?, ?)
-            """, (longitude, latitude, zeit))
+                INSERT INTO GeoDatum (FahrzeugID, Longitude, Latitude, Zeit)
+                VALUES (?, ?, ?, ?)
+            """, (vehicle_id, longitude, latitude, zeit))
             geodatum_id = cursor.lastrowid
             conn.commit()
             return geodatum_id
     @staticmethod
-    def update(geodatum_id, longitude, latitude, zeit):
+    def update(geodatum_id, vehicle_id, longitude, latitude, zeit):
         """Aktualisiert ein GeoDatum"""
         with get_db() as conn:
             conn.execute("""
                 UPDATE GeoDatum
-                SET Longitude = ?, Latitude = ?, Zeit = ?
+                SET FahrzeugID = ?, Longitude = ?, Latitude = ?, Zeit = ?
                 WHERE GeoDatumID = ?
-            """, (longitude, latitude, zeit, geodatum_id))
+            """, (vehicle_id, longitude, latitude, zeit, geodatum_id))
             conn.commit()
 
     @staticmethod

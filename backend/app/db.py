@@ -98,6 +98,7 @@ def init_db():
         db.execute(f"""
         CREATE TABLE IF NOT EXISTS GeoDatum (
             GeoDatumID {primary_key},
+            FahrzeugID INTEGER NOT NULL,
             Longitude {double_precision},
             Latitude {double_precision},
             Zeit {timestamp_type}

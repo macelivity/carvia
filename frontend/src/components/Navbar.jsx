@@ -8,7 +8,7 @@ export default function Navbar() {
 		<nav className="flex justify-between p-4 bg-blue-700 text-white">
 			<Link to="/">CarVia</Link>
 			<div className="space-x-4">
-			<Link to="/vehicles">Fahrzeuge</Link>
+			<Link to="/search">Fahrzeuge</Link>
 				{user.role !== "guest" ? (
 					<>
 						<Link to="/reservations">Reservierungen</Link>
