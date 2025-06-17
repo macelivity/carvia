@@ -73,13 +73,15 @@ const useInView = (options) => {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
 
+  const memoizedOptions = React.useMemo(() => options, [options]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
         setInView(true);
         observer.disconnect();
       }
-    }, options);
+    }, memoizedOptions);
 
     const currentRef = ref.current;
     if (currentRef) {
