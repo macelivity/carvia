@@ -1,11 +1,34 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import TextField from '@mui/material/TextField';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { de } from 'date-fns/locale'; // German locale for date-fns
+
+// Helper function to format Date object to 'YYYY-MM-DDTHH:mm' string
+function formatToDateTimeLocalString(date) {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
 
 export default function VehicleSearch() {
     const navigate = useNavigate();
     const initialSearchFilters = {
-        start_datum: '',
-        end_datum: '',
+        start_datum: null, // Use null for DateTimePicker
+        end_datum: null,   // Use null for DateTimePicker
         abholort_plz: '',
         abholort_stadt: '',
         rueckgabeort_plz: '',
@@ -23,10 +46,20 @@ export default function VehicleSearch() {
         setPageError('');
     };
 
+    const handleStartDateChange = (newValue) => {
+        setSearchFilters(prev => ({ ...prev, start_datum: newValue }));
+        setPageError('');
+    };
+
+    const handleEndDateChange = (newValue) => {
+        setSearchFilters(prev => ({ ...prev, end_datum: newValue }));
+        setPageError('');
+    };
+
     const handleUseCurrentTimeChange = (e) => {
         setUseCurrentTime(e.target.checked);
         if (e.target.checked) {
-            setSearchFilters(prev => ({ ...prev, start_datum: '' }));
+            setSearchFilters(prev => ({ ...prev, start_datum: null })); // Clear start_datum when "Jetzt starten"
         }
         setPageError('');
     };
@@ -35,27 +68,30 @@ export default function VehicleSearch() {
         e.preventDefault();
         setPageError('');
 
-        let finalSearchFilters = { ...searchFilters };
-        if (useCurrentTime) {
-            const now = new Date();
-            now.setSeconds(0, 0); // Optional: Sekunden und Millisekunden entfernen für datetime-local
-            finalSearchFilters.start_datum = now.toISOString().slice(0, 16);
-        }
+        const startDateToValidate = useCurrentTime ? new Date() : searchFilters.start_datum;
+        const endDateToValidate = searchFilters.end_datum;
 
-        if ((!useCurrentTime && !finalSearchFilters.start_datum) || !finalSearchFilters.end_datum ||
-            !finalSearchFilters.abholort_plz || !finalSearchFilters.abholort_stadt ||
-            !finalSearchFilters.rueckgabeort_plz || !finalSearchFilters.rueckgabeort_stadt) {
-            setPageError('Bitte füllen Sie alle Felder für die zeit- und ortsgebundene Suche aus.');
+        if ((!useCurrentTime && !startDateToValidate) || !endDateToValidate ||
+            !searchFilters.abholort_plz || !searchFilters.abholort_stadt ||
+            !searchFilters.rueckgabeort_plz || !searchFilters.rueckgabeort_stadt) {
+            setPageError('Bitte füllen Sie alle erforderlichen Felder aus.');
             return;
         }
-        if (new Date(finalSearchFilters.start_datum) >= new Date(finalSearchFilters.end_datum)) {
+
+        if (startDateToValidate && endDateToValidate && new Date(startDateToValidate) >= new Date(endDateToValidate)) {
             setPageError('Das Rückgabedatum muss nach dem Abholdatum liegen.');
             return;
         }
-        // Navigiere zur Vehicles-Seite und übergebe die Filter und den Suchtyp
+
+        const searchFilterForNavigation = {
+            ...searchFilters, // Includes PLZ, Stadt etc.
+            start_datum: useCurrentTime ? formatToDateTimeLocalString(new Date()) : formatToDateTimeLocalString(searchFilters.start_datum),
+            end_datum: formatToDateTimeLocalString(searchFilters.end_datum),
+        };
+
         navigate('/vehicles', {
             state: {
-                searchFilter: finalSearchFilters,
+                searchFilter: searchFilterForNavigation,
                 searchNowAvailable: useCurrentTime
             }
         });
@@ -68,73 +104,125 @@ export default function VehicleSearch() {
     };
 
     return (
-        <div className="p-6 max-w-2xl mx-auto">
-            <div className="mb-8 p-6 border rounded-lg shadow-lg bg-white">
-                <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">Fahrzeug finden</h1>
+        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={de}>
+            <Box sx={{ p: 3, maxWidth: 'md', mx: 'auto' }}>
+                <Paper elevation={3} sx={{ p: { xs: 2, sm: 3, md: 4 }, mb: 4 }}>
+                    <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ fontWeight: 'bold', color: 'text.primary', pb: 2, mb: 4, borderBottom: 1 }}>
+                        Fahrzeug finden
+                    </Typography>
 
-                <form onSubmit={handleSearchSubmit} className="space-y-4">
-                    <h2 className="text-xl font-semibold text-gray-700 mb-3 border-b pb-2">Suche nach Zeitraum und Ort</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                        <div className="col-span-1 md:col-span-2"> {/* Checkbox unter den Datumsfeldern */}
-                            <div className="flex items-center mt-2">
-                                <input
-                                    type="checkbox"
-                                    id="useCurrentTime"
-                                    name="useCurrentTime"
-                                    checked={useCurrentTime}
-                                    onChange={handleUseCurrentTimeChange}
-                                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    <form onSubmit={handleSearchSubmit}>
+                        <Grid container spacing={2}>
+                            <Grid item size={12}>
+                                <DateTimePicker
+                                    label="Abholdatum und -zeit*"
+                                    value={searchFilters.start_datum}
+                                    onChange={handleStartDateChange}
+                                    ampm={false} // Use 24-hour format
+                                    slotProps={{
+                                        actionBar: { actions: ["cancel", "today", "accept"] },
+                                        textField: { fullWidth: true }
+                                    }}
                                 />
-                                <label htmlFor="useCurrentTime" className="ml-2 block text-sm font-medium text-gray-700">
-                                    Jetzt starten
-                                </label>
-                            </div>
-                        </div>
-                        {!useCurrentTime && (
-                            <div>
-                                <label htmlFor="start_datum" className="block text-sm font-medium text-gray-700">Abholdatum und -zeit*</label>
-                                <input type="datetime-local" name="start_datum" id="start_datum" value={searchFilters.start_datum} onChange={handleInputChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-                            </div>
+                            </Grid>
+                            <Grid item size={6}>
+                                <TextField
+                                    type="text"
+                                    name="abholort_plz"
+                                    id="abholort_plz"
+                                    label="Abholort PLZ*"
+                                    value={searchFilters.abholort_plz}
+                                    onChange={handleInputChange}
+                                    placeholder="z.B. 28195"
+                                    fullWidth
+                                    variant="outlined"
+                                    margin="normal"
+                                />
+                            </Grid>
+                            <Grid item size={6}>
+                                <TextField
+                                    type="text"
+                                    name="abholort_stadt"
+                                    id="abholort_stadt"
+                                    label="Abholort Stadt*"
+                                    value={searchFilters.abholort_stadt}
+                                    onChange={handleInputChange}
+                                    placeholder="z.B. Bremen"
+                                    fullWidth
+                                    variant="outlined"
+                                    margin="normal"
+                                />
+                            </Grid>
+                            <Grid item size={12}>
+                                <DateTimePicker
+                                    label="Rückgabedatum und -zeit*"
+                                    value={searchFilters.end_datum}
+                                    onChange={handleEndDateChange}
+                                    ampm={false} // Use 24-hour format
+                                    slotProps={{
+                                        actionBar: { actions: ["cancel", "today", "accept"] },
+                                        textField: { fullWidth: true }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item size={6}>
+                                <TextField
+                                    type="text"
+                                    name="rueckgabeort_plz"
+                                    id="rueckgabeort_plz"
+                                    label="Rückgabeort PLZ*"
+                                    value={searchFilters.rueckgabeort_plz}
+                                    onChange={handleInputChange}
+                                    placeholder="z.B. 28195"
+                                    fullWidth
+                                    variant="outlined"
+                                    margin="normal"
+                                />
+                            </Grid>
+                            <Grid item size={6}>
+                                <TextField
+                                    type="text"
+                                    name="rueckgabeort_stadt"
+                                    id="rueckgabeort_stadt"
+                                    label="Rückgabeort Stadt*"
+                                    value={searchFilters.rueckgabeort_stadt}
+                                    onChange={handleInputChange}
+                                    placeholder="z.B. Bremen"
+                                    fullWidth
+                                    variant="outlined"
+                                    margin="normal"
+                                />
+                            </Grid>
+                        </Grid>
+                        {pageError && (
+                            <Typography color="error" sx={{ mt: 2 }}>
+                                {pageError}
+                            </Typography>
                         )}
-                        <div className={useCurrentTime ? "md:col-span-2" : ""}> {/* Nimmt volle Breite ein, wenn Startdatum ausgeblendet ist */}
-                            <label htmlFor="end_datum" className="block text-sm font-medium text-gray-700">Rückgabedatum und -zeit*</label>
-                            <input type="datetime-local" name="end_datum" id="end_datum" value={searchFilters.end_datum} onChange={handleInputChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-                        </div>
-                        <div>
-                            <label htmlFor="abholort_plz" className="block text-sm font-medium text-gray-700">Abholort PLZ*</label>
-                            <input type="text" name="abholort_plz" id="abholort_plz" value={searchFilters.abholort_plz} onChange={handleInputChange} placeholder="z.B. 28195" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-                        </div>
-                        <div>
-                            <label htmlFor="rueckgabeort_plz" className="block text-sm font-medium text-gray-700">Rückgabeort PLZ*</label>
-                            <input type="text" name="rueckgabeort_plz" id="rueckgabeort_plz" value={searchFilters.rueckgabeort_plz} onChange={handleInputChange} placeholder="z.B. 28195" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-                        </div>
-                        <div>
-                            <label htmlFor="abholort_stadt" className="block text-sm font-medium text-gray-700">Abholort Stadt*</label>
-                            <input type="text" name="abholort_stadt" id="abholort_stadt" value={searchFilters.abholort_stadt} onChange={handleInputChange} placeholder="z.B. Bremen" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-                        </div>
-                        <div>
-                            <label htmlFor="rueckgabeort_stadt" className="block text-sm font-medium text-gray-700">Rückgabeort Stadt*</label>
-                            <input type="text" name="rueckgabeort_stadt" id="rueckgabeort_stadt" value={searchFilters.rueckgabeort_stadt} onChange={handleInputChange} placeholder="z.B. Bremen" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-                        </div>
-                    </div>
-                    {pageError && <p className="text-red-500 text-sm mt-2">{pageError}</p>}
-                    <div className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0 pt-3">
-                        <button
-                            type="submit"
-                            className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-md shadow"
-                        >
-                            Fahrzeuge suchen
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleResetSearchForm}
-                            className="w-full sm:w-auto bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-md shadow"
-                        >
-                            Suche zurücksetzen
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mt: 3, pt: 2 }}>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="success"
+                                size="large"
+                                sx={{ flexGrow: { sm: 1 } }}
+                            >
+                                Fahrzeuge suchen
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleResetSearchForm}
+                                variant="outlined"
+                                color="secondary"
+                                size="large"
+                                sx={{ flexGrow: { sm: 1 } }}
+                            >
+                                Suche zurücksetzen
+                            </Button>
+                        </Box>
+                    </form>
+                </Paper>
+            </Box>
+        </LocalizationProvider>
     );
 }

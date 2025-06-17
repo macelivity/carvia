@@ -161,7 +161,9 @@ def init_db():
             StartDatum {date_type} NOT NULL,
             EndDatum {date_type} NOT NULL,
             Abholort TEXT NOT NULL,
-            Rueckgabeort TEXT NOT NULL
+            AbholPlz TEXT NOT NULL,
+            Rueckgabeort TEXT NOT NULL,
+            RueckgabePlz TEXT NOT NULL
         );
         """)
         

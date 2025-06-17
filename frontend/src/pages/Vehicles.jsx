@@ -7,6 +7,14 @@ import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility
 import 'leaflet-defaulticon-compatibility';
 import { getCoordinatesFromPostalCodeAndCity, getFilteredVehicles, getVehicleLocation } from '../api/api';
 import L, { Icon, latLng } from 'leaflet'; // Import latLng and L
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import Grid from '@mui/material/Grid';
+import InputAdornment from '@mui/material/InputAdornment';
 
 // OptionalFilterModal außerhalb der Vehicles-Komponente definieren
 const OptionalFilterModal = ({
@@ -22,46 +30,93 @@ const OptionalFilterModal = ({
 	}
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex justify-center items-center">
-            <div className="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
-                <div className="mt-3">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4 text-center">Optionale Fahrzeugfilter</h3>
-                    <form className="space-y-4 text-left">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label htmlFor="modal_hersteller" className="block text-sm font-medium text-gray-700">Hersteller</label>
-                                <input type="text" name="hersteller" id="modal_hersteller" value={currentFilters.hersteller || ''} onChange={onFilterChange} placeholder="z.B. BMW" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-                            </div>
-                            <div>
-                                <label htmlFor="modal_fahrzeugtyp" className="block text-sm font-medium text-gray-700">Fahrzeugtyp</label>
-                                <input type="text" name="fahrzeugtyp" id="modal_fahrzeugtyp" value={currentFilters.fahrzeugtyp || ''} onChange={onFilterChange} placeholder="z.B. SUV" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-                            </div>
-                            <div>
-                                <label htmlFor="modal_getriebeart" className="block text-sm font-medium text-gray-700">Getriebeart</label>
-                                <input type="text" name="getriebeart" id="modal_getriebeart" value={currentFilters.getriebeart || ''} onChange={onFilterChange} placeholder="z.B. Automatik" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-                            </div>
-                            <div>
-                                <label htmlFor="modal_sitze" className="block text-sm font-medium text-gray-700">Sitze (mind.)</label>
-                                <input type="number" name="sitze" id="modal_sitze" value={currentFilters.sitze || ''} onChange={onFilterChange} placeholder="z.B. 5" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label htmlFor="modal_stundenpreis" className="block text-sm font-medium text-gray-700">Max. Preis/Stunde (€)</label>
-                                <input type="number" step="0.01" name="stundenpreis" id="modal_stundenpreis" value={currentFilters.stundenpreis || ''} onChange={onFilterChange} placeholder="z.B. 15.50" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-                            </div>
-							<div className="md:col-span-2">
-								<label htmlFor="modal_radius" className="block text-sm font-medium text-gray-700">Max. Umkreis vom Startort (km)</label>
-								<input type="number" step="1" min={1} name="radius" id="modal_radius" value={currentFilters.radius || ''} onChange={onFilterChange} placeholder="z.B. 10" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm" />
-							</div>
-                        </div>
-                        <div className="items-center px-4 py-3 space-x-2 flex justify-end border-t mt-6">
-                            <button type="button" onClick={onReset} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none">Zurücksetzen</button>
-                            <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none">Abbrechen</button>
-                            <button type="button" onClick={onApply} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none">Anwenden</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+        <Dialog open={isOpen} onClose={onCancel} maxWidth="sm" fullWidth>
+            <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold', borderBottom: 1, borderColor: 'divider', pb: 2 }}>
+                Filter
+            </DialogTitle>
+            <DialogContent sx={{ pt: '20px !important' }}> {/* Add padding top to content */}
+                <Grid container spacing={2}>
+                    <Grid item size={4}>
+                        <TextField
+                            label="Hersteller"
+                            name="hersteller"
+                            value={currentFilters.hersteller || ''}
+                            onChange={onFilterChange}
+                            placeholder="z.B. VW"
+                            fullWidth
+                            variant="outlined"
+                        />
+                    </Grid>
+                    <Grid item size={8}>
+                        <TextField
+                            label="Modell"
+                            name="modell"
+                            value={currentFilters.modell || ''}
+                            onChange={onFilterChange}
+                            placeholder="z.B. Golf"
+                            fullWidth
+                            variant="outlined"
+                        />
+                    </Grid>
+                    <Grid item size={12}>
+                        <TextField
+                            label="Fahrzeugtyp"
+                            name="fahrzeugtyp"
+                            value={currentFilters.fahrzeugtyp || ''}
+                            onChange={onFilterChange}
+                            placeholder="z.B. SUV"
+                            fullWidth
+                            variant="outlined"
+                        />
+                    </Grid>
+                    <Grid item size={12}>
+                        <TextField
+                            label="Getriebeart"
+                            name="getriebeart"
+                            value={currentFilters.getriebeart || ''}
+                            onChange={onFilterChange}
+                            placeholder="z.B. Automatik"
+                            fullWidth
+                            variant="outlined"
+                        />
+                    </Grid>
+                    <Grid item size={12}>
+                        <TextField
+                            label="Sitze (mind.)"
+                            type="number"
+                            name="sitze"
+                            value={currentFilters.sitze || 0}
+                            onChange={onFilterChange}
+                            placeholder="z.B. 5"
+                            fullWidth
+                            variant="outlined"
+                            InputProps={{ inputProps: { min: 0 } }}
+                        />
+                    </Grid>
+                    <Grid item size={12}>
+                        <TextField
+                            label="Max. Preis/Stunde"
+                            type="number"
+                            name="stundenpreis"
+                            value={currentFilters.stundenpreis || 0}
+                            onChange={onFilterChange}
+                            placeholder="z.B. 15.50"
+                            fullWidth
+                            variant="outlined"
+                            InputProps={{
+                                startAdornment: <InputAdornment position="start">€</InputAdornment>,
+                                inputProps: { step: "0.01", min: 0 }
+                            }}
+                        />
+                    </Grid>
+                </Grid>
+            </DialogContent>
+            <DialogActions sx={{ p: '16px 24px', borderTop: 1, borderColor: 'divider' }}>
+                <Button onClick={onReset} color="inherit">Zurücksetzen</Button>
+                <Button onClick={onCancel} color="secondary">Abbrechen</Button>
+                <Button onClick={onApply} variant="contained" color="primary">Anwenden</Button>
+            </DialogActions>
+        </Dialog>
     );
 };
 
@@ -91,21 +146,21 @@ export default function Vehicles() {
     const { user } = useAuth(); // Auth context for JWT
 
     const [vehicles, setVehicles] = useState([]);
+	const [vehiclesToDisplay, setVehiclesToDisplay] = useState([]); // For displaying vehicles after fetching
 	const [pickupLocationCoords, setPickupLocationCoords] = useState(null); // For "Jetzt" search
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 	const [hasSearched, setHasSearched] = useState(false);
 
-    const [currentActiveFilters, setCurrentActiveFilters] = useState({});
+    const [currentActiveFilters, setCurrentActiveFilters] = useState({radius: 10});
     const [searchNowAvailable, setSearchNowAvailable] = useState(false);
 
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [modalInitialFilters, setModalInitialFilters] = useState({});
 
-    const executeFetchVehicles = (filtersToUse, searchNowAvailable) => {
+    const executeFetchVehicles = (filtersToUse) => {
         setLoading(true);
         setError('');
-        setVehicles([]);
 
         const params = new URLSearchParams();
         // Radius is a frontend filter, not sent to backend
@@ -118,59 +173,45 @@ export default function Vehicles() {
 
         getFilteredVehicles(params)
             .then(async res => {
-				console.log(filtersToUse)
                 let fetchedVehicles = res.data;
 
-                var vehiclesToDisplay = []; // Initialize with an empty array
-
-                if (searchNowAvailable && fetchedVehicles.length > 0 && user) {
+                if (user.role !== 'guest') {
                     try {
-                        const locationPromises = fetchedVehicles.map(car =>
-                            getVehicleLocation(car.FahrzeugID)
-                                .then(locRes => ({ car: car, location: locRes.data }))
+                        const locationPromises = fetchedVehicles.map(async car => {
+							return await getVehicleLocation(car.FahrzeugID)
+                                .then(async locRes => {
+									if (locRes.data.type === 'geolocation') {
+                                    	return { car: car, longitude: locRes.data.longitude, latitude: locRes.data.latitude };
+									}
+									else {
+										const geoCoordinates = await getCoordinatesFromPostalCodeAndCity(locRes.data.plz, locRes.data.ort) 
+										return { car: car, longitude: geoCoordinates.longitude, latitude: geoCoordinates.latitude };
+									}
+                                })
                                 .catch(locErr => {
                                     console.warn(`Echtzeit-Position für Fahrzeug ${car.FahrzeugID} nicht abrufbar: ${locErr.response?.data?.error || locErr.message}.`);
                                     return { car: car, location: null };
                                 })
+							}
                         );
                         const locationResults = await Promise.all(locationPromises);
 
-                        vehiclesToDisplay = [];
+						const vehiclesWithLocation = [];
 						for (const vehicle of fetchedVehicles) {
-                            const locationResult = locationResults.find(r => r.car.FahrzeugID === vehicle.FahrzeugID);
-                            if (locationResult && locationResult.location) {
-								const car = {
-									...vehicle,
-									latitude: locationResult.location.Latitude,
-									longitude: locationResult.location.Longitude,
-								}
-								// Apply radius filter if searchNowAvailable, radius is set, and start coordinates are available
-								if (filtersToUse.radius && pickupLocationCoords) {
-									if (!isNaN(pickupLocationCoords.lat) && !isNaN(pickupLocationCoords.lon)) {
-										const pickupLocation = latLng(pickupLocationCoords.lat, pickupLocationCoords.lon);
-										const radiusInMeters = parseFloat(filtersToUse.radius) * 1000;
-
-										const vehicleLocation = latLng(car.latitude, car.longitude);
-										const distance = pickupLocation.distanceTo(vehicleLocation);
-										if (distance <= radiusInMeters) {
-											vehiclesToDisplay.push(car);
-										}
-									} else {
-										console.warn("Ungültige Koordinaten für Radiusfilter:", filtersToUse.abholort_latitude, filtersToUse.abholort_longitude);
-									}
-								}
-								else if(car.latitude && car.longitude) {
-									vehiclesToDisplay.push(car);
-								}
-							}
+                            const vehicleLocation = locationResults.find(r => r.car.FahrzeugID === vehicle.FahrzeugID);
+                            if (vehicleLocation) {
+                                vehiclesWithLocation.push({ ...vehicle, longitude: vehicleLocation.longitude, latitude: vehicleLocation.latitude });
+                            }
 						}
+						setVehicles(vehiclesWithLocation);
 					} catch (e) {
                         console.error("Fehler beim Abrufen der Echtzeit-Fahrzeugpositionen:", e);
                     }
                 }
+				else {
+					setVehicles(fetchedVehicles);
+				}
 
-
-                setVehicles(vehiclesToDisplay);
                 setHasSearched(true);
             })
             .catch(err => {
@@ -182,6 +223,34 @@ export default function Vehicles() {
             .finally(() => setLoading(false));
     };
 
+	const executeUpdateVehicles = (filtersToUse) => {
+		console.log("Aktualisiere Fahrzeuge mit Filtern:", filtersToUse);
+		const vehiclesToDisplay = [];
+		for (const vehicle of vehicles) {
+			if (vehicle.latitude && vehicle.longitude) {
+				// Apply radius filter if searchNowAvailable, radius is set, and start coordinates are available
+				if (filtersToUse.radius && pickupLocationCoords) {
+					if (!isNaN(pickupLocationCoords.lat) && !isNaN(pickupLocationCoords.lon)) {
+						const pickupLocation = latLng(pickupLocationCoords.lat, pickupLocationCoords.lon);
+						const radiusInMeters = parseFloat(filtersToUse.radius) * 1000;
+
+						const vehicleCoordinates = latLng(vehicle.latitude, vehicle.longitude);
+						const distance = pickupLocation.distanceTo(vehicleCoordinates);
+						if (distance <= radiusInMeters) {
+							vehiclesToDisplay.push({ ...vehicle });
+						}
+					} else {
+						console.warn("Ungültige Koordinaten für Radiusfilter:", filtersToUse.abholort_latitude, filtersToUse.abholort_longitude);
+					}
+				}
+				else {
+					vehiclesToDisplay.push({ ...vehicle });
+				}
+			}
+		}
+		setVehiclesToDisplay(vehiclesToDisplay);
+	}
+
     // Effekt zum Laden der Fahrzeuge basierend auf dem State von der SearchPage
     useEffect(() => {
 		const {
@@ -191,18 +260,18 @@ export default function Vehicles() {
 
 		if (searchFilter) {
 			setSearchNowAvailable(searchNowAvailable);
-			let initialFiltersForFetch = { ...searchFilter };
+			let initialFiltersForFetch = { ...searchFilter, radius: searchFilter.radius || 10 }; // Default radius if not set
 
 			setCurrentActiveFilters(initialFiltersForFetch);
 			getCoordinatesFromPostalCodeAndCity(searchFilter.abholort_plz, searchFilter.abholort_stadt)
-				.then(coords => {
+				.then(async coords => {
 					if (coords) {
 						setPickupLocationCoords(coords);
 					} else {
 						console.warn("Keine Koordinaten für Abholort gefunden, Suche ohne Radiusfilter.");
-						setPickupLocationCoords(null);
+						setPickupLocationCoords(undefined);
 					}
-					executeFetchVehicles(initialFiltersForFetch, searchNowAvailable);
+					executeFetchVehicles(initialFiltersForFetch);
 				})
 		} else {
 			setVehicles([]);
@@ -210,7 +279,15 @@ export default function Vehicles() {
 		}
     }, [location.state, user]);
 
-    const handleOptionalFilterChange = (e) => {
+	useEffect(() => {
+		if (vehicles.length > 0) {
+			executeUpdateVehicles(currentActiveFilters);
+		} else {
+			setVehiclesToDisplay([]);
+		}
+	}, [vehicles, currentActiveFilters]);
+
+    const handleFilterChange = (e) => {
         setCurrentActiveFilters(prev => ({
             ...prev,
             [e.target.name]: e.target.value
@@ -224,7 +301,7 @@ export default function Vehicles() {
             getriebeart: currentActiveFilters.getriebeart || '',
             sitze: currentActiveFilters.sitze || 0,
             stundenpreis: currentActiveFilters.stundenpreis || 0,
-            radius: currentActiveFilters.radius || undefined, // Add radius to modal initial state
+            radius: currentActiveFilters.radius || 10, // Add radius to modal initial state
         });
         setIsFilterModalOpen(true);
     };
@@ -239,18 +316,18 @@ export default function Vehicles() {
 
     const handleApplyFilter = () => {
         setIsFilterModalOpen(false);
-        executeFetchVehicles(currentActiveFilters, searchNowAvailable);
     };
 
-    const handleResetOptionalFiltersInModal = () => {
+    const handleResetFiltersInModal = () => {
         const newFilters = { // Keep mandatory filters like dates and location details
             ...currentActiveFilters, // Start with all current filters
             hersteller: '',
+			modell: '',
             fahrzeugtyp: '',
             getriebeart: '',
             sitze: 0,
             stundenpreis: 0,
-            radius: undefined, // Reset radius
+            radius: 10, // Reset radius
         };
         // Only remove abholort_latitude and abholort_longitude if they are not part of the original search criteria for "Jetzt"
         // However, for simplicity in this modal, we only reset optional visual filters.
@@ -258,7 +335,9 @@ export default function Vehicles() {
         setCurrentActiveFilters(newFilters);
     };
 
-    const validMarkers = vehicles.filter(v => typeof v.latitude === 'number' && typeof v.longitude === 'number');
+    const validMarkers = vehiclesToDisplay.filter(v => typeof v.latitude === 'number' && typeof v.longitude === 'number');
+
+	console.log(currentActiveFilters.radius, "Aktueller Radius in Vehicles.jsx");
 
 	return (
 		<div className="flex flex-col md:flex-row h-screen overflow-hidden">
@@ -266,8 +345,8 @@ export default function Vehicles() {
 			<OptionalFilterModal
 				isOpen={isFilterModalOpen}
 				currentFilters={currentActiveFilters}
-				onFilterChange={handleOptionalFilterChange}
-				onReset={handleResetOptionalFiltersInModal}
+				onFilterChange={handleFilterChange}
+				onReset={handleResetFiltersInModal}
 				onCancel={handleCancelFilter}
 				onApply={handleApplyFilter}
 				searchNowAvailable={searchNowAvailable} // Pass state to modal
@@ -277,19 +356,33 @@ export default function Vehicles() {
 				<div className="mb-6 p-4 border rounded-lg shadow bg-gray-50 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-3">
 					<h2 className="text-xl font-semibold text-gray-700">Suchergebnisse</h2>
 					<div className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0 w-full sm:w-auto">
+						{
+							user.role !== 'guest' && 
+							<TextField
+								label="Max. Umkreis (km)"
+								type="number"
+								name="radius"
+								value={currentActiveFilters.radius}
+								onChange={handleFilterChange}
+								placeholder="z.B. 10"
+								variant="outlined"
+								className="w-full sm:w-48"
+								InputProps={{ inputProps: { step: 1, min: 1, max: 50 } }}
+							/>
+						}
+						<button
+							type="button"
+							onClick={handleOpenFilterModal}
+							className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow"
+						>
+							Filter
+						</button>
 						<button
 							type="button"
 							onClick={() => navigate('/search')}
 							className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md shadow"
 						>
 							Neue Suche starten
-						</button>
-						<button
-							type="button"
-							onClick={handleOpenFilterModal}
-							className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow"
-						>
-							Weitere Filter anpassen...
 						</button>
 					</div>
 				</div>
@@ -310,16 +403,16 @@ export default function Vehicles() {
 					</div>
 				)}
 
-				{hasSearched && !loading && !error && vehicles.length === 0 && (
+				{hasSearched && !loading && !error && vehiclesToDisplay.length === 0 && (
 					<div className="text-center py-10 bg-yellow-50 p-6 rounded-lg">
 						<p className="text-lg text-gray-700 font-semibold">Keine Fahrzeuge für die aktuellen Kriterien gefunden.</p>
 						<p className="text-gray-600 mt-2">Versuchen Sie, Ihre Suchkriterien anzupassen oder eine <Link to="/search" className="text-blue-600 hover:underline">neue Suche</Link> zu starten.</p>
 					</div>
 				)}
 
-				{hasSearched && !loading && !error && vehicles.length > 0 && (
+				{hasSearched && !loading && !error && vehiclesToDisplay.length > 0 && (
 					<ul className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-						{vehicles.map(car => 
+						{vehiclesToDisplay.map(car => 
 							<li key={car.FahrzeugID} className="p-4 border rounded-lg shadow-md bg-white flex flex-col justify-between hover:shadow-xl transition-shadow">
 								<div>
 									<h3 className="font-semibold text-lg mb-1 text-blue-700">{car.ModellName || 'Unbekanntes selectedVehicleModell'}</h3>
@@ -351,18 +444,19 @@ export default function Vehicles() {
 				)}
 			</div>
 
-			{user.role !== "guest" && (
+			{user.role !== 'guest' && (
 				<div className="w-full md:w-2/5 lg:w-1/3 h-64 md:h-full sticky top-0">
-					<MapContainer center={(pickupLocationCoords && searchNowAvailable) ? [pickupLocationCoords.lat, pickupLocationCoords.lon] : [53.0793, 8.8017]} zoom={10} scrollWheelZoom={true} style={{ height: "100%", width: "100%" }}>
+					<MapContainer center={pickupLocationCoords ? [pickupLocationCoords.lat, pickupLocationCoords.lon] : [53.0793, 8.8017]} zoom={10} scrollWheelZoom={true} style={{ height: "100%", width: "100%" }}>
 						<TileLayer
 							attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 							url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 						/>
-						<ChangeView markers={validMarkers} zoomToWorld={searchNowAvailable && vehicles.length > 0 && (!currentActiveFilters.radius || parseFloat(currentActiveFilters.radius) <= 0) && !pickupLocationCoords} />
+						<ChangeView markers={validMarkers} zoomToWorld={searchNowAvailable && vehiclesToDisplay.length > 0 && (!currentActiveFilters.radius || parseFloat(currentActiveFilters.radius) <= 0) && !pickupLocationCoords} />
 						
 						{/* Marker for pickup location */}
-						{searchNowAvailable && pickupLocationCoords && (
-							<Marker 
+						{
+							pickupLocationCoords &&
+							<Marker	
 								position={[pickupLocationCoords.lat, pickupLocationCoords.lon]}
 								icon={L.icon({
 									iconUrl: '/icons/pickup-marker.svg', // Ensure you have this icon
@@ -372,16 +466,17 @@ export default function Vehicles() {
 							>
 								<Popup>Abholort: {currentActiveFilters.abholort_stadt}, {currentActiveFilters.abholort_plz}</Popup>
 							</Marker>
-						)}
+						}
 
 						{/* Circle for radius */}
-						{searchNowAvailable && pickupLocationCoords && currentActiveFilters.radius && parseFloat(currentActiveFilters.radius) > 0 && (
+						{
+							pickupLocationCoords && currentActiveFilters.radius && parseFloat(currentActiveFilters.radius) > 0 &&
 							<Circle
 								center={[pickupLocationCoords.lat, pickupLocationCoords.lon]}
 								radius={parseFloat(currentActiveFilters.radius) * 1000} // Radius in meters
 								pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.1 }}
 							/>
-						)}
+						}
 
                         {validMarkers.map(car => {
                             let popupLocationText = `${car.latitude.toFixed(4)} ${car.longitude.toFixed(4)}`;
@@ -390,7 +485,7 @@ export default function Vehicles() {
 								<Marker key={car.FahrzeugID} position={[car.latitude, car.longitude]} icon={L.icon({
 									iconUrl: '/icons/car-marker.svg',
 									iconSize: [48, 48],
-									iconAnchor: [24, 48]
+									iconAnchor: [24, 36]
 								})}>
 									<Popup>
 										<b>{car.Hersteller} {car.ModellName}</b> <br />

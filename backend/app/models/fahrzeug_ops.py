@@ -1,4 +1,6 @@
+from datetime import datetime, timedelta
 from app.db import get_db
+from app.models.geodatum_ops import GeodatumOps
 
 class FahrzeugOps:
     @staticmethod
@@ -88,6 +90,10 @@ class FahrzeugOps:
         if any([hersteller, fahrzeugtyp, getriebeart, sitze, stundenpreis]):
             query += " WHERE "
             if hersteller:
+                if hersteller == "VW":
+                    hersteller = "Volkswagen"
+                elif hersteller == "Mercedes":
+                    hersteller = "Mercedes-Benz"
                 query += "Modell.Hersteller = '{}' AND ".format(hersteller)
             if fahrzeugtyp:
                 query += "Modell.Fahrzeugtyp = '{}' AND ".format(fahrzeugtyp)
@@ -124,10 +130,21 @@ class FahrzeugOps:
     @staticmethod
     def get_target_destination(fahrzeug_id, date):
         """Holt den erwarteten Standort eines Fahrzeugs an einem bestimmten Datum"""
+
+        if (datetime.now() - timedelta(minutes=15)) <= datetime.fromisoformat(date) <= (datetime.now() + timedelta(minutes=30)):
+            geolocation = GeodatumOps.get_location_of_vehicle(fahrzeug_id)
+            return {"type": "geolocation", "longitude": geolocation['Longitude'], "latitude": geolocation['Latitude']}
+
         with get_db() as conn:
             result = conn.execute("""
-                SELECT Zielort FROM Reservierung
-                WHERE FahrzeugID = ? AND EndDatum >= ? AND EndDatum <= ?
+                SELECT RueckgabePlz, Rueckgabeort FROM Reservierung
+                WHERE FahrzeugID = ? AND EndDatum <= ?
                 ORDER BY EndDatum DESC
-            """, (fahrzeug_id, date, date)).fetchone()
-        return result['Zielort'] if result else None
+            """, (fahrzeug_id, date)).fetchone()
+        
+        if result:
+            # Wenn ein Ergebnis gefunden wurde, gib PLZ und Ort zurück
+            return {"type": "plz", "plz": result['RueckgabePlz'], "ort": result['Rueckgabeort']}
+        else:
+            geolocation = GeodatumOps.get_location_of_vehicle(fahrzeug_id)
+            return {"type": "geolocation", "longitude": geolocation['Longitude'], "latitude": geolocation['Latitude']}

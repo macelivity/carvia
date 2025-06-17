@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime # Sicherstellen, dass datetime importiert ist
 from flask import Blueprint, request, jsonify
 from app.models.fahrzeug_ops import FahrzeugOps
 from app.models.geodatum_ops import GeodatumOps # Import für Geodaten
@@ -93,35 +93,45 @@ def delete_fahrzeug(fahrzeug_id):
 @jwt_required()
 def get_fahrzeug_location(fahrzeug_id):
     """
-    Gibt die aktuelle Position eines Fahrzeugs zurück.
+    Gibt die aktuelle oder erwartete Position eines Fahrzeugs zurück.
+    Akzeptiert einen optionalen Query-Parameter 'time' (ISO-Format, z.B. YYYY-MM-DDTHH:MM:SS).
     Zugriffsregeln:
-    - Mitarbeiter: Immer Zugriff.
-    - Mitglieder: Nur Zugriff, wenn das Fahrzeug aktuell nicht verwendet wird (keine aktive Buchung).
+    - Manager: Immer Zugriff.
+    - User: Nur Zugriff, wenn das Fahrzeug zum angefragten Zeitpunkt (oder aktuell) nicht gebucht ist.
     """
-    role = RolleOps.get_by_user_id(int(get_jwt_identity()))  # Hole die Rolle des Nutzers aus dem JWT
+    user_id = int(get_jwt_identity())
+    role_entry = RolleOps.get_by_user_id(user_id)
 
-    if not role:
-        return jsonify({"error": "Access denied"}), 401
+    if not role_entry:
+        return jsonify({"error": "Zugriff verweigert: Benutzerrolle nicht gefunden."}), 401
 
-    if role['Bedeutung'] not in ["User", "Manager"]:
-        return jsonify({"error": "Zugriff verweigert: Ungültige Rolle"}), 403
+    user_role = role_entry['Bedeutung']
+
+    if user_role not in ["User", "Manager"]:
+        return jsonify({"error": "Zugriff verweigert: Ungültige Rolle."}), 403
 
     fahrzeug = FahrzeugOps.get_by_id(fahrzeug_id)
     if not fahrzeug:
-        return jsonify({"error": "Fahrzeug nicht gefunden"}), 404
+        return jsonify({"error": "Fahrzeug nicht gefunden."}), 404
 
-    # Mitarbeiter dürfen die Position immer abfragen
-    if role['Bedeutung'] == "Manager":
-        location_data = GeodatumOps.get_location_of_vehicle(fahrzeug_id)
-        if not location_data:
-            return jsonify({"error": "Keine Positionsdaten für dieses Fahrzeug gefunden"}), 404
-        return jsonify(location_data), 200
+    time_param_str = request.args.get("time")
+    query_time_iso_str = datetime.now().isoformat() # Standard ist die aktuelle Zeit
 
-    # Mitglieder dürfen die Position nur abfragen, wenn das Fahrzeug nicht aktiv gebucht ist
-    if role['Bedeutung'] == "User" and not FahrzeugOps.is_booked_at_time(fahrzeug_id, datetime.now().isoformat()):
-        location_data = GeodatumOps.get_location_of_vehicle(fahrzeug_id)
-        if not location_data:
-            return jsonify({"error": "Keine Positionsdaten für dieses Fahrzeug gefunden"}), 404
-        return jsonify(location_data), 200
-    
-    return jsonify({"error": "Unerwarteter Fehler bei der Autorisierung"}), 500
+    if time_param_str:
+        try:
+            datetime.fromisoformat(time_param_str.replace('Z', '+00:00'))
+            query_time_iso_str = time_param_str
+        except ValueError:
+            return jsonify({"error": "Ungültiges Zeitformat für 'time'. Bitte ISO-Format verwenden (z.B. YYYY-MM-DDTHH:MM:SS)."}), 400
+
+    # Autorisierungslogik: User dürfen nur zugreifen, wenn Fahrzeug nicht gebucht ist zum query_time_iso_str
+    if user_role == "User":
+        if FahrzeugOps.is_booked_at_time(fahrzeug_id, query_time_iso_str):
+            return jsonify({"error": f"Zugriff auf Fahrzeugposition verweigert, da das Fahrzeug zum Zeitpunkt {query_time_iso_str} gebucht ist."}), 403
+
+    # Datenabruf basierend darauf, ob 'time' angefragt wurde
+    # Erwartete Position für den gegebenen Zeitpunkt
+    location_data = FahrzeugOps.get_target_destination(fahrzeug_id, query_time_iso_str if time_param_str else datetime.now().isoformat())
+    if not location_data:
+        return jsonify({"error": f"Keine erwarteten Positionsdaten für Fahrzeug {fahrzeug_id} zum Zeitpunkt {query_time_iso_str} gefunden."}), 404
+    return jsonify(location_data), 200

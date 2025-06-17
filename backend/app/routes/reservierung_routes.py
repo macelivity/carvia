@@ -23,7 +23,9 @@ def create_reservierung():
         data["StartDatum"],
         data["EndDatum"],
         data["Abholort"],
-        data["Rueckgabeort"]
+        data["AbholPlz"],
+        data["Rueckgabeort"],
+        data["RueckgabePlz"]
     )
     return jsonify({"msg": f"Reservierung with ID {reservierung_id} added", "id": reservierung_id}), 201
 
@@ -48,7 +50,9 @@ def update_reservierung(reservierung_id):
         data["StartDatum"], 
         data["EndDatum"],
         data["Abholort"],
-        data["Rueckgabeort"]
+        data["AbholPlz"],
+        data["Rueckgabeort"],
+        data["RueckgabePlz"]
     )
     return jsonify({"msg": "Reservierung updated"})
 
