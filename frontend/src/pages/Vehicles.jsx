@@ -1,21 +1,26 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import ModelCard from '../components/ModelCard';
+import Skeleton from '@mui/material/Skeleton';
 
-// Übersicht und Detailansicht in einer Datei, Routing über useParams
+const MODELS_PER_PAGE = 12; // 4 rows × 3 cards = 12 models per page
+
 export default function Vehicles() {
-  const { model_id } = useParams(); // Bezieht sich auf FahrzeugID in diesem Kontext
+  const { fahrzeugId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Übersicht
-  const [vehicles, setVehicles] = useState([]);
-  const [models, setModels] = useState({});
-  const [loading, setLoading] = useState(true);
+  // State for model list (overview)
+  const [models, setModels] = useState([]);
+  const [displayedModels, setDisplayedModels] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState('');
 
-  // Filter-States
+  // Filter state
   const [filters, setFilters] = useState({
     start_datum: '',
     end_datum: '',
@@ -28,69 +33,72 @@ export default function Vehicles() {
     rueckgabeort: ''
   });
 
-  // Detailansicht
+  // State for vehicle detail view (when fahrzeugId is present)
   const [vehicle, setVehicle] = useState(null);
-  const [modell, setModell] = useState(null);
+  const [selectedModel, setSelectedModel] = useState(null);
   const [reserveMsg, setReserveMsg] = useState('');
 
-  const fetchVehicles = (currentFilters) => {
+  // Intersection observer for infinite scroll
+  const observer = useRef();
+  const lastModelElementRef = useCallback(node => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMoreModels();
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, hasMore]);
+  // Fetch models from backend with filters
+  const fetchModels = async (currentFilters, page = 1) => {
     setLoading(true);
     setError('');
     
-    const params = new URLSearchParams();
-    for (const key in currentFilters) {
-      if (currentFilters[key]) { // Nur Filter mit Werten hinzufügen
-        params.append(key, currentFilters[key]);
+    try {
+      // PLACEHOLDER: Currently fetches all models regardless of filters
+      // TODO: Replace with filtered endpoint once backend filtering is implemented
+      const endpoint = '/api/modell';
+      
+      const response = await axios.get(endpoint);
+      const allModels = response.data || []; // Get all models
+      
+      // Client-side pagination simulation for now
+      const startIndex = (page - 1) * MODELS_PER_PAGE;
+      const endIndex = startIndex + MODELS_PER_PAGE;
+      const newModels = allModels.slice(startIndex, endIndex);      
+      if (page === 1) {
+        setModels(newModels);
+        setDisplayedModels(newModels);
+        setCurrentPage(1);
+      } else {
+        setModels(prev => [...prev, ...newModels]);
+        setDisplayedModels(prev => [...prev, ...newModels]);
       }
+      
+      setHasMore(newModels.length === MODELS_PER_PAGE);
+    } catch (err) {
+      console.error("Error loading models:", err);
+      setError('Could not load vehicle models.');
+      if (page === 1) {
+        setModels([]);
+        setDisplayedModels([]);
+      }
+    } finally {
+      setLoading(false);
     }
-    const endpoint = params.toString() ? `/api/fahrzeug/filter?${params.toString()}` : '/api/fahrzeug';
-
-    axios.get(endpoint)
-      .then(res => setVehicles(res.data))
-      .catch(err => {
-        console.error("Fehler beim Laden der Fahrzeuge:", err);
-        setError('Fahrzeuge konnten nicht geladen werden.');
-        setVehicles([]);
-      })
-      .finally(() => setLoading(false));
   };
 
-  useEffect(() => {
-    if (!model_id) {
-      // Übersicht laden (initial ohne Filter, oder mit aktuellen Filtern, falls schon gesetzt)
-      fetchVehicles(filters);
-
-      // Modelle immer laden für die Anzeige
-      axios.get('/api/modell')
-        .then(res => {
-          const modelMap = {};
-          res.data.forEach(m => { modelMap[m.ModellID] = m; });
-          setModels(modelMap);
-        })
-        .catch(() => setModels({}));
-    } else {
-      // Detailansicht laden
-      setLoading(true);
-      setError('');
-      axios.get(`/api/fahrzeug/${model_id}`)
-        .then(res => {
-          setVehicle(res.data);
-          if (res.data && res.data.ModellID) {
-            return axios.get(`/api/modell/${res.data.ModellID}`);
-          }
-          throw new Error("ModellID nicht im Fahrzeugobjekt gefunden.");
-        })
-        .then(res => setModell(res.data))
-        .catch(err => {
-          console.error("Fehler beim Laden der Fahrzeugdetails:", err);
-          setError('Fahrzeugdetails konnten nicht geladen werden.');
-          setVehicle(null);
-          setModell(null);
-        })
-        .finally(() => setLoading(false));
+  // Load more models (for infinite scroll)
+  const loadMoreModels = () => {
+    if (!loading && hasMore) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      fetchModels(filters, nextPage);
     }
-  }, [model_id]); // Abhängigkeit von model_id, nicht von filters hier, um Re-Fetchen bei Filteränderung zu steuern
+  };
 
+  // Handle filter changes
   const handleFilterChange = (e) => {
     setFilters({
       ...filters,
@@ -98,215 +106,398 @@ export default function Vehicles() {
     });
   };
 
+  // Apply filters
   const handleApplyFilters = (e) => {
     e.preventDefault();
-    fetchVehicles(filters);
+    setCurrentPage(1);
+    setHasMore(true);
+    fetchModels(filters, 1);
   };
 
+  // Reset filters
   const handleResetFilters = () => {
-    const resetFiltersState = {
-        start_datum: '', end_datum: '', hersteller: '', fahrzeugtyp: '',
-        getriebeart: '', sitze: '', stundenpreis: '', abholort: '', rueckgabeort: ''
+    const resetFilters = {
+      start_datum: '', end_datum: '', hersteller: '', fahrzeugtyp: '',
+      getriebeart: '', sitze: '', stundenpreis: '', abholort: '', rueckgabeort: ''
     };
-    setFilters(resetFiltersState);
-    fetchVehicles(resetFiltersState); // Fahrzeuge mit zurückgesetzten Filtern neu laden
+    setFilters(resetFilters);
+    setCurrentPage(1);
+    setHasMore(true);
+    fetchModels(resetFilters, 1);
   };
 
+  // Handle model selection
+  const handleSelectModel = (model) => {
+    // For now, navigate to a vehicles list for this model
+    // Later this can be expanded to show available vehicles for the selected model
+    navigate(`/vehicles/model/${model.ModellID}`);
+  };
 
-  // Reservierung
+  // Handle vehicle reservation (for detail view)
   const handleReserve = async () => {
     if (!user || !vehicle) {
-        setReserveMsg('Benutzer nicht angemeldet oder Fahrzeugdetails fehlen.');
-        return;
+      setReserveMsg('User not logged in or vehicle details missing.');
+      return;
     }
-    setReserveMsg('Reservierung wird verarbeitet...');
+    
+    setReserveMsg('Processing reservation...');
     try {
-      // Annahme: Die Reservierungs-API benötigt UserID, FahrzeugID, Start- und Enddatum
-      // Diese Daten müssen hier noch erfasst oder aus einem Kontext geholt werden.
-      // Für dieses Beispiel wird ein Platzhalter verwendet.
-      // TODO: Echte Reservierungsdaten erfassen (z.B. über ein Modal oder separate Felder)
       const reservationData = {
-        UserID: user.UserID, // Annahme: UserID ist im user-Objekt verfügbar
+        UserID: user.UserID,
         FahrzeugID: vehicle.FahrzeugID,
-        Reservierungsbeginn: new Date().toISOString(), // Platzhalter
-        Reservierungsende: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(), // Platzhalter: 2 Stunden später
-        // RechnungID und TarifID müssen ggf. auch übergeben werden, je nach API-Definition
-        RechnungID: 1, // Platzhalter
-        TarifID: modell?.TarifID || 1 // Platzhalter, ggf. TarifID vom Modell nehmen
+        Reservierungsbeginn: new Date().toISOString(),
+        Reservierungsende: new Date(new Date().getTime() + 2 * 60 * 60 * 1000).toISOString(),
+        RechnungID: 1,
+        TarifID: selectedModel?.TarifID || 1
       };
       
-      await axios.post(`/api/reservations/`, reservationData, {
+      await axios.post('/api/reservations/', reservationData, {
         headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}` // Falls JWT benötigt wird
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      setReserveMsg('Reservierung erfolgreich!');
-      // Optional: Weiterleitung oder Aktualisierung der Ansicht
-    } catch(err) {
-        console.error("Reservierungsfehler:", err.response?.data || err.message);
-        setReserveMsg(`Reservierung fehlgeschlagen: ${err.response?.data?.msg || 'Serverfehler'}`);
+      setReserveMsg('Reservation successful!');
+    } catch (err) {
+      console.error("Reservation error:", err.response?.data || err.message);
+      setReserveMsg(`Reservation failed: ${err.response?.data?.msg || 'Server error'}`);
     }
   };
 
-  // Übersicht
-  if (!model_id) {
+  // Load initial data or vehicle details
+  useEffect(() => {
+    if (!fahrzeugId) {
+      // Load model overview
+      fetchModels(filters, 1);
+    } else {
+      // Load specific vehicle details
+      setLoading(true);
+      setError('');
+      
+      axios.get(`/api/fahrzeug/${fahrzeugId}`)
+        .then(res => {
+          setVehicle(res.data);
+          if (res.data && res.data.ModellID) {
+            return axios.get(`/api/modell/${res.data.ModellID}`);
+          }
+          throw new Error("ModellID not found in vehicle object.");
+        })
+        .then(res => setSelectedModel(res.data))
+        .catch(err => {
+          console.error("Error loading vehicle details:", err);
+          setError('Could not load vehicle details.');
+          setVehicle(null);
+          setSelectedModel(null);
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [fahrzeugId]);
+
+  // Model overview page
+  if (!fahrzeugId) {
     return (
       <div className="p-6">
-        <h2 className="text-xl font-bold mb-4">Fahrzeuge finden</h2>
+        <h2 className="text-2xl font-bold mb-6">Find Your Perfect Vehicle</h2>
         
-        <form onSubmit={handleApplyFilters} className="mb-6 p-4 border rounded shadow bg-gray-50 space-y-6">
-          {/* Kategorie: Zeitraum und Ort */}
+        {/* Filter Form */}
+        <form onSubmit={handleApplyFilters} className="mb-8 p-6 border rounded-lg shadow-sm bg-gray-50 space-y-6">
+          {/* Date and Location Filters */}
           <div>
-            <h3 className="text-lg font-semibold mb-3 text-gray-700 border-b pb-1">Abholung und Rückgabe</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Pickup and Return</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="start_datum" className="block text-sm font-medium text-gray-700">Verfügbar ab (Datum & Zeit)</label>
-                <input type="datetime-local" name="start_datum" id="start_datum" value={filters.start_datum} onChange={handleFilterChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
+                <label htmlFor="start_datum" className="block text-sm font-medium text-gray-700 mb-1">
+                  Available from (Date & Time)
+                </label>
+                <input
+                  type="datetime-local"
+                  name="start_datum"
+                  id="start_datum"
+                  value={filters.start_datum}
+                  onChange={handleFilterChange}
+                  className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
               <div>
-                <label htmlFor="abholort" className="block text-sm font-medium text-gray-700">Abholort</label>
-                <input type="text" name="abholort" id="abholort" value={filters.abholort} onChange={handleFilterChange} placeholder="z.B. Bremen Zentrum" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
+                <label htmlFor="end_datum" className="block text-sm font-medium text-gray-700 mb-1">
+                  Available until (Date & Time)
+                </label>
+                <input
+                  type="datetime-local"
+                  name="end_datum"
+                  id="end_datum"
+                  value={filters.end_datum}
+                  onChange={handleFilterChange}
+                  className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
               <div>
-                <label htmlFor="end_datum" className="block text-sm font-medium text-gray-700">Verfügbar bis (Datum & Zeit)</label>
-                <input type="datetime-local" name="end_datum" id="end_datum" value={filters.end_datum} onChange={handleFilterChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
+                <label htmlFor="abholort" className="block text-sm font-medium text-gray-700 mb-1">
+                  Pickup Location
+                </label>
+                <input
+                  type="text"
+                  name="abholort"
+                  id="abholort"
+                  value={filters.abholort}
+                  onChange={handleFilterChange}
+                  placeholder="e.g. Bremen City Center"
+                  className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
               <div>
-                <label htmlFor="rueckgabeort" className="block text-sm font-medium text-gray-700">Rückgabeort</label>
-                <input type="text" name="rueckgabeort" id="rueckgabeort" value={filters.rueckgabeort} onChange={handleFilterChange} placeholder="z.B. Bremen Zentrum" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
+                <label htmlFor="rueckgabeort" className="block text-sm font-medium text-gray-700 mb-1">
+                  Return Location
+                </label>
+                <input
+                  type="text"
+                  name="rueckgabeort"
+                  id="rueckgabeort"
+                  value={filters.rueckgabeort}
+                  onChange={handleFilterChange}
+                  placeholder="e.g. Bremen City Center"
+                  className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
-              {/* Optional: Rueckgabeort, falls benötigt
-              <div>
-                <label htmlFor="rueckgabeort" className="block text-sm font-medium text-gray-700">Rückgabeort</label>
-                <input type="text" name="rueckgabeort" id="rueckgabeort" value={filters.rueckgabeort} onChange={handleFilterChange} placeholder="z.B. Bremen Flughafen" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
-              </div>
-              */}
             </div>
           </div>
 
-          {/* Kategorie: Fahrzeugspezifikationen */}
+          {/* Vehicle Specification Filters */}
           <div>
-            <h3 className="text-lg font-semibold mb-3 text-gray-700 border-b pb-1">Fahrzeug</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Vehicle Specifications</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label htmlFor="hersteller" className="block text-sm font-medium text-gray-700">Hersteller</label>
-                <input type="text" name="hersteller" id="hersteller" value={filters.hersteller} onChange={handleFilterChange} placeholder="z.B. BMW" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
+                <label htmlFor="hersteller" className="block text-sm font-medium text-gray-700 mb-1">
+                  Manufacturer
+                </label>
+                <input
+                  type="text"
+                  name="hersteller"
+                  id="hersteller"
+                  value={filters.hersteller}
+                  onChange={handleFilterChange}
+                  placeholder="e.g. BMW"
+                  className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
               <div>
-                <label htmlFor="fahrzeugtyp" className="block text-sm font-medium text-gray-700">Fahrzeugtyp</label>
-                <input type="text" name="fahrzeugtyp" id="fahrzeugtyp" value={filters.fahrzeugtyp} onChange={handleFilterChange} placeholder="z.B. SUV" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
+                <label htmlFor="fahrzeugtyp" className="block text-sm font-medium text-gray-700 mb-1">
+                  Vehicle Type
+                </label>
+                <input
+                  type="text"
+                  name="fahrzeugtyp"
+                  id="fahrzeugtyp"
+                  value={filters.fahrzeugtyp}
+                  onChange={handleFilterChange}
+                  placeholder="e.g. SUV"
+                  className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
               <div>
-                <label htmlFor="getriebeart" className="block text-sm font-medium text-gray-700">Getriebeart</label>
-                <input type="text" name="getriebeart" id="getriebeart" value={filters.getriebeart} onChange={handleFilterChange} placeholder="z.B. Automatik" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
+                <label htmlFor="getriebeart" className="block text-sm font-medium text-gray-700 mb-1">
+                  Transmission
+                </label>
+                <input
+                  type="text"
+                  name="getriebeart"
+                  id="getriebeart"
+                  value={filters.getriebeart}
+                  onChange={handleFilterChange}
+                  placeholder="e.g. Automatic"
+                  className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
               <div>
-                <label htmlFor="sitze" className="block text-sm font-medium text-gray-700">Sitze (mind.)</label>
-                <input type="number" name="sitze" id="sitze" value={filters.sitze} onChange={handleFilterChange} placeholder="z.B. 5" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
+                <label htmlFor="sitze" className="block text-sm font-medium text-gray-700 mb-1">
+                  Minimum Seats
+                </label>
+                <input
+                  type="number"
+                  name="sitze"
+                  id="sitze"
+                  value={filters.sitze}
+                  onChange={handleFilterChange}
+                  placeholder="e.g. 5"
+                  className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
               <div>
-                <label htmlFor="stundenpreis" className="block text-sm font-medium text-gray-700">Max. Preis/Stunde (€)</label>
-                <input type="number" step="0.01" name="stundenpreis" id="stundenpreis" value={filters.stundenpreis} onChange={handleFilterChange} placeholder="z.B. 15.50" className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
+                <label htmlFor="stundenpreis" className="block text-sm font-medium text-gray-700 mb-1">
+                  Max. Price/Hour (€)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="stundenpreis"
+                  id="stundenpreis"
+                  value={filters.stundenpreis}
+                  onChange={handleFilterChange}
+                  placeholder="e.g. 15.50"
+                  className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
             </div>
           </div>
           
-          <div className="flex space-x-2 pt-2">
-            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
-              Filter anwenden
+          <div className="flex space-x-4 pt-4">
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200"
+            >
+              Apply Filters
             </button>
-            <button type="button" onClick={handleResetFilters} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded">
-              Filter zurücksetzen
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-md transition duration-200"
+            >
+              Reset Filters
             </button>
           </div>
         </form>
 
-        {loading && <p>Lade Fahrzeuge...</p>}
-        {error && <p className="text-red-500">{error}</p>}
-        {!loading && !error && vehicles.length === 0 && (
-          <p>Keine Fahrzeuge für die aktuellen Filterkriterien gefunden.</p>
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
         )}
-        {!loading && !error && vehicles.length > 0 && (
-          <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {vehicles.map(car => {
-              const currentModell = models[car.ModellID] || {};
-              return (
-                <li key={car.FahrzeugID} className="p-4 border rounded shadow bg-white flex flex-col justify-between">
-                  <div>
-                    <h3 className="font-semibold text-lg mb-1">{currentModell.ModellName || 'Unbekanntes Modell'}</h3>
-                    <p className="text-sm text-gray-600 mb-1">Hersteller: {currentModell.Hersteller}</p>
-                    <p className="text-sm text-gray-600">Typ: {currentModell.Fahrzeugtyp}</p>
-                    <p className="text-sm text-gray-600">Sitze: {currentModell.Sitze}</p>
-                    <p className="text-sm text-gray-600">Getriebe: {currentModell.Getriebeart}</p>
-                    {currentModell.Stundenpreis && <p className="text-sm text-gray-600 font-medium mt-1">Preis: {currentModell.Stundenpreis} €/Stunde</p>}
-                    <p className="text-sm text-gray-600">Kennzeichen: {car.Kennzeichen}</p>
-                    {/* Abholort des Fahrzeugs anzeigen, falls in Fahrzeugdaten vorhanden */}
-                    {/* <p className="text-sm text-gray-600">Standort: {car.Abholort || 'N/A'}</p> */}
-                  </div>
-                  <Link to={`/vehicles/${car.FahrzeugID}`} className="mt-3 inline-block bg-blue-500 hover:bg-blue-600 text-white text-center font-semibold py-2 px-3 rounded text-sm">
-                    Details & Reservieren
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+
+        {/* Results */}
+        {displayedModels.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">No vehicle models found for the current filter criteria.</p>
+          </div>
+        )}
+
+        {displayedModels.length > 0 && (
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+              {displayedModels.map((model, index) => (
+                <div
+                  key={model.ModellID}
+                  ref={index === displayedModels.length - 1 ? lastModelElementRef : null}
+                >
+                  <ModelCard
+                    model={model}
+                    onSelectModel={() => handleSelectModel(model)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Loading Skeletons */}
+        {loading && (
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+              {Array.from({ length: MODELS_PER_PAGE }).map((_, idx) => (
+                <Skeleton key={idx} variant="rectangular" width={345} height={300} />
+              ))}
+            </div>
+          </div>
         )}
       </div>
     );
   }
 
-  // Detailansicht
-  if (loading && !vehicle) { // Ladeanzeige für Detailansicht
-    return <div className="p-6 text-center">Lade Fahrzeugdetails...</div>;
+  // Vehicle detail view
+  if (loading && !vehicle) {
+    return <div className="p-6 text-center">Loading vehicle details...</div>;
   }
-  if (error && !vehicle) { // Fehleranzeige, falls Fahrzeug nicht geladen werden konnte
-    return <div className="p-6 text-center text-red-500">{error} <button className="text-blue-600 underline ml-2" onClick={() => navigate(-1)}>Zurück</button></div>;
+
+  if (error && !vehicle) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        {error}
+        <button className="text-blue-600 underline ml-2" onClick={() => navigate(-1)}>
+          Back
+        </button>
+      </div>
+    );
   }
+
   if (!vehicle) {
-    return <div className="p-6">Fahrzeug nicht gefunden. <button className="text-blue-600 underline" onClick={() => navigate(-1)}>Zurück</button></div>;
+    return (
+      <div className="p-6">
+        Vehicle not found.
+        <button className="text-blue-600 underline" onClick={() => navigate(-1)}>
+          Back
+        </button>
+      </div>
+    );
   }
+
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <button className="mb-4 text-blue-600 underline" onClick={() => navigate(-1)}>Zurück zur Übersicht</button>
-      <h2 className="text-2xl font-bold mb-2">{modell?.ModellName || 'Unbekanntes Modell'}</h2>
-      <p className="text-gray-600 mb-1">Hersteller: {modell?.Hersteller}</p>
-      {/* Zusätzliche Modelldetails */}
-      {modell?.Fahrzeugtyp && <p className="text-sm text-gray-500">Typ: {modell.Fahrzeugtyp}</p>}
-      {modell?.Getriebeart && <p className="text-sm text-gray-500">Getriebe: {modell.Getriebeart}</p>}
-      {modell?.Kraftstoffart && <p className="text-sm text-gray-500">Kraftstoff: {modell.Kraftstoffart}</p>}
-      {modell?.Leistung && <p className="text-sm text-gray-500">Leistung: {modell.Leistung} PS</p>}
-      {modell?.Türen && <p className="text-sm text-gray-500">Türen: {modell.Türen}</p>}
-      {modell?.Sitze && <p className="text-sm text-gray-500">Sitze: {modell.Sitze}</p>}
-      {modell?.Kofferraumvolumen && <p className="text-sm text-gray-500 mb-2">Kofferraum: {modell.Kofferraumvolumen} l</p>}
+    <div className="p-6 max-w-2xl mx-auto">
+      <button className="mb-4 text-blue-600 underline" onClick={() => navigate(-1)}>
+        ← Back to Overview
+      </button>
       
-      <p className="mt-3 font-semibold">Fahrzeugdetails:</p>
-      <p>Kennzeichen: {vehicle.Kennzeichen}</p>
-      <p>Zustand: {vehicle.Reperaturzustand}</p>
-      <p>Aktiv: {vehicle.Aktiv ? 'Ja' : 'Nein'}</p>
-      <p>Reifen: {vehicle.Reifen}</p>
-      <p>Kilometerstand: {vehicle.Kilometerstand} km</p>
-      <p>Letzter Service: {vehicle.LetzterService}</p>
-      <p>TÜV: {vehicle.TuevDatum}</p>
-      <p>Erstzulassung: {vehicle.ErstzulassungsDatum}</p>
-      {/* Abholort des Fahrzeugs anzeigen, falls in Fahrzeugdaten vorhanden */}
-      {/* <p>Standort: {vehicle.Abholort || 'N/A'}</p> */}
-      {modell?.Stundenpreis && <p className="font-semibold mt-2">Preis: {modell.Stundenpreis.toFixed(2)} €/Stunde</p>}
+      <h2 className="text-3xl font-bold mb-4">{selectedModel?.ModellName || 'Unknown Model'}</h2>
       
-      {user && user.RolleID === 1 && vehicle.Aktiv && ( // Annahme: RolleID 1 ist 'Mitglied'
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-2">Dieses Fahrzeug reservieren</h3>
-          {/* Hier könnten Eingabefelder für Start- und Enddatum der Reservierung hinzukommen */}
-          <button 
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50" 
-            onClick={handleReserve}
-            disabled={!vehicle.Aktiv} // Deaktiviere Button, wenn Fahrzeug nicht aktiv
-          >
-            Jetzt Reservieren
-          </button>
-          {reserveMsg && <p className={`mt-2 text-sm ${reserveMsg.startsWith('Reservierung erfolgreich') ? 'text-green-600' : 'text-red-600'}`}>{reserveMsg}</p>}
+      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+        <h3 className="text-lg font-semibold mb-4">Model Details</h3>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <p><span className="font-medium">Manufacturer:</span> {selectedModel?.Hersteller}</p>
+          <p><span className="font-medium">Type:</span> {selectedModel?.Fahrzeugtyp}</p>
+          <p><span className="font-medium">Transmission:</span> {selectedModel?.Getriebeart}</p>
+          <p><span className="font-medium">Fuel:</span> {selectedModel?.Kraftstoffart}</p>
+          <p><span className="font-medium">Power:</span> {selectedModel?.Leistung} PS</p>
+          <p><span className="font-medium">Doors:</span> {selectedModel?.Türen}</p>
+          <p><span className="font-medium">Seats:</span> {selectedModel?.Sitze}</p>
+          <p><span className="font-medium">Trunk:</span> {selectedModel?.Kofferraumvolumen} l</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+        <h3 className="text-lg font-semibold mb-4">Vehicle Details</h3>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <p><span className="font-medium">License Plate:</span> {vehicle.Kennzeichen}</p>
+          <p><span className="font-medium">Condition:</span> {vehicle.Reperaturzustand}</p>
+          <p><span className="font-medium">Active:</span> {vehicle.Aktiv ? 'Yes' : 'No'}</p>
+          <p><span className="font-medium">Tires:</span> {vehicle.Reifen}</p>
+          <p><span className="font-medium">Mileage:</span> {vehicle.Kilometerstand} km</p>
+          <p><span className="font-medium">Last Service:</span> {vehicle.LetzterService}</p>
+          <p><span className="font-medium">TÜV:</span> {vehicle.TuevDatum}</p>
+          <p><span className="font-medium">First Registration:</span> {vehicle.ErstzulassungsDatum}</p>
+        </div>
+      </div>
+
+      {selectedModel?.Stundenpreis && (
+        <div className="bg-blue-50 rounded-lg p-4 mb-6">
+          <p className="text-lg font-semibold">
+            Price: €{selectedModel.Stundenpreis.toFixed(2)} / hour
+          </p>
         </div>
       )}
-      {!vehicle.Aktiv && <p className="mt-4 text-red-600 font-semibold">Dieses Fahrzeug ist derzeit nicht aktiv und kann nicht reserviert werden.</p>}
+      
+      {user && user.RolleID === 1 && vehicle.Aktiv && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h3 className="text-lg font-semibold mb-4">Reserve This Vehicle</h3>
+          <button 
+            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-200" 
+            onClick={handleReserve}
+            disabled={!vehicle.Aktiv}
+          >
+            Reserve Now
+          </button>
+          {reserveMsg && (
+            <p className={`mt-4 text-sm ${reserveMsg.startsWith('Reservation successful') ? 'text-green-600' : 'text-red-600'}`}>
+              {reserveMsg}
+            </p>
+          )}
+        </div>
+      )}
+      
+      {!vehicle.Aktiv && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-600 font-semibold">
+            This vehicle is currently not active and cannot be reserved.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

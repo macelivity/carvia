@@ -1,16 +1,16 @@
 ### Modell Endpoints
 
 # GET all modells
-GET http://127.0.0.1:5000/modell/
+GET http://127.0.0.1:5000/api/modell/
 
 ###
 
 # POST create new modell
-POST http://127.0.0.1:5000/modell/
+POST http://127.0.0.1:5000/api/modell/
 Content-Type: application/json
 
 {
-  "ModellName": "Golf 8",
+  "ModellName": "Golf 11",
   "Hersteller": "Volkswagen",
   "Fahrzeugtyp": "Kompaktwagen",
   "Getriebeart": "Manuell",
