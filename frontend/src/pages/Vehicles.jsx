@@ -224,8 +224,6 @@ export default function Vehicles() {
     };
 
 	const executeUpdateVehicles = (filtersToUse) => {
-		console.log("Vehicles: ", vehicles);
-		console.log("Aktuelle Filter: ", filtersToUse);
 		const vehiclesToDisplay = [];
 		for (const vehicle of vehicles) {
 			if (vehicle.latitude && vehicle.longitude) {
@@ -353,7 +351,16 @@ export default function Vehicles() {
 
 			<div className={`w-full ${user.role !== "guest" ? 'md:w-3/5 lg:w-2/3' : 'md:w-full'} p-6 overflow-y-auto`}>
 				<div className="mb-6 p-4 border rounded-lg shadow bg-gray-50 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-3">
-					<h2 className="text-xl font-semibold text-gray-700">Suchergebnisse</h2>
+					<div className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0 w-full sm:w-auto">
+						<h2 className="text-xl font-semibold text-gray-700">Suchergebnisse</h2>
+						{
+							location.state &&
+								<>
+									<h2 className="text-xl font text-gray-700">{new Date(location.state.searchFilter.start_datum).toLocaleDateString('de-DE')}</h2>
+									<h2 className="text-xl font text-gray-700">{location.state.searchFilter.abholort_stadt}</h2>
+								</>
+						}
+					</div>
 					<div className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0 w-full sm:w-auto">
 						{
 							user.role !== 'guest' && 
