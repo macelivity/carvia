@@ -114,13 +114,13 @@ def get_fahrzeug_location(fahrzeug_id):
     if not fahrzeug:
         return jsonify({"error": "Fahrzeug nicht gefunden."}), 404
 
-    time_param_str = request.args.get("time")
+    date_param_str = request.args.get("date")
     query_time_iso_str = datetime.now().isoformat() # Standard ist die aktuelle Zeit
 
-    if time_param_str:
+    if date_param_str:
         try:
-            datetime.fromisoformat(time_param_str.replace('Z', '+00:00'))
-            query_time_iso_str = time_param_str
+            datetime.fromisoformat(date_param_str.replace('Z', '+00:00'))
+            query_time_iso_str = date_param_str
         except ValueError:
             return jsonify({"error": "Ungültiges Zeitformat für 'time'. Bitte ISO-Format verwenden (z.B. YYYY-MM-DDTHH:MM:SS)."}), 400
 
@@ -131,7 +131,7 @@ def get_fahrzeug_location(fahrzeug_id):
 
     # Datenabruf basierend darauf, ob 'time' angefragt wurde
     # Erwartete Position für den gegebenen Zeitpunkt
-    location_data = FahrzeugOps.get_target_destination(fahrzeug_id, query_time_iso_str if time_param_str else datetime.now().isoformat())
+    location_data = FahrzeugOps.get_target_destination(fahrzeug_id, query_time_iso_str if date_param_str else datetime.now().isoformat())
     if not location_data:
         return jsonify({"error": f"Keine erwarteten Positionsdaten für Fahrzeug {fahrzeug_id} zum Zeitpunkt {query_time_iso_str} gefunden."}), 404
     return jsonify(location_data), 200

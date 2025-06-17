@@ -178,14 +178,14 @@ export default function Vehicles() {
                 if (user.role !== 'guest') {
                     try {
                         const locationPromises = fetchedVehicles.map(async car => {
-							return await getVehicleLocation(car.FahrzeugID)
+							return await getVehicleLocation(car.FahrzeugID, filtersToUse.start_datum)
                                 .then(async locRes => {
 									if (locRes.data.type === 'geolocation') {
                                     	return { car: car, longitude: locRes.data.longitude, latitude: locRes.data.latitude };
 									}
 									else {
-										const geoCoordinates = await getCoordinatesFromPostalCodeAndCity(locRes.data.plz, locRes.data.ort) 
-										return { car: car, longitude: geoCoordinates.longitude, latitude: geoCoordinates.latitude };
+										const geoCoordinates = await getCoordinatesFromPostalCodeAndCity(locRes.data.plz, locRes.data.ort)
+										return { car: car, longitude: geoCoordinates.lon, latitude: geoCoordinates.lat };
 									}
                                 })
                                 .catch(locErr => {
@@ -224,7 +224,8 @@ export default function Vehicles() {
     };
 
 	const executeUpdateVehicles = (filtersToUse) => {
-		console.log("Aktualisiere Fahrzeuge mit Filtern:", filtersToUse);
+		console.log("Vehicles: ", vehicles);
+		console.log("Aktuelle Filter: ", filtersToUse);
 		const vehiclesToDisplay = [];
 		for (const vehicle of vehicles) {
 			if (vehicle.latitude && vehicle.longitude) {
@@ -336,8 +337,6 @@ export default function Vehicles() {
     };
 
     const validMarkers = vehiclesToDisplay.filter(v => typeof v.latitude === 'number' && typeof v.longitude === 'number');
-
-	console.log(currentActiveFilters.radius, "Aktueller Radius in Vehicles.jsx");
 
 	return (
 		<div className="flex flex-col md:flex-row h-screen overflow-hidden">

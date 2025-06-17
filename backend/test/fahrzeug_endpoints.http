@@ -30,7 +30,7 @@ Content-Type: application/json
 ###
 
 # GET specific fahrzeug
-GET {{baseUrl}}/fahrzeug/1
+GET {{baseUrl}}/fahrzeug/2
 
 ###
 
