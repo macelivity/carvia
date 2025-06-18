@@ -219,6 +219,24 @@ def update_user_by_id(user_id):
     except Exception as e:
         return jsonify({"msg": "Error updating user", "error": str(e)}), 500
 
+@bp.route("/user/<int:user_id>", methods=["DELETE"])
+@jwt_required()
+def delete_user_by_id(user_id):
+    """Löscht einen Nutzer anhand der Benutzer-ID (nur für Admin/Mitarbeiter)"""
+    current_user_id = int(get_jwt_identity())
+    current_user = UserOps.get_user_by_id(current_user_id)
+    # Rollenprüfung: z.B. nur Admin/Mitarbeiter dürfen löschen
+    if not current_user or current_user["RolleID"] not in [2, 3]:
+        return jsonify({"msg": "Nicht autorisiert"}), 403
+
+    try:
+        success = UserOps.delete_user(user_id)
+        if success:
+            return jsonify({"msg": "User deleted successfully"}), 200
+        else:
+            return jsonify({"msg": "User not found"}), 404
+    except Exception as e:
+        return jsonify({"msg": "Error deleting user", "error": str(e)}), 500
 # Protected route example
 @bp.route("/protected", methods=["GET"])
 @jwt_required()

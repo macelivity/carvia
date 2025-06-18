@@ -68,6 +68,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsI
   "Nachname": "Mustermann"
 }
 
+### delete account (requires JWT token)
+DELETE http://localhost:5000/api/auth/user/6
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1MDI1NjU2OSwianRpIjoiZjdjNzRhOGMtNzkzNy00Y2Q1LTliN2MtOGU2NTRkNWVjNWZiIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjMiLCJuYmYiOjE3NTAyNTY1NjksImNzcmYiOiI0MWFiMGNhZi0wMjc1LTRjMzAtOGNmNy1lMmEyMWZhZTkwZDYiLCJleHAiOjE3NTAyNjAxNjl9.-1nMdbJFL3AHX0oFHsP_IyIm8fK2PpsHfMeNvc9kvLs
+
 ###
 
 # Change password (requires JWT token)
