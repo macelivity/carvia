@@ -11,7 +11,7 @@ def list_geodatums():
 @bp.route("/", methods=["POST"])
 def create_geodatum():
     data = request.get_json()
-    geodatum_id = GeodatumOps.create(data["Longitude"], data["Latitude"], data["Zeit"])
+    geodatum_id = GeodatumOps.create(data["FahrzeugID"], data["Longitude"], data["Latitude"], data["Zeit"])
     return jsonify({"msg": f"GeoDatum with ID {geodatum_id} added", "id": geodatum_id}), 201
 
 @bp.route("/<int:geodatum_id>", methods=["GET"])

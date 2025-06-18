@@ -1,38 +1,283 @@
-### GeoDatum Endpoints
+# GeoDatum Endpoints
+
+@host = http://127.0.0.1:5000
+@baseUrl = {{host}}/api
+
+
+###
 
 # GET all geodatums
-GET http://127.0.0.1:5000/geodatum/
+GET {{baseUrl}}/geodatum/
 
 ###
 
-# POST create new geodatum
-POST http://127.0.0.1:5000/geodatum/
+# POST create new geodatum for Fahrzeug 1 (Bremen)
+POST {{baseUrl}}/geodatum/
 Content-Type: application/json
 
 {
+  "FahrzeugID": 1,
   "Longitude": 8.8017,
   "Latitude": 53.0793,
-  "Zeit": "2024-06-04T10:30:00"
+  "Zeit": "2025-06-16T10:00:00"
 }
 
 ###
 
-# GET specific geodatum
-GET http://127.0.0.1:5000/geodatum/1
-
-###
-
-# PUT update geodatum
-PUT http://127.0.0.1:5000/geodatum/1
+# POST create new geodatum for Fahrzeug 2 (Bremen)
+POST {{baseUrl}}/geodatum/
 Content-Type: application/json
 
 {
-  "Longitude": 8.8020,
-  "Latitude": 53.0795,
-  "Zeit": "2024-06-04T10:35:00"
+  "FahrzeugID": 2,
+  "Longitude": 8.7950,
+  "Latitude": 53.0750,
+  "Zeit": "2025-06-16T10:05:00"
 }
 
 ###
 
-# DELETE geodatum
-DELETE http://127.0.0.1:5000/geodatum/1
+# POST create new geodatum for Fahrzeug 3 (Bremen)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 3,
+  "Longitude": 8.8100,
+  "Latitude": 53.0820,
+  "Zeit": "2025-06-16T10:10:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 4 (Bremerhaven)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 4,
+  "Longitude": 8.5825,
+  "Latitude": 53.5450,
+  "Zeit": "2025-06-16T10:15:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 5 (Oldenburg)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 5,
+  "Longitude": 8.2167,
+  "Latitude": 53.1439,
+  "Zeit": "2025-06-16T10:20:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 6 (Bremen)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 6,
+  "Longitude": 8.8050,
+  "Latitude": 53.0760,
+  "Zeit": "2025-06-16T10:25:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 7 (Bremen)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 7,
+  "Longitude": 8.7890,
+  "Latitude": 53.0850,
+  "Zeit": "2025-06-16T10:30:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 8 (Hamburg)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 8,
+  "Longitude": 9.9937,
+  "Latitude": 53.5511,
+  "Zeit": "2025-06-16T10:35:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 9 (Hannover)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 9,
+  "Longitude": 9.7320,
+  "Latitude": 52.3759,
+  "Zeit": "2025-06-16T10:40:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 10 (Bremen)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 10,
+  "Longitude": 8.8150,
+  "Latitude": 53.0700,
+  "Zeit": "2025-06-16T10:45:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 11 (Bremen - Nähe Uni)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 11,
+  "Longitude": 8.8533,
+  "Latitude": 53.1038,
+  "Zeit": "2025-06-16T10:50:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 12 (Bremen - Überseestadt)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 12,
+  "Longitude": 8.7775,
+  "Latitude": 53.0903,
+  "Zeit": "2025-06-16T10:55:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 13 (Berlin)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 13,
+  "Longitude": 13.4050,
+  "Latitude": 52.5200,
+  "Zeit": "2025-06-16T11:00:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 14 (München)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 14,
+  "Longitude": 11.5820,
+  "Latitude": 48.1351,
+  "Zeit": "2025-06-16T11:05:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 15 (Bremen - Neustadt)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 15,
+  "Longitude": 8.7900,
+  "Latitude": 53.0650,
+  "Zeit": "2025-06-16T11:10:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 16 (Bremen - Schwachhausen)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 16,
+  "Longitude": 8.8350,
+  "Latitude": 53.0850,
+  "Zeit": "2025-06-16T11:15:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 17 (Köln)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 17,
+  "Longitude": 6.9603,
+  "Latitude": 50.9375,
+  "Zeit": "2025-06-16T11:20:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 18 (Bremen - Findorff)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 18,
+  "Longitude": 8.8000,
+  "Latitude": 53.0920,
+  "Zeit": "2025-06-16T11:25:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 19 (Bremen - Hastedt)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 19,
+  "Longitude": 8.8600,
+  "Latitude": 53.0600,
+  "Zeit": "2025-06-16T11:30:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 20 (Frankfurt)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 20,
+  "Longitude": 8.6821,
+  "Latitude": 50.1109,
+  "Zeit": "2025-06-16T11:35:00"
+}
+
+###
+
+# POST create new geodatum for Fahrzeug 21 (Berlin - Mitte)
+POST {{baseUrl}}/geodatum/
+Content-Type: application/json
+
+{
+  "FahrzeugID": 21,
+  "Longitude": 13.3886,
+  "Latitude": 52.5170,
+  "Zeit": "2025-06-16T11:40:00"
+}
