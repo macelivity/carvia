@@ -1,12 +1,18 @@
-### Reservierung Endpoints
+# Reservierung Endpoints
+
+@host = http://127.0.0.1:5000
+@baseUrl = {{host}}/api
+
+
+###
 
 # Get all Reservierungen
-GET http://127.0.0.1:5000/api/reservations/
+GET {{baseUrl}}/reservations/
 
 ###
 
 # Create a new Reservierung
-POST http://127.0.0.1:5000/api/reservations/
+POST {{baseUrl}}/reservations/
 Content-Type: application/json
 
 {
@@ -17,13 +23,15 @@ Content-Type: application/json
   "StartDatum": "2024-12-10",
   "EndDatum": "2024-12-12",
   "Abholort": "Berlin",
-  "Rueckgabeort": "Berlin"
+  "AbholPlz": "10115",
+  "Rueckgabeort": "Berlin",
+  "RueckgabePlz": "10115"
 }
 
 ###
 
 # Create another Reservierung
-POST http://127.0.0.1:5000/api/reservations/
+POST {{baseUrl}}/reservations/
 Content-Type: application/json
 
 {
@@ -34,18 +42,20 @@ Content-Type: application/json
   "StartDatum": "2024-12-15",
   "EndDatum": "2024-12-17",
   "Abholort": "Berlin",
-  "Rueckgabeort": "Hamburg"
+  "AbholPlz": "10115",
+  "Rueckgabeort": "Hamburg",
+  "RueckgabePlz": "20095"
 }
 
 ###
 
 # Get specific Reservierung by ID
-GET http://127.0.0.1:5000/api/reservations/1
+GET {{baseUrl}}/reservations/1
 
 ###
 
 # Update specific Reservierung
-PUT http://127.0.0.1:5000/api/reservations/1
+PUT {{baseUrl}}/reservations/1
 Content-Type: application/json
 
 {
@@ -60,14 +70,14 @@ Content-Type: application/json
 ###
 
 # Get all Reservierungen for a specific User
-GET http://127.0.0.1:5000/api/reservations/user/1
+GET {{baseUrl}}/reservations/user/1
 
 ###
 
 # Get all Reservierungen for a specific Fahrzeug
-GET http://127.0.0.1:5000/api/reservations/fahrzeug/1
+GET {{baseUrl}}/reservations/fahrzeug/1
 
 ###
 
 # Delete specific Reservierung
-DELETE http://127.0.0.1:5000/api/reservations/2
+DELETE {{baseUrl}}/reservations/2

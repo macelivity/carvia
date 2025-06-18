@@ -1,11 +1,13 @@
+from datetime import datetime, timedelta
 from app.db import get_db
+from app.models.geodatum_ops import GeodatumOps
 
 class FahrzeugOps:
     @staticmethod
     def get_all():
         """Holt alle Fahrzeuge aus der Datenbank"""
         with get_db() as conn:
-            result = conn.execute("SELECT * FROM Fahrzeug").fetchall()
+            result = conn.execute("SELECT * FROM Fahrzeug JOIN Modell").fetchall()
         return [dict(row) for row in result]
 
     @staticmethod
@@ -44,14 +46,54 @@ class FahrzeugOps:
         with get_db() as conn:
             conn.execute("DELETE FROM Fahrzeug WHERE FahrzeugID = ?", (fahrzeug_id,))
             conn.commit()
- 
+
     @staticmethod
-    def get_filtered(start_datum, end_datum, hersteller=None, fahrzeugtyp=None, getriebeart=None, sitze=None, stundenpreis=None, abholort=None, rueckgabeort=None):
+    def get_all_detailed():
+        """Holt alle Fahrzeuge mit Modellinformationen aus der Datenbank"""
+        with get_db() as conn:
+            result = conn.execute("""
+                SELECT Fahrzeug.*, Modell.Hersteller, Modell.Fahrzeugtyp, Modell.Getriebeart, Modell.Sitze, Modell.Stundenpreis
+                FROM Fahrzeug
+                JOIN Modell ON Fahrzeug.ModellID = Modell.ModellID
+            """).fetchall()
+        return [dict(row) for row in result]
+
+    @staticmethod
+    def get_by_id_detailed(fahrzeug_id):
+        """Holt ein Fahrzeug mit Modellinformationen nach ID"""
+        with get_db() as conn:
+            result = conn.execute("""
+                SELECT Fahrzeug.*, Modell.Hersteller, Modell.Fahrzeugtyp, Modell.Getriebeart, Modell.Sitze, Modell.Stundenpreis
+                FROM Fahrzeug
+                JOIN Modell ON Fahrzeug.ModellID = Modell.ModellID
+                WHERE FahrzeugID = ?
+            """, (fahrzeug_id,)).fetchone()
+        return dict(result) if result else None
+
+    @staticmethod
+    def is_booked_at_time(fahrzeug_id, time):
+        """Überprüft, ob ein Fahrzeug in einem bestimmten Zeitraum gebucht ist"""
+        with get_db() as conn:
+            query = """
+                SELECT * FROM Reservierung
+                WHERE FahrzeugID = ? AND (
+                    StartDatum < ? AND EndDatum > ?
+                )
+            """
+            result = conn.execute(query, (fahrzeug_id, time, time)).fetchone()
+        return result is not None
+
+    @staticmethod
+    def get_filtered(start_datum, end_datum, hersteller=None, fahrzeugtyp=None, getriebeart=None, sitze=None, stundenpreis=None):
         query = "SELECT * FROM Fahrzeug JOIN Modell ON Fahrzeug.ModellID = Modell.ModellID"
 
         if any([hersteller, fahrzeugtyp, getriebeart, sitze, stundenpreis]):
             query += " WHERE "
             if hersteller:
+                if hersteller == "VW":
+                    hersteller = "Volkswagen"
+                elif hersteller == "Mercedes":
+                    hersteller = "Mercedes-Benz"
                 query += "Modell.Hersteller = '{}' AND ".format(hersteller)
             if fahrzeugtyp:
                 query += "Modell.Fahrzeugtyp = '{}' AND ".format(fahrzeugtyp)
@@ -65,9 +107,6 @@ class FahrzeugOps:
         
         with get_db() as conn:
             vehicles = [dict(row) for row in conn.execute(query).fetchall()]
-
-            if not any([start_datum, end_datum, abholort, rueckgabeort]):
-                return vehicles
             
             available_vehicles = []
 
@@ -80,28 +119,32 @@ class FahrzeugOps:
                         # Check if the vehicle is reserved during the requested period
                         is_available = False
                         break
-                
-                if abholort:
-                    for i in range(len(reservations) - 1, 0, -1):
-                        # Check if the vehicle is at the correct location
-                        if reservations[i]['EndDatum'] > start_datum:
-                            continue
-                        if reservations[i]['Rueckgabeort'] != abholort:
-                            is_available = False
-                            break
-                        break
-
-                if rueckgabeort:
-                    for i in range(len(reservations) - 1):
-                        # Check if the vehicle will be given back at the correct location
-                        if reservations[i]['StartDatum'] < end_datum:
-                            continue
-                        if reservations[i]['Abholort'] != rueckgabeort:
-                            is_available = False
-                            break
-                        break
 
                 if is_available:
                     available_vehicles.append(vehicle)
 
             return available_vehicles
+        
+    #TODO: Implementierung der Fahrzeugortung für zukünftige Abholorte
+    # PLZ und Ort müssen in Reservierungstabelle gespeichert werden
+    @staticmethod
+    def get_target_destination(fahrzeug_id, date):
+        """Holt den erwarteten Standort eines Fahrzeugs an einem bestimmten Datum"""
+
+        if (datetime.now() - timedelta(minutes=15)) <= datetime.fromisoformat(date) <= (datetime.now() + timedelta(minutes=30)):
+            geolocation = GeodatumOps.get_location_of_vehicle(fahrzeug_id)
+            return {"type": "geolocation", "longitude": geolocation['Longitude'], "latitude": geolocation['Latitude']}
+
+        with get_db() as conn:
+            result = conn.execute("""
+                SELECT RueckgabePlz, Rueckgabeort FROM Reservierung
+                WHERE FahrzeugID = ? AND EndDatum <= ?
+                ORDER BY EndDatum DESC
+            """, (fahrzeug_id, date)).fetchone()
+        
+        if result:
+            # Wenn ein Ergebnis gefunden wurde, gib PLZ und Ort zurück
+            return {"type": "plz", "plz": result['RueckgabePlz'], "ort": result['Rueckgabeort']}
+        else:
+            geolocation = GeodatumOps.get_location_of_vehicle(fahrzeug_id)
+            return {"type": "geolocation", "longitude": geolocation['Longitude'], "latitude": geolocation['Latitude']}

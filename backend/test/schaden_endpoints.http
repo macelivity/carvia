@@ -1,12 +1,18 @@
-### Schaden Endpoints
+# Schaden Endpoints
+
+@host = http://127.0.0.1:5000
+@baseUrl = {{host}}/api
+
+
+###
 
 # GET all schadens
-GET http://127.0.0.1:5000/schaden/
+GET {{baseUrl}}/schaden/
 
 ###
 
 # POST create new schaden
-POST http://127.0.0.1:5000/schaden/
+POST {{baseUrl}}/schaden/
 Content-Type: application/json
 
 {
@@ -17,12 +23,12 @@ Content-Type: application/json
 ###
 
 # GET specific schaden
-GET http://127.0.0.1:5000/schaden/1
+GET {{baseUrl}}/schaden/1
 
 ###
 
 # PUT update schaden
-PUT http://127.0.0.1:5000/schaden/1
+PUT {{baseUrl}}/schaden/1
 Content-Type: application/json
 
 {
@@ -33,4 +39,4 @@ Content-Type: application/json
 ###
 
 # DELETE schaden
-DELETE http://127.0.0.1:5000/schaden/1
+DELETE {{baseUrl}}/schaden/1

@@ -15,7 +15,7 @@ const mapRolleIdToRole = (rolleId) => {
 };
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState({ username: "Gast", role: "guest" });
+    const [user, setUser] = useState({ username: "Gast", role: 'guest', userID: null }); // userID hinzugefügt
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -27,15 +27,16 @@ export const AuthProvider = ({ children }) => {
                     const backendUser = response.data.user;
                     const initialUser = {
                         ...backendUser,
-                        username: backendUser.Username, // Sicherstellen, dass username gesetzt ist
+                        username: backendUser.username, // Sicherstellen, dass username gesetzt ist
                         role: mapRolleIdToRole(backendUser.RolleID),
+                        userID: backendUser.UserID, // userID aus Backend-Daten übernehmen
                     };
                     setUser(initialUser);
                 } catch (error) {
                     // console.error("[AuthContext] Fehler bei der Initialisierung des Auth-Status:", error); // Entfernt
                     localStorage.removeItem('accessToken');
                     localStorage.removeItem('refreshToken');
-                    setUser({ username: "Gast", role: "guest" });
+                    setUser({ username: "Gast", role: "guest", userID: null }); // userID zurücksetzen
                 }
             }
             setLoading(false);
@@ -50,13 +51,15 @@ export const AuthProvider = ({ children }) => {
         const backendUser = authData.user;
         if (!backendUser) {
             // console.error('[AuthContext] backendUser is undefined in authData:', authData); // Entfernt
-            setUser({ username: "Gast", role: "guest" }); // Fallback
+            setUser({ username: "Gast", role: "guest", userID: null }); // Fallback mit userID
             return;
         }
         
         const newUserState = {
             ...backendUser,
-            role: mapRolleIdToRole(backendUser.rolle_id), // Korrigiert von backendUser.rolle_id zu backendUser.RolleID
+            username: backendUser.username, // Explizit Username setzen, falls nicht direkt im Spread enthalten
+            role: mapRolleIdToRole(backendUser.rolle_id), // Korrigiert und sichergestellt
+            userID: backendUser.user_id, // userID aus Backend-Daten übernehmen
         };
         setUser(newUserState);
     };
@@ -65,7 +68,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         delete API.defaults.headers.common['Authorization'];
-        setUser({ username: "Gast", role: "guest" });
+        setUser({ username: "Gast", role: "guest", userID: null }); // userID zurücksetzen
     };
 
     if (loading) {

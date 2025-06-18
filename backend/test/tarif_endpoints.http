@@ -1,12 +1,17 @@
-### Tarif Endpoints
+# Tarif Endpoints
+
+@host = http://127.0.0.1:5000
+@baseUrl = {{host}}/api
+
+###
 
 # Get all Tarife
-GET http://127.0.0.1:5000/tarif/
+GET {{baseUrl}}/tarife
 
 ###
 
 # Create a new Tarif
-POST http://127.0.0.1:5000/tarif/
+POST {{baseUrl}}/tarife
 Content-Type: application/json
 
 {
@@ -18,7 +23,7 @@ Content-Type: application/json
 ###
 
 # Create another Tarif
-POST http://127.0.0.1:5000/tarif/
+POST {{baseUrl}}/tarife
 Content-Type: application/json
 
 {
@@ -30,12 +35,12 @@ Content-Type: application/json
 ###
 
 # Get specific Tarif by ID
-GET http://127.0.0.1:5000/tarif/1
+GET {{baseUrl}}/tarife/1
 
 ###
 
 # Update specific Tarif
-PUT http://127.0.0.1:5000/tarif/1
+PUT {{baseUrl}}/tarife/1
 Content-Type: application/json
 
 {
@@ -47,4 +52,4 @@ Content-Type: application/json
 ###
 
 # Delete specific Tarif
-DELETE http://127.0.0.1:5000/tarif/2
+DELETE {{baseUrl}}/tarife/2
