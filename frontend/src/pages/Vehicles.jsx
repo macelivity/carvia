@@ -163,13 +163,8 @@ export default function Vehicles() {
         setError('');
 
         const params = new URLSearchParams();
-        // Radius is a frontend filter, not sent to backend
-        ['start_datum', 'end_datum', 'hersteller', 'fahrzeugtyp', 'getriebeart', 'sitze', 'stundenpreis'].forEach(key => {
-            if (filtersToUse[key]) {
-                params.append(key, filtersToUse[key]);
-            }
-        });
-
+		params.append('start_datum', filtersToUse.start_datum);
+		params.append('end_datum', filtersToUse.end_datum);
 
         getFilteredVehicles(params)
             .then(async res => {
@@ -226,6 +221,14 @@ export default function Vehicles() {
 	const executeUpdateVehicles = (filtersToUse) => {
 		const vehiclesToDisplay = [];
 		for (const vehicle of vehicles) {
+			if (filtersToUse.hersteller && vehicle.Hersteller !== filtersToUse.hersteller) continue;
+			if (filtersToUse.modell && vehicle.ModellName !== filtersToUse.modell) continue;
+			if (filtersToUse.fahrzeugtyp && vehicle.Fahrzeugtyp !== filtersToUse.fahrzeugtyp) continue;
+			if (filtersToUse.getriebeart && vehicle.Getriebeart !== filtersToUse.getriebeart) continue;
+			if (filtersToUse.sitze && vehicle.Sitze < parseInt(filtersToUse.sitze)) continue;
+			if (filtersToUse.stundenpreis && vehicle.Stundenpreis > parseFloat(filtersToUse.stundenpreis)) continue;
+
+
 			if (vehicle.latitude && vehicle.longitude) {
 				// Apply radius filter if searchNowAvailable, radius is set, and start coordinates are available
 				if (filtersToUse.radius && pickupLocationCoords) {
@@ -284,7 +287,7 @@ export default function Vehicles() {
 		} else {
 			setVehiclesToDisplay([]);
 		}
-	}, [vehicles, currentActiveFilters]);
+	}, [vehicles]);
 
     const handleFilterChange = (e) => {
         setCurrentActiveFilters(prev => ({
@@ -315,7 +318,15 @@ export default function Vehicles() {
 
     const handleApplyFilter = () => {
         setIsFilterModalOpen(false);
+		executeUpdateVehicles(currentActiveFilters);
     };
+
+	const handleRadiusChange = (e) => {
+		let newFilter = { ...currentActiveFilters, radius: e.target.value };
+        setCurrentActiveFilters(newFilter);
+		executeUpdateVehicles(newFilter);
+    };
+
 
     const handleResetFiltersInModal = () => {
         const newFilters = { // Keep mandatory filters like dates and location details
@@ -369,7 +380,7 @@ export default function Vehicles() {
 								type="number"
 								name="radius"
 								value={currentActiveFilters.radius}
-								onChange={handleFilterChange}
+								onChange={handleRadiusChange}
 								placeholder="z.B. 10"
 								variant="outlined"
 								className="w-full sm:w-48"
