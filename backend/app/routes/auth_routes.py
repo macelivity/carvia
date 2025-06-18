@@ -11,11 +11,12 @@ def register():
     data = request.get_json()
     
     # Validate required fields
-    required_fields = ['username', 'password', 'vorname', 'nachname', 'geburtsdatum']
+    required_fields = ['email', 'username', 'password', 'vorname', 'nachname', 'geburtsdatum', 'iban', 'bic', 'plz', 'ort', 'strasse' ,'hausnummer']
     for field in required_fields:
         if not data.get(field):
             return jsonify({"msg": f"Missing required field: {field}"}), 400
-    
+
+    email = data.get("email")
     username = data.get("username")
     password = data.get("password")
     

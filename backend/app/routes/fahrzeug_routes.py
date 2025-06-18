@@ -1,17 +1,20 @@
+from datetime import datetime # Sicherstellen, dass datetime importiert ist
 from flask import Blueprint, request, jsonify
 from app.models.fahrzeug_ops import FahrzeugOps
-from datetime import datetime # Import für Datumskonvertierung
+from app.models.geodatum_ops import GeodatumOps # Import für Geodaten
+from app.models.rolle_ops import RolleOps # Import für Rollenoperationen
+from flask_jwt_extended import jwt_required, get_jwt_identity # Import für Autorisierung
 
 # Expose the blueprint as 'bp' for test imports
 bp = Blueprint("fahrzeug", __name__, url_prefix="/fahrzeug")
 
 @bp.route("/", methods=["GET"])
-def list_fahrzeugs():
-    fahrzeugs = FahrzeugOps.get_all()
-    return jsonify(fahrzeugs)
+def list_fahrzeuge():
+    fahrzeuge = FahrzeugOps.get_all_detailed()
+    return jsonify(fahrzeuge)
 
 @bp.route("/filter", methods=["GET"])
-def list_filtered_fahrzeugs():
+def list_filtered_fahrzeuge():
     """
     Gibt eine gefilterte Liste von Fahrzeugen zurück.
     Mögliche Query-Parameter:
@@ -22,52 +25,28 @@ def list_filtered_fahrzeugs():
     - getriebeart (string)
     - sitze (integer)
     - stundenpreis (float)
-    - abholort (string)
-    - rueckgabeort (string)
     """
     try:
-        start_datum_str = request.args.get("start_datum")
-        end_datum_str = request.args.get("end_datum")
-        
-        # Konvertiere Datumsstrings zu datetime-Objekten, falls vorhanden
-        # Die get_filtered Methode erwartet Strings, aber eine Validierung hier ist gut
-        start_datum = None
-        if start_datum_str:
-            try:
-                start_datum = datetime.fromisoformat(start_datum_str)
-            except ValueError:
-                return jsonify({"error": "Ungültiges Format für start_datum. Bitte YYYY-MM-DDTHH:MM:SS verwenden."}), 400
-        
-        end_datum = None
-        if end_datum_str:
-            try:
-                end_datum = datetime.fromisoformat(end_datum_str)
-            except ValueError:
-                return jsonify({"error": "Ungültiges Format für end_datum. Bitte YYYY-MM-DDTHH:MM:SS verwenden."}), 400
-
-        # Hole weitere Filterparameter
+        start_datum = request.args.get("start_datum")
+        end_datum = request.args.get("end_datum")
         hersteller = request.args.get("hersteller")
         fahrzeugtyp = request.args.get("fahrzeugtyp")
         getriebeart = request.args.get("getriebeart")
         sitze_str = request.args.get("sitze")
         stundenpreis_str = request.args.get("stundenpreis")
-        abholort = request.args.get("abholort")
-        rueckgabeort = request.args.get("rueckgabeort")
 
         sitze = int(sitze_str) if sitze_str else None
         stundenpreis = float(stundenpreis_str) if stundenpreis_str else None
 
         # Übergebe die originalen Strings für Datum an get_filtered, da die Methode diese erwartet
         fahrzeuge = FahrzeugOps.get_filtered(
-            start_datum=start_datum_str, 
-            end_datum=end_datum_str,
+            start_datum=start_datum, 
+            end_datum=end_datum,
             hersteller=hersteller,
             fahrzeugtyp=fahrzeugtyp,
             getriebeart=getriebeart,
             sitze=sitze,
-            stundenpreis=stundenpreis,
-            abholort=abholort,
-            rueckgabeort=rueckgabeort
+            stundenpreis=stundenpreis
         )
         return jsonify(fahrzeuge), 200
     except ValueError as ve: # Für int/float Konvertierungsfehler
@@ -88,7 +67,7 @@ def create_fahrzeug():
 
 @bp.route("/<int:fahrzeug_id>", methods=["GET"])
 def get_fahrzeug(fahrzeug_id):
-    fahrzeug = FahrzeugOps.get_by_id(fahrzeug_id)
+    fahrzeug = FahrzeugOps.get_by_id_detailed(fahrzeug_id)
     if not fahrzeug:
         return jsonify({"error": "Not found"}), 404
     return jsonify(fahrzeug)
@@ -109,3 +88,50 @@ def delete_fahrzeug(fahrzeug_id):
         return jsonify({"error": "Not found"}), 404
     FahrzeugOps.delete(fahrzeug_id)
     return jsonify({"msg": "Fahrzeug deleted"}), 204
+
+@bp.route("/<int:fahrzeug_id>/location", methods=["GET"])
+@jwt_required()
+def get_fahrzeug_location(fahrzeug_id):
+    """
+    Gibt die aktuelle oder erwartete Position eines Fahrzeugs zurück.
+    Akzeptiert einen optionalen Query-Parameter 'time' (ISO-Format, z.B. YYYY-MM-DDTHH:MM:SS).
+    Zugriffsregeln:
+    - Manager: Immer Zugriff.
+    - User: Nur Zugriff, wenn das Fahrzeug zum angefragten Zeitpunkt (oder aktuell) nicht gebucht ist.
+    """
+    user_id = int(get_jwt_identity())
+    role_entry = RolleOps.get_by_user_id(user_id)
+
+    if not role_entry:
+        return jsonify({"error": "Zugriff verweigert: Benutzerrolle nicht gefunden."}), 401
+
+    user_role = role_entry['Bedeutung']
+
+    if user_role not in ["User", "Manager"]:
+        return jsonify({"error": "Zugriff verweigert: Ungültige Rolle."}), 403
+
+    fahrzeug = FahrzeugOps.get_by_id(fahrzeug_id)
+    if not fahrzeug:
+        return jsonify({"error": "Fahrzeug nicht gefunden."}), 404
+
+    date_param_str = request.args.get("date")
+    query_time_iso_str = datetime.now().isoformat() # Standard ist die aktuelle Zeit
+
+    if date_param_str:
+        try:
+            datetime.fromisoformat(date_param_str.replace('Z', '+00:00'))
+            query_time_iso_str = date_param_str
+        except ValueError:
+            return jsonify({"error": "Ungültiges Zeitformat für 'time'. Bitte ISO-Format verwenden (z.B. YYYY-MM-DDTHH:MM:SS)."}), 400
+
+    # Autorisierungslogik: User dürfen nur zugreifen, wenn Fahrzeug nicht gebucht ist zum query_time_iso_str
+    if user_role == "User":
+        if FahrzeugOps.is_booked_at_time(fahrzeug_id, query_time_iso_str):
+            return jsonify({"error": f"Zugriff auf Fahrzeugposition verweigert, da das Fahrzeug zum Zeitpunkt {query_time_iso_str} gebucht ist."}), 403
+
+    # Datenabruf basierend darauf, ob 'time' angefragt wurde
+    # Erwartete Position für den gegebenen Zeitpunkt
+    location_data = FahrzeugOps.get_target_destination(fahrzeug_id, query_time_iso_str if date_param_str else datetime.now().isoformat())
+    if not location_data:
+        return jsonify({"error": f"Keine erwarteten Positionsdaten für Fahrzeug {fahrzeug_id} zum Zeitpunkt {query_time_iso_str} gefunden."}), 404
+    return jsonify(location_data), 200
