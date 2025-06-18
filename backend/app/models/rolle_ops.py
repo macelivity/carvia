@@ -16,6 +16,18 @@ class RolleOps:
         return dict(result) if result else None
         
     @staticmethod
+    def get_by_user_id(user_id):
+        """Holt die Rolle eines Nutzers anhand der UserID"""
+        with get_db() as conn:
+            result = conn.execute("""
+                SELECT Rolle.*
+                FROM Rolle
+                JOIN Nutzer ON Rolle.RolleID = Nutzer.RolleID
+                WHERE Nutzer.UserID = ?
+            """, (user_id,)).fetchone()
+        return dict(result) if result else None
+
+    @staticmethod
     def create(bedeutung):
         """Erstellt eine neue Rolle"""
         with get_db() as conn:

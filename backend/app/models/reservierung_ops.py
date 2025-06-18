@@ -3,15 +3,23 @@ from app.db import get_db
 from datetime import datetime
 
 class ReservierungOps:
+
     @staticmethod
-    def create(user_id, fahrzeug_id, start_datum, end_datum, rechnung_id, tarif_id, abholort, rueckgabeort):
+    def get_all():
+        """Holt alle Reservierungen aus der Datenbank."""
+        with get_db() as conn:
+            result = conn.execute("SELECT * FROM Reservierung").fetchall()
+        return [dict(row) for row in result]
+
+    @staticmethod
+    def create(user_id, fahrzeug_id, start_datum, end_datum, rechnung_id, tarif_id, abholort, abholplz, rueckgabeort, rueckgabeplz):
         """Erstellt eine neue Reservierung."""
         try:
             with get_db() as conn:
                 cursor = conn.execute("""
-                    INSERT INTO Reservierung (UserID, FahrzeugID, StartDatum, EndDatum, RechnungID, TarifID, Abholort, Rueckgabeort)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, (user_id, fahrzeug_id, start_datum, end_datum, rechnung_id, tarif_id, abholort, rueckgabeort))
+                    INSERT INTO Reservierung (UserID, FahrzeugID, StartDatum, EndDatum, RechnungID, TarifID, Abholort, AbholPlz, Rueckgabeort, RueckgabePlz)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (user_id, fahrzeug_id, start_datum, end_datum, rechnung_id, tarif_id, abholort, abholplz, rueckgabeort, rueckgabeplz))
                 reservierungs_id = cursor.lastrowid
                 conn.commit()
                 return reservierungs_id
@@ -23,14 +31,14 @@ class ReservierungOps:
             return None
 
     @staticmethod
-    def update(reservierung_id, fahrzeug_id, user_id, rechnung_id, tarif_id, start_datum, end_datum, abholort, rueckgabeort):
+    def update(reservierung_id, fahrzeug_id, user_id, rechnung_id, tarif_id, start_datum, end_datum, abholort, abholplz, rueckgabeort, rueckgabeplz):
         """Aktualisiert eine Reservierung"""
         with get_db() as conn:
             conn.execute("""
                 UPDATE Reservierung
-                SET FahrzeugID = ?, UserID = ?, RechnungID = ?, TarifID = ?, StartDatum = ?, EndDatum = ?, Abholort = ?, Rueckgabeort = ?
+                SET FahrzeugID = ?, UserID = ?, RechnungID = ?, TarifID = ?, StartDatum = ?, EndDatum = ?, Abholort = ?, AbholPlz = ?, Rueckgabeort = ?, RueckgabePlz = ?
                 WHERE ReservierungID = ?
-            """, (fahrzeug_id, user_id, rechnung_id, tarif_id, start_datum, end_datum, abholort, rueckgabeort, reservierung_id))
+            """, (fahrzeug_id, user_id, rechnung_id, tarif_id, start_datum, end_datum, abholort, abholplz, rueckgabeort, rueckgabeplz, reservierung_id))
             conn.commit()
 
     @staticmethod
