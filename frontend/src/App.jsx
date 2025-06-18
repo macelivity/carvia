@@ -8,6 +8,7 @@ import Vehicles from './pages/Vehicles';
 import Homepage from './pages/Homepage';
 import Booking from './pages/Booking';
 import VehicleSearch from './pages/VehicleSearch';
+import VehicleManagement from './pages/VehicleManagement';
 
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
 					<Route path="/register" element={<Register />} />
 					<Route path="/reservations" element={<Reservations />} />
 					<Route path="/vehicles" element={<Vehicles />} />
+					<Route path="/vehicle-management" element={<VehicleManagement />} />
 					<Route path="/booking/:vehicle_id" element={<Booking />} />
 					<Route path="/search" element={<VehicleSearch />} />
 				</Routes>
