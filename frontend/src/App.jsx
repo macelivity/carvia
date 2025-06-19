@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import Reservations from './pages/Reservations';
 import Vehicles from './pages/Vehicles';
 import Homepage from './pages/Homepage';
+import Account from './pages/Account';
 
 
 export default function App() {
