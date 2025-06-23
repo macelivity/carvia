@@ -75,6 +75,7 @@ export default function VehicleManagement() {
             });
         } catch {
             setError('Fehler beim Speichern.');
+            window.alert('Fehler beim Speichern des Fahrzeugs.\nBitte versuchen Sie es später erneut.');
         }
         setSaving(false);
     };
@@ -93,47 +94,39 @@ export default function VehicleManagement() {
                     {vehicles.map(vehicle => {
                         const edit = vehicleEdits[vehicle.FahrzeugID] || {};
                         return (
-                            <Grid item xs={12} md={6} key={vehicle.FahrzeugID}>
+                            <Grid item size={9} xs={12} md={6} key={vehicle.FahrzeugID}>
                                 <Paper sx={{ p: 2 }}>
-                                    <Typography variant="h6">{vehicle.ModellName} ({vehicle.Kennzeichen})</Typography>
+                                    <Typography variant="h6">{`${vehicle.Hersteller} ${vehicle.ModellName} (${vehicle.Kennzeichen})`}</Typography>
                                     <TextField
-                                        label="Hersteller"
-                                        value={edit.Hersteller ?? vehicle.Hersteller}
-                                        onChange={e => handleEditChange(vehicle.FahrzeugID, 'Hersteller', e.target.value)}
+                                        label="Basispreis"
+                                        value={edit.Stundenpreis ?? vehicle.Stundenpreis}
+                                        onChange={e => handleEditChange(vehicle.FahrzeugID, 'Stundenpreis', e.target.value)}
                                         fullWidth sx={{ mt: 1 }}
+                                        type="number"
+                                        InputProps={{ inputProps: { min: 0, step: 0.01 } }}
                                     />
-                                    <TextField
-                                        label="Modell"
-                                        value={edit.ModellName ?? vehicle.ModellName}
-                                        onChange={e => handleEditChange(vehicle.FahrzeugID, 'ModellName', e.target.value)}
-                                        fullWidth sx={{ mt: 1 }}
-                                    />
-                                    <TextField
-                                        label="Kennzeichen"
-                                        value={edit.Kennzeichen ?? vehicle.Kennzeichen}
-                                        onChange={e => handleEditChange(vehicle.FahrzeugID, 'Kennzeichen', e.target.value)}
-                                        fullWidth sx={{ mt: 1 }}
-                                    />
-                                    <FormControlLabel
-                                        control={
-                                            <Switch
-                                                checked={edit.Aktiv ?? vehicle.Aktiv}
-                                                onChange={e => handleEditChange(vehicle.FahrzeugID, 'Aktiv', e.target.checked)}
-                                                color="primary"
-                                            />
-                                        }
-                                        label={edit.Aktiv ?? vehicle.Aktiv ? "Verfügbar" : "Nicht verfügbar"}
-                                        sx={{ mt: 1 }}
-                                    />
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        sx={{ mt: 2 }}
-                                        onClick={() => handleSave(vehicle.FahrzeugID)}
-                                        disabled={saving}
-                                    >
-                                        Speichern
-                                    </Button>
+                                    <div className='flex flex-row justify-between'>
+                                        <FormControlLabel
+                                            control={
+                                                <Switch
+                                                    checked={edit.Aktiv ?? vehicle.Aktiv}
+                                                    onChange={e => handleEditChange(vehicle.FahrzeugID, 'Aktiv', e.target.checked)}
+                                                    color="primary"
+                                                />
+                                            }
+                                            label={edit.Aktiv ?? vehicle.Aktiv ? "Verfügbar" : "Nicht verfügbar"}
+                                            sx={{ mt: 1 }}
+                                        />
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            sx={{ mt: 2 }}
+                                            onClick={() => handleSave(vehicle.FahrzeugID)}
+                                            disabled={saving}
+                                        >
+                                            Speichern
+                                        </Button>
+                                    </div>
                                 </Paper>
                             </Grid>
                         );

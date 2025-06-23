@@ -7,7 +7,7 @@
 ###
 
 # GET all fahrzeugs
-GET {{baseUrl}}/fahrzeug/
+GET {{baseUrl}}/fahrzeug?detailed=true
 
 ###
 

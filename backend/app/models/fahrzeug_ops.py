@@ -7,7 +7,7 @@ class FahrzeugOps:
     def get_all():
         """Holt alle Fahrzeuge aus der Datenbank"""
         with get_db() as conn:
-            result = conn.execute("SELECT * FROM Fahrzeug JOIN Modell").fetchall()
+            result = conn.execute("SELECT * FROM Fahrzeug").fetchall()
         return [dict(row) for row in result]
 
     @staticmethod
@@ -52,7 +52,7 @@ class FahrzeugOps:
         """Holt alle Fahrzeuge mit Modellinformationen aus der Datenbank"""
         with get_db() as conn:
             result = conn.execute("""
-                SELECT Fahrzeug.*, Modell.Hersteller, Modell.Fahrzeugtyp, Modell.Getriebeart, Modell.Sitze, Modell.Stundenpreis
+                SELECT Fahrzeug.*, Modell.Hersteller, Modell.ModellName, Modell.Hersteller, Modell.Fahrzeugtyp, Modell.Getriebeart, Modell.Kraftstoffart, Modell.Leistung, Modell.Türen, Modell.Sitze, Modell.Kofferraumvolumen, Modell.Stundenpreis
                 FROM Fahrzeug
                 JOIN Modell ON Fahrzeug.ModellID = Modell.ModellID
             """).fetchall()
@@ -63,7 +63,7 @@ class FahrzeugOps:
         """Holt ein Fahrzeug mit Modellinformationen nach ID"""
         with get_db() as conn:
             result = conn.execute("""
-                SELECT Fahrzeug.*, Modell.Hersteller, Modell.Fahrzeugtyp, Modell.Getriebeart, Modell.Sitze, Modell.Stundenpreis
+                SELECT Fahrzeug.*, Modell.Hersteller, Modell.ModellName, Modell.Fahrzeugtyp, Modell.Getriebeart, Modell.Kraftstoffart, Modell.Leistung, Modell.Türen, Modell.Sitze, Modell.Kofferraumvolumen, Modell.Stundenpreis
                 FROM Fahrzeug
                 JOIN Modell ON Fahrzeug.ModellID = Modell.ModellID
                 WHERE FahrzeugID = ?

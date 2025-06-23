@@ -10,7 +10,11 @@ bp = Blueprint("fahrzeug", __name__, url_prefix="/fahrzeug")
 
 @bp.route("/", methods=["GET"])
 def list_fahrzeuge():
-    fahrzeuge = FahrzeugOps.get_all_detailed()
+    detailed = request.args.get("detailed")
+    if detailed and detailed.lower() == "true":
+        fahrzeuge = FahrzeugOps.get_all_detailed()
+    else:
+        fahrzeuge = FahrzeugOps.get_all()
     return jsonify(fahrzeuge)
 
 @bp.route("/filter", methods=["GET"])
