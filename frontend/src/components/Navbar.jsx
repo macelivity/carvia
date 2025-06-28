@@ -11,11 +11,12 @@ export default function Navbar() {
 			<Link to="/search">Fahrzeuge</Link>
 				{user.role !== "guest" ? (
 					<>
+						<Link to="/account">Account</Link>
 						<Link to="/reservations">Reservierungen</Link>
 						<button onClick={logout}>Logout</button>
 					</>
 				) : (
-					<>
+					<>	
 						<Link to="/login">Login</Link>
 						<Link to="/register">Registrieren</Link>
 					</>
