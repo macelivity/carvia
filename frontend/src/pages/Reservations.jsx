@@ -27,8 +27,6 @@ export default function Reservations() {
         const past = [];
 
         allReservations.forEach(r => {
-          // Annahme: r.Reservierungsende und r.Reservierungsbeginn sind gültige Datumsstrings
-          // Anpassung an die Spaltennamen aus db.py: StartDatum, EndDatum
           const endDate = new Date(r.EndDatum); 
           if (endDate > now) {
             future.push(r);
@@ -72,16 +70,18 @@ export default function Reservations() {
         {futureReservations.length > 0 ? (
           <ul className="space-y-4">
             {futureReservations.map(r => (
-              <li key={r.ReservierungsID} className="border p-4 rounded-lg shadow bg-white">
-                <p className="font-semibold">Reservierungs-ID: {r.ReservierungsID}</p>
-                <p>Fahrzeug-ID: {r.FahrzeugID} (Tarif-ID: {r.TarifID})</p> 
-                {/* Annahme: ModellID ist nicht mehr direkt in Reservierung, ggf. TarifID anzeigen */}
-                <p>Zeitraum: {formatDate(r.StartDatum)} – {formatDate(r.EndDatum)}</p>
-                {/* Status und Gesamtkosten sind nicht mehr in der DB-Struktur von Reservierung gemäß db.py */}
-                {/* <p>Status: {r.Status || 'N/A'}</p> */}
-                {/* {r.Gesamtkosten !== null && r.Gesamtkosten !== undefined && ( */}
-                {/*   <p>Geschätzte Kosten: {r.Gesamtkosten.toFixed(2)} €</p> */}
-                {/* )} */}
+              <li key={r.ReservierungsID} className="border p-4 rounded-lg shadow bg-white flex justify-between items-center">
+                <div>
+                  <p className="font-semibold">Reservierungs-ID: {r.ReservierungsID}</p>
+                  <p>Fahrzeug-ID: {r.FahrzeugID} (Tarif-ID: {r.TarifID})</p> 
+                  <p>Zeitraum: {formatDate(r.StartDatum)} – {formatDate(r.EndDatum)}</p>
+                </div>
+                <Link
+                  to={`/rechnung/${r.ReservierungsID}`}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                >
+                  Rechnung einsehen
+                </Link>
               </li>
             ))}
           </ul>
@@ -103,11 +103,18 @@ export default function Reservations() {
         {pastReservations.length > 0 ? (
           <ul className="space-y-4">
             {pastReservations.map(r => (
-              <li key={r.ReservierungsID} className="border p-4 rounded-lg shadow bg-gray-50">
-                <p className="font-semibold">Reservierungs-ID: {r.ReservierungsID}</p>
-                <p>Fahrzeug-ID: {r.FahrzeugID} (Tarif-ID: {r.TarifID})</p>
-                <p>Zeitraum: {formatDate(r.StartDatum)} – {formatDate(r.EndDatum)}</p>
-                {/* Status und Gesamtkosten sind nicht mehr in der DB-Struktur von Reservierung gemäß db.py */}
+              <li key={r.ReservierungsID} className="border p-4 rounded-lg shadow bg-gray-50 flex justify-between items-center">
+                <div>
+                  <p className="font-semibold">Reservierungs-ID: {r.ReservierungsID}</p>
+                  <p>Fahrzeug-ID: {r.FahrzeugID} (Tarif-ID: {r.TarifID})</p>
+                  <p>Zeitraum: {formatDate(r.StartDatum)} – {formatDate(r.EndDatum)}</p>
+                </div>
+                <Link
+                  to={`/rechnung/${r.ReservierungsID}`}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                >
+                  Rechnung einsehen
+                </Link>
               </li>
             ))}
           </ul>
