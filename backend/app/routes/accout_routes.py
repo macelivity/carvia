@@ -10,15 +10,15 @@ def get_current_user():
     return UserOps.get_user_by_id(current_user_id)
 
 # Route 1: Alle Nutzer mit Rolle "Manager" oder "Customer Support" (nur für Admin)
-@bp.route("/managers-support", methods=["GET"])
+@bp.route("/empolyee", methods=["GET"])
 @jwt_required()
 def get_managers_and_support():
-    """Gibt alle Nutzer mit Rolle 'Manager' oder 'Customer Support' zurück (nur für Admins)"""
+    """Gibt alle Nutzer mit Rolle 'Empolyee' zurück (nur für Admins)"""
     current_user = get_current_user()
-    if not current_user or current_user.get("RolleID") != 2:  # 2 = Admin
+    if not current_user or current_user.get("RolleID") != 2: 
         return jsonify({"msg": "Unauthorized"}), 403
 
-    users = UserOps.get_users_by_role_bedeutung(["Manager", "Customer Support"])
+    users = UserOps.get_users_by_role_bedeutung(["Employee"])
     user_list = []
     for user in users:
         user_data = user.copy()
@@ -28,13 +28,12 @@ def get_managers_and_support():
 
 # Route 2: Alle Nutzer mit Rolle "User" (nur für Manager oder Customer Support)
 @bp.route("/users", methods=["GET"])
-@jwt_required()
 def get_users_for_manager_support():
-    """Gibt alle Nutzer mit Rolle 'User' zurück (nur für Manager oder Customer Support)"""
+    """Gibt alle Nutzer mit Rolle 'User' zurück (Empolyee)"""
     current_user = get_current_user()
     # Hole die Rollenbezeichnung des aktuellen Nutzers
     rolle_bedeutung = UserOps.get_role_bedeutung_by_id(current_user.get("RolleID"))
-    if rolle_bedeutung not in ["Manager", "Customer Support"]:
+    if rolle_bedeutung != "Empolyee":
         return jsonify({"msg": "Unauthorized"}), 403
 
     users = UserOps.get_users_by_role_bedeutung(["User"])

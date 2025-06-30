@@ -15,12 +15,11 @@ const UserList = () => {
             try {
                 let endpoint = "";
                 if (user.role === "Admin") {
-                    endpoint = "/accounts/managers-support";
-                } else if (user.role === "Manager" || user.role === "Customer Support") {
-                    endpoint = "/accounts/users";
+                    endpoint = "/api/accounts/mitarbeiter";
+                } else if (user.role === "Mitarbeiter") {
+                    endpoint = "/api/accounts/users";
                 } else {
                     setError("Keine Berechtigung, Nutzer anzuzeigen.");
-                    setUsers([]); // Sicherstellen, dass users ein Array ist
                     setLoading(false);
                     return;
                 }
@@ -30,13 +29,7 @@ const UserList = () => {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                // Prüfen, ob response.data ein Array ist
-                if (Array.isArray(response.data)) {
-                    setUsers(response.data);
-                } else {
-                    setUsers([]); // Fallback: leeres Array
-                    setError("Keine Nutzer gefunden oder keine Berechtigung.");
-                }
+                setUsers(response.data);
             } catch (err) {
                 setError("Fehler beim Laden der Nutzer.");
                 setUsers([]); // Fallback: leeres Array

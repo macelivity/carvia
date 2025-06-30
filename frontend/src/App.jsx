@@ -11,6 +11,8 @@ import Booking from './pages/Booking';
 import VehicleSearch from './pages/VehicleSearch';
 import ShowAccount from './pages/SchowAccount'; 
 import Account from './pages/Account';
+import Datenschutz from './pages/Datenschutz';
+import Impressum from './pages/Impressum';
 
 
 export default function App() {
@@ -29,6 +31,8 @@ export default function App() {
 					<Route path="/search" element={<VehicleSearch />} />
 					<Route path="/account" element={<Account />} />
 					<Route path="/accounts" element={<ShowAccount />} />
+					<Route path="/datenschutz" element={<Datenschutz />} />
+					<Route path="/impressum" element={<Impressum />} />
 				</Routes>
 				<Footer />
 			</BrowserRouter>
