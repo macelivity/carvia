@@ -28,6 +28,46 @@ Content-Type: application/json
 }
 
 ###
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "Mitarbeiter",
+  "password": "Mitarbeiter123",
+  "vorname": "Max",
+  "nachname": "Mustermann",
+  "geburtsdatum": "1990-01-01",
+  "rolle_id": 3,
+  "hausnummer": "123",
+  "plz": "12345",
+  "ort": "Berlin",
+  "strasse": "Musterstraße",
+  "email": "m.m@m.m",
+  "iban": "mm",
+  "bic": "bic"
+}
+
+###
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "Admin",
+  "password": "Admin123",
+  "vorname": "Max",
+  "nachname": "Mustermann",
+  "geburtsdatum": "1990-01-01",
+  "rolle_id": 2,
+  "hausnummer": "123",
+  "plz": "12345",
+  "ort": "Berlin",
+  "strasse": "Musterstraße",
+    "email": "m.m@m.m",
+  "iban": "mm",
+  "bic": "bic"
+}
+
+###
 
 # Login user
 POST {{baseUrl}}/auth/login

@@ -20,6 +20,7 @@ const UserList = () => {
                     endpoint = "/accounts/users";
                 } else {
                     setError("Keine Berechtigung, Nutzer anzuzeigen.");
+                    setUsers([]); // Sicherstellen, dass users ein Array ist
                     setLoading(false);
                     return;
                 }
@@ -29,9 +30,16 @@ const UserList = () => {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                setUsers(response.data);
+                // Prüfen, ob response.data ein Array ist
+                if (Array.isArray(response.data)) {
+                    setUsers(response.data);
+                } else {
+                    setUsers([]); // Fallback: leeres Array
+                    setError("Keine Nutzer gefunden oder keine Berechtigung.");
+                }
             } catch (err) {
                 setError("Fehler beim Laden der Nutzer.");
+                setUsers([]); // Fallback: leeres Array
             }
             setLoading(false);
         };
