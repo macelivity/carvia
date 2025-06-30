@@ -82,6 +82,41 @@ class UserOps:
         return True
 
     @staticmethod
+    def update_user_fields(user_id, fields_dict):
+        """
+        Aktualisiert beliebige Felder eines Nutzers anhand eines Dictionarys.
+        :param user_id: Die ID des Nutzers
+        :param fields_dict: Dictionary mit zu ändernden Feldern
+        :return: True bei Erfolg, False sonst
+        """
+        if not fields_dict:
+            return False
+
+        db = get_db()
+        set_clauses = []
+        values = []
+        for key, value in fields_dict.items():
+            if key == "password":
+                # Passwort muss gehasht werden
+                import bcrypt
+                hashed_password = bcrypt.hashpw(value.encode('utf-8'), bcrypt.gensalt())
+                set_clauses.append("PasswordHash = ?")
+                values.append(hashed_password.decode('utf-8'))
+            elif key in ['Username', 'RolleID', 'Vorname', 'Nachname', 'Geburtsdatum', 
+                         'Führerschein', 'IBAN', 'BIC', 'HausNummer', 'PLZ', 'Ort', 'Strasse']:
+                set_clauses.append(f"{key} = ?")
+                values.append(value)
+        if not set_clauses:
+            return False
+
+        values.append(user_id)
+        query = f"UPDATE Nutzer SET {', '.join(set_clauses)} WHERE UserID = ?"
+        with db:
+            db.execute(query, values)
+            db.commit()
+        return True
+
+    @staticmethod
     def delete_user(user_id):
         """Löscht einen Nutzer"""
         db = get_db()
@@ -95,3 +130,32 @@ class UserOps:
         db = get_db()
         user = db.execute("SELECT UserID FROM Nutzer WHERE Username = ?", (username,)).fetchone()
         return user is not None
+
+    @staticmethod
+    def get_users_by_role_bedeutung(bedeutungen):
+        """
+        Gibt alle Nutzer zurück, deren Rolle.Bedeutung in der übergebenen Liste ist.
+        :param bedeutungen: Liste von Rollenbezeichnungen (z.B. ["Manager", "Customer Support"])
+        :return: Liste von Nutzer-Dictionaries
+        """
+        db = get_db()
+        # Hole alle Nutzer, deren RolleID zu einer Rolle mit passender Bedeutung gehört
+        query = """
+            SELECT n.*
+            FROM Nutzer n
+            JOIN Rolle r ON n.RolleID = r.RolleID
+            WHERE r.Bedeutung IN ({})
+        """.format(','.join(['?'] * len(bedeutungen)))
+        result = db.execute(query, bedeutungen).fetchall()
+        return [dict(row) for row in result]
+
+    @staticmethod
+    def get_role_bedeutung_by_id(rolle_id):
+        """
+        Gibt die Rollenbezeichnung (Bedeutung) zu einer RolleID zurück.
+        :param rolle_id: Die ID der Rolle
+        :return: String mit der Rollenbezeichnung oder None
+        """
+        db = get_db()
+        row = db.execute("SELECT Bedeutung FROM Rolle WHERE RolleID = ?", (rolle_id,)).fetchone()
+        return row["Bedeutung"] if row else None
