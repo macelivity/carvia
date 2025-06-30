@@ -12,6 +12,7 @@ import VehicleSearch from './pages/VehicleSearch';
 import VehicleManagement from './pages/VehicleManagement';
 import Impressum from './pages/Impressum';
 import Datenschutz from './pages/Datenschutz';
+import Account from './pages/Account';
 
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
 					<Route path="/" element={<Homepage />} />
 					<Route path="/login" element={<Login />} />
 					<Route path="/register" element={<Register />} />
+					<Route path='/account' element={<Account />} />
 					<Route path="/reservations" element={<Reservations />} />
 					<Route path="/vehicles" element={<Vehicles />} />
 					<Route path="/vehicle-management" element={<VehicleManagement />} />
@@ -32,6 +34,7 @@ export default function App() {
 					<Route path="/impressum" element={<Impressum />} />
 					<Route path="/datenschutz" element={<Datenschutz />} />
 				</Routes>
+				
 				<Footer />
 			</BrowserRouter>
 		</AuthProvider>

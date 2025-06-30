@@ -18,7 +18,14 @@ class ModellOps:
     @staticmethod
     def create(modell_name, hersteller, fahrzeugtyp, getriebeart, kraftstoffart, leistung, türen, sitze, kofferraumvolumen, stundenpreis):
         """Erstellt ein neues Modell"""
+        if hersteller == "VW":
+            hersteller = "Volkswagen"
         with get_db() as conn:
+            # Überprüfen, ob das Modell bereits existiert
+            existing_modell = conn.execute("SELECT * FROM Modell WHERE ModellName = ? AND Hersteller = ? AND Fahrzeugtyp = ? AND Getriebeart = ? AND Kraftstoffart = ? AND Leistung = ? AND Türen = ? AND Sitze = ? AND Kofferraumvolumen = ? AND Stundenpreis = ?",
+                                           (modell_name, hersteller, fahrzeugtyp, getriebeart, kraftstoffart, leistung, türen, sitze, kofferraumvolumen, stundenpreis)).fetchone()
+            if existing_modell:
+                return existing_modell['ModellID']  # Gibt die ID des existierenden Modells zurück
             cursor = conn.execute("""
                 INSERT INTO Modell (ModellName, Hersteller, Fahrzeugtyp, Getriebeart, Kraftstoffart, Leistung, Türen, Sitze, Kofferraumvolumen, Stundenpreis)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -30,6 +37,8 @@ class ModellOps:
     @staticmethod
     def update(modell_id, modell_name, hersteller, fahrzeugtyp, getriebeart, kraftstoffart, leistung, türen, sitze, kofferraumvolumen, stundenpreis):
         """Aktualisiert ein Modell"""
+        if hersteller == "VW":
+            hersteller = "Volkswagen"
         with get_db() as conn:
             conn.execute("""
                 UPDATE Modell

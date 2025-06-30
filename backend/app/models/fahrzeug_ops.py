@@ -133,6 +133,8 @@ class FahrzeugOps:
 
         if (datetime.now() - timedelta(minutes=15)) <= datetime.fromisoformat(date) <= (datetime.now() + timedelta(minutes=30)):
             geolocation = GeodatumOps.get_location_of_vehicle(fahrzeug_id)
+            if not geolocation:
+                return {"type": "None"}
             return {"type": "geolocation", "longitude": geolocation['Longitude'], "latitude": geolocation['Latitude']}
 
         with get_db() as conn:
@@ -147,4 +149,6 @@ class FahrzeugOps:
             return {"type": "plz", "plz": result['RueckgabePlz'], "ort": result['Rueckgabeort']}
         else:
             geolocation = GeodatumOps.get_location_of_vehicle(fahrzeug_id)
+            if not geolocation:
+                return {"type": "None"}
             return {"type": "geolocation", "longitude": geolocation['Longitude'], "latitude": geolocation['Latitude']}

@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
 	const { user, logout } = useAuth();
+	const navigate = useNavigate();
 
 	return (
 		<nav className="flex justify-between p-4 bg-blue-700 text-white">
@@ -18,7 +19,7 @@ export default function Navbar() {
 				<>
 						<Link to="/account">Account</Link>
 					<Link to="/reservations">Reservierungen</Link>
-					<button onClick={logout}>Logout</button>
+					<button onClick={() => { logout(); navigate('/'); }}>Logout</button>
 				</>
 			) : (
 				<>	
