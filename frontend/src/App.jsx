@@ -12,6 +12,8 @@ import VehicleSearch from './pages/VehicleSearch';
 import VehicleManagement from './pages/VehicleManagement';
 import Impressum from './pages/Impressum';
 import Datenschutz from './pages/Datenschutz';
+import ProtectedRoute from './components/ProtectedRoute';
+import NotFound from './pages/NotFound';
 import Account from './pages/Account';
 
 
@@ -26,13 +28,35 @@ export default function App() {
 					<Route path="/login" element={<Login />} />
 					<Route path="/register" element={<Register />} />
 					<Route path='/account' element={<Account />} />
-					<Route path="/reservations" element={<Reservations />} />
-					<Route path="/vehicles" element={<Vehicles />} />
+					<Route
+						path="/reservations"
+						element={
+							<ProtectedRoute allowedRoles={['Mitglied', 'Admin', 'Mitarbeiter']}>
+								<Reservations />
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/vehicles"
+						element={
+							<ProtectedRoute allowedRoles={['Mitglied', 'Admin', 'Mitarbeiter']}>
+								<Vehicles />
+							</ProtectedRoute>
+						}
+					/>
 					<Route path="/vehicle-management" element={<VehicleManagement />} />
-					<Route path="/booking/:vehicle_id" element={<Booking />} />
+					<Route
+						path="/booking/:vehicle_id"
+						element={
+							<ProtectedRoute allowedRoles={['Mitglied', 'Admin', 'Mitarbeiter']}>
+								<Booking />
+							</ProtectedRoute>
+						}
+					/>
 					<Route path="/search" element={<VehicleSearch />} />
 					<Route path="/impressum" element={<Impressum />} />
 					<Route path="/datenschutz" element={<Datenschutz />} />
+					<Route path="*" element={<NotFound />} />
 				</Routes>
 				
 				<Footer />
