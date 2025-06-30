@@ -44,12 +44,19 @@ export default function App() {
 							</ProtectedRoute>
 						}
 					/>
-					<Route path="/vehicle-management" element={<VehicleManagement />} />
 					<Route
 						path="/booking/:vehicle_id"
 						element={
 							<ProtectedRoute allowedRoles={['Mitglied', 'Admin', 'Mitarbeiter']}>
 								<Booking />
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/vehicle-management"
+						element={
+							<ProtectedRoute allowedRoles={['Mitarbeiter']}>
+								<VehicleManagement />
 							</ProtectedRoute>
 						}
 					/>
