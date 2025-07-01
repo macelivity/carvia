@@ -7,7 +7,7 @@
 ###
 
 # GET all fahrzeugs
-GET {{baseUrl}}/fahrzeug/
+GET {{baseUrl}}/fahrzeug?detailed=false
 
 ###
 
@@ -30,7 +30,7 @@ Content-Type: application/json
 ###
 
 # GET specific fahrzeug
-GET {{baseUrl}}/fahrzeug/2
+GET {{baseUrl}}/fahrzeug/22?detailed=true
 
 ###
 
@@ -48,6 +48,25 @@ Content-Type: application/json
   "LetzterService": "2024-06-15",
   "TuevDatum": "2025-12-31",
   "ErstzulassungsDatum": "2020-03-01"
+}
+
+###
+
+# PUT update fahrzeug
+PUT {{baseUrl}}/fahrzeug/22
+Content-Type: application/json
+
+{
+  "Aktiv": 1,
+  "ErstzulassungsDatum": "2023-01-18",
+  "FahrzeugID": 22,
+  "Kennzeichen": "HB-AB 103",
+  "Kilometerstand": 36500,
+  "LetzterService": "2025-06-28",
+  "ModellID": 12,
+  "Reifen": "4",
+  "Reperaturzustand": "Neuwagen",
+  "TuevDatum": "2025-06-27"
 }
 
 ###

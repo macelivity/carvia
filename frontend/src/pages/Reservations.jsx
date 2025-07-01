@@ -90,7 +90,7 @@ export default function Reservations() {
             <p className="text-gray-600 mb-2">Keine zukünftigen Reservierungen vorhanden.</p>
             <p className="text-gray-600">
               Möchten Sie verfügbare Fahrzeuge ansehen? 
-              <Link to="/vehicles" className="text-blue-600 hover:text-blue-800 underline ml-1">
+              <Link to="/search" className="text-blue-600 hover:text-blue-800 underline ml-1">
                 Zur Fahrzeugübersicht
               </Link>
             </p>
