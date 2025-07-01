@@ -10,7 +10,11 @@ bp = Blueprint("fahrzeug", __name__, url_prefix="/fahrzeug")
 
 @bp.route("/", methods=["GET"])
 def list_fahrzeuge():
-    fahrzeuge = FahrzeugOps.get_all_detailed()
+    detailed = request.args.get("detailed")
+    if detailed and detailed.lower() == "true":
+        fahrzeuge = FahrzeugOps.get_all_detailed()
+    else:
+        fahrzeuge = FahrzeugOps.get_all()
     return jsonify(fahrzeuge)
 
 @bp.route("/filter", methods=["GET"])
@@ -67,7 +71,11 @@ def create_fahrzeug():
 
 @bp.route("/<int:fahrzeug_id>", methods=["GET"])
 def get_fahrzeug(fahrzeug_id):
-    fahrzeug = FahrzeugOps.get_by_id_detailed(fahrzeug_id)
+    detailed = request.args.get("detailed")
+    if detailed and detailed.lower() == "true":
+        fahrzeug = FahrzeugOps.get_by_id_detailed(fahrzeug_id)
+    else:
+        fahrzeug = FahrzeugOps.get_by_id(fahrzeug_id)
     if not fahrzeug:
         return jsonify({"error": "Not found"}), 404
     return jsonify(fahrzeug)
@@ -75,11 +83,19 @@ def get_fahrzeug(fahrzeug_id):
 @bp.route("/<int:fahrzeug_id>", methods=["PUT"])
 def update_fahrzeug(fahrzeug_id):
     data = request.get_json()
-    if not FahrzeugOps.get_by_id(fahrzeug_id):
+    fahrzeug = FahrzeugOps.get_by_id(fahrzeug_id)
+    if not fahrzeug:
         return jsonify({"error": "Not found"}), 404
-    FahrzeugOps.update(fahrzeug_id, data["ModellID"], data["Kennzeichen"], data["Reperaturzustand"], data["Aktiv"],
-                     data["Reifen"], data["Kilometerstand"], data["LetzterService"], data["TuevDatum"],
-                     data["ErstzulassungsDatum"])
+    FahrzeugOps.update(fahrzeug_id,
+            data["ModellID"] if data.get("ModellID") else fahrzeug["ModellID"],
+            data["Kennzeichen"] if data.get("Kennzeichen") else fahrzeug["Kennzeichen"],
+            data["Reperaturzustand"] if data.get("Reperaturzustand") else fahrzeug["Reperaturzustand"],
+            data["Aktiv"] if data.get("Aktiv") else fahrzeug["Aktiv"],
+            data["Reifen"] if data.get("Reifen") else fahrzeug["Reifen"],
+            data["Kilometerstand"] if data.get("Kilometerstand") else fahrzeug["Kilometerstand"],
+            data["LetzterService"] if data.get("LetzterService") else fahrzeug["LetzterService"],
+            data["TuevDatum"] if data.get("TuevDatum") else fahrzeug["TuevDatum"],
+            data["ErstzulassungsDatum"] if data.get("ErstzulassungsDatum") else fahrzeug["ErstzulassungsDatum"])
     return jsonify({"msg": "Fahrzeug updated"})
 
 @bp.route("/<int:fahrzeug_id>", methods=["DELETE"])
