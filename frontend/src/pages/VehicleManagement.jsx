@@ -253,7 +253,7 @@ export default function VehicleManagement() {
                     {vehicles.map(vehicle => {
                         const edit = vehicleEdits[vehicle.FahrzeugID] || {};
                         return (
-                            <Grid item xs={12} key={vehicle.FahrzeugID}>
+                            <Grid item xs={12} key={vehicle.FahrzeugID} size={12}>
                                 <Accordion>
                                     <AccordionSummary
                                         expandIcon={<ExpandMoreIcon />}
