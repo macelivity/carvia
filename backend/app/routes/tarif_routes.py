@@ -11,7 +11,7 @@ def list_tarife():
 @bp.route("/", methods=["POST"])
 def create_tarif():
     data = request.get_json()
-    tarif_id = TarifOps.create(data["Name"], data["Freikilometer"], data["Versicherungsschutz"])
+    tarif_id = TarifOps.create(data["Name"], data["Freikilometer"], data["Versicherungsschutz"], data["Multiplikator"])
     return jsonify({"msg": f"Tarif with ID {tarif_id} added", "id": tarif_id}), 201
 
 @bp.route("/<int:tarif_id>", methods=["GET"])
@@ -26,7 +26,7 @@ def update_tarif(tarif_id):
     data = request.get_json()
     if not TarifOps.get_by_id(tarif_id):
         return jsonify({"error": "Not found"}), 404
-    TarifOps.update(tarif_id, data["Name"], data["Freikilometer"], data["Versicherungsschutz"])
+    TarifOps.update(tarif_id, data["Name"], data["Freikilometer"], data["Versicherungsschutz"], data["Multiplikator"])
     return jsonify({"msg": "Tarif updated"})
 
 @bp.route("/<int:tarif_id>", methods=["DELETE"])

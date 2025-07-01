@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.models.reservierung_ops import ReservierungOps
+from app.models.rechnung_ops import RechnungOps
+from datetime import datetime
 
 bp = Blueprint("reservierung", __name__)
 
@@ -27,6 +29,14 @@ def create_reservierung():
             rueckgabeort=data["Rueckgabeort"],
             rueckgabeplz=data["RueckgabePlz"],
             rechnung_id=0
+        )
+        rechnung = RechnungOps.create(
+            reservierung_id=reservierung_id,
+            user_id=data["UserID"],
+            fahrzeug_id=data["FahrzeugID"],
+            preis=data["Preis"],
+            bezahlt=False,
+            austellungsdatum=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
         return jsonify({"msg": f"Reservierung with ID {reservierung_id} added", "id": reservierung_id}), 201
     except Exception as e:
@@ -75,3 +85,10 @@ def get_reservierungen_by_user(user_id):
 def get_reservierungen_by_fahrzeug(fahrzeug_id):
     reservierungen = ReservierungOps.get_by_fahrzeug_id(fahrzeug_id)
     return jsonify(reservierungen)
+
+@bp.route("/<int:reservierung_id>/rechnung", methods=["GET"])
+def get_rechnung_by_reservierung(reservierung_id):
+    rechnung = RechnungOps.get_by_reservierung_id(reservierung_id)
+    if not rechnung:
+        return jsonify({"error": "Not found"}), 404
+    return jsonify(rechnung)

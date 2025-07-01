@@ -15,6 +15,28 @@ POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
+  "username": "Chrizzl",
+  "password": "sechallo",
+  "vorname": "Christian",
+  "nachname": "Zahn",
+  "geburtsdatum": "2004-04-18",
+  "rolle_id": 1,
+  "email": "christian@localhost.de",
+  "hausnummer": "17",
+  "plz": "28816",
+  "ort": "Stuhr",
+  "strasse": "Ricarda-Huch-Str. ",
+  "iban": "DE4309874087309401",
+  "bic": "COBAHAETTETIHRGERNE"
+}
+
+###
+
+# Register a new user
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
   "username": "mathias",
   "password": "sein_geburtstag",
   "vorname": "Mathias",

@@ -35,8 +35,3 @@ def delete_rechnung(rechnung_id):
         return jsonify({"error": "Not found"}), 404
     RechnungOps.delete(rechnung_id)
     return jsonify({"msg": "Rechnung deleted"}), 204
-
-@bp.route("/fahrzeug/<int:fahrzeug_id>", methods=["GET"])
-def get_rechnungen_by_fahrzeug(fahrzeug_id):
-    rechnungen = RechnungOps.get_by_fahrzeug_id(fahrzeug_id)
-    return jsonify(rechnungen)

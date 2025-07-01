@@ -138,7 +138,8 @@ def init_db():
             TarifID {primary_key},
             Name TEXT NOT NULL,
             Freikilometer INTEGER NOT NULL,
-            Versicherungsschutz TEXT NOT NULL
+            Versicherungsschutz TEXT NOT NULL,
+            Multiplikator {numeric_type} NOT NULL
         );
         """)
 
@@ -146,11 +147,16 @@ def init_db():
         db.execute(f"""
         CREATE TABLE IF NOT EXISTS Rechnung (
             RechnungID {primary_key},
+            ReservierungID INTEGER NOT NULL,
+            UserID INTEGER NOT NULL,
             FahrzeugID INTEGER NOT NULL,
+            Preis {numeric_type} NOT NULL,
             Bezahlt {boolean_type},
             Austellungsdatum {date_type}
         );
-        """)        # Tabelle: Reservierung
+        """)
+        
+        # Tabelle: Reservierung
         db.execute(f"""
         CREATE TABLE IF NOT EXISTS Reservierung (
             ReservierungID {primary_key},

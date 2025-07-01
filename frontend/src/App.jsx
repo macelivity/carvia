@@ -62,7 +62,7 @@ export default function App() {
 						}
 					/>
 					<Route path="/search" element={<VehicleSearch />} />
-					<Route path="/rechnung/:reservierungsId" element={<Rechnung />} />
+					<Route path="/rechnung" element={<Rechnung />} />
 					<Route path="/impressum" element={<Impressum />} />
 					<Route path="/datenschutz" element={<Datenschutz />} />
 					<Route path="*" element={<NotFound />} />

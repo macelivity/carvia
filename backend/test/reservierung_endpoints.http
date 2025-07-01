@@ -7,12 +7,12 @@
 ###
 
 # Get all Reservierungen
-GET {{baseUrl}}/reservations/
+GET {{baseUrl}}/reservierung/
 
 ###
 
 # Create a new Reservierung
-POST {{baseUrl}}/reservations/
+POST {{baseUrl}}/reservierung/
 Content-Type: application/json
 
 {
@@ -31,7 +31,7 @@ Content-Type: application/json
 ###
 
 # Create another Reservierung
-POST {{baseUrl}}/reservations/
+POST {{baseUrl}}/reservierung/
 Content-Type: application/json
 
 {
@@ -50,12 +50,12 @@ Content-Type: application/json
 ###
 
 # Get specific Reservierung by ID
-GET {{baseUrl}}/reservations/1
+GET {{baseUrl}}/reservierung/1
 
 ###
 
 # Update specific Reservierung
-PUT {{baseUrl}}/reservations/1
+PUT {{baseUrl}}/reservierung/1
 Content-Type: application/json
 
 {
@@ -70,14 +70,14 @@ Content-Type: application/json
 ###
 
 # Get all Reservierungen for a specific User
-GET {{baseUrl}}/reservations/user/1
+GET {{baseUrl}}/reservierung/6/rechnung
 
 ###
 
 # Get all Reservierungen for a specific Fahrzeug
-GET {{baseUrl}}/reservations/fahrzeug/1
+GET {{baseUrl}}/reservierung/fahrzeug/1
 
 ###
 
 # Delete specific Reservierung
-DELETE {{baseUrl}}/reservations/2
+DELETE {{baseUrl}}/reservierung/5/rechnung
