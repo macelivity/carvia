@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { getRechnungByReservierungsId } from '../api/api';
 
 export default function Rechnung() {
   const { reservierungsId } = useParams();
@@ -9,11 +10,9 @@ export default function Rechnung() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Passe den API-Endpunkt ggf. an dein Setup an!
-    fetch(`/api/rechnung/${reservierungsId}`)
-      .then(res => res.json())
-      .then(data => {
-        setRechnung(data);
+    getRechnungByReservierungsId(reservierungsId)
+      .then(res => {
+        setRechnung(res.data);
         setLoading(false);
       })
       .catch(() => setLoading(false));

@@ -53,6 +53,7 @@ class ReservierungOps:
         """Holt alle Reservierungen für einen Benutzer"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Reservierung WHERE UserID = ?", (user_id,)).fetchall()
+            print(result)
         return [dict(row) for row in result]
         
     @staticmethod
