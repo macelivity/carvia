@@ -11,7 +11,7 @@ export default function Navbar() {
 			<Link to="/search">Fahrzeuge</Link>
 				{user.role !== "guest" ? (
 					<>
-					{user.role !== "user" ? (
+					{user.role !== "Mitglied" ? (
 					<>
 						<Link to="/accounts">Nutzerübersicht</Link>
 					</>

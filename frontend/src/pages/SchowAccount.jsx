@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import axios from "axios";
+import { getMitarbeiter, getUsersForMitarbeiter } from '../api/api';
+import {
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, CircularProgress, Alert
+} from '@mui/material';
 
 const UserList = () => {
     const { user } = useAuth();
@@ -13,26 +16,20 @@ const UserList = () => {
             setLoading(true);
             setError("");
             try {
-                let endpoint = "";
+                let response;
                 if (user.role === "Admin") {
-                    endpoint = "/api/accounts/mitarbeiter";
+                    response = await getMitarbeiter();
                 } else if (user.role === "Mitarbeiter") {
-                    endpoint = "/api/accounts/users";
+                    response = await getUsersForMitarbeiter();
                 } else {
                     setError("Keine Berechtigung, Nutzer anzuzeigen.");
                     setLoading(false);
                     return;
                 }
-                const token = localStorage.getItem("accessToken");
-                const response = await axios.get(endpoint, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
                 setUsers(response.data);
             } catch (err) {
                 setError("Fehler beim Laden der Nutzer.");
-                setUsers([]); // Fallback: leeres Array
+                setUsers([]);
             }
             setLoading(false);
         };
@@ -40,37 +37,41 @@ const UserList = () => {
         fetchUsers();
     }, [user.role]);
 
-    if (loading) return <div>Laden...</div>;
-    if (error) return <div>{error}</div>;
+    if (loading) return <CircularProgress />;
+    if (error) return <Alert severity="error">{error}</Alert>;
 
     return (
         <div>
-            <h2 className="text-xl font-bold mb-4">Nutzerliste</h2>
+            <Typography variant="h5" component="h2" gutterBottom>
+                Nutzerliste
+            </Typography>
             {users.length === 0 ? (
-                <div>Keine Nutzer gefunden.</div>
+                <Typography>Keine Nutzer gefunden.</Typography>
             ) : (
-                <table className="min-w-full border">
-                    <thead>
-                        <tr>
-                            <th className="border px-2 py-1">UserID</th>
-                            <th className="border px-2 py-1">Username</th>
-                            <th className="border px-2 py-1">Vorname</th>
-                            <th className="border px-2 py-1">Nachname</th>
-                            <th className="border px-2 py-1">Rolle</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.map((u) => (
-                            <tr key={u.UserID}>
-                                <td className="border px-2 py-1">{u.UserID}</td>
-                                <td className="border px-2 py-1">{u.Username}</td>
-                                <td className="border px-2 py-1">{u.Vorname}</td>
-                                <td className="border px-2 py-1">{u.Nachname}</td>
-                                <td className="border px-2 py-1">{u.RolleID}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                <TableContainer component={Paper}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>UserID</TableCell>
+                                <TableCell>Username</TableCell>
+                                <TableCell>Vorname</TableCell>
+                                <TableCell>Nachname</TableCell>
+                                <TableCell>Rolle</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {users.map((u) => (
+                                <TableRow key={u.UserID}>
+                                    <TableCell>{u.UserID}</TableCell>
+                                    <TableCell>{u.Username}</TableCell>
+                                    <TableCell>{u.Vorname}</TableCell>
+                                    <TableCell>{u.Nachname}</TableCell>
+                                    <TableCell>{u.RolleID}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             )}
         </div>
     );

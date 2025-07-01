@@ -27,6 +27,8 @@ export const createReservation = (data) => API.post('/reservations', data);
 
 export const getFilteredVehicles = (params) => API.get(`/fahrzeug/filter?${params.toString()}`);
 export const getVehicleLocation = (vehicle_id, date) => API.get(`/fahrzeug/${vehicle_id}/location${date ? `?date=${date}` : ''}`);
+export const getMitarbeiter = () => API.get('/accounts/mitarbeiter');
+export const getUsersForMitarbeiter = () => API.get('/accounts/users');
 
 export default API;
 

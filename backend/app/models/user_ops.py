@@ -143,7 +143,7 @@ class UserOps:
         query = """
             SELECT n.*
             FROM Nutzer n
-            JOIN Rolle r ON n.RolleID = r.RolleID
+            INNER JOIN Rolle r ON n.RolleID = r.RolleID
             WHERE r.Bedeutung IN ({})
         """.format(','.join(['?'] * len(bedeutungen)))
         result = db.execute(query, bedeutungen).fetchall()

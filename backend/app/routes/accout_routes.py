@@ -4,6 +4,7 @@ from app.models.user_ops import UserOps
 
 bp = Blueprint("accounts", __name__, url_prefix="/accounts")
 
+@jwt_required()
 def get_current_user():
     """Hilfsfunktion: Holt den aktuellen Nutzer aus der DB"""
     current_user_id = int(get_jwt_identity())
@@ -28,12 +29,12 @@ def get_managers_and_support():
 
 # Route 2: Alle Nutzer mit Rolle "User" (nur für Manager oder Customer Support)
 @bp.route("/users", methods=["GET"])
+@jwt_required()
 def get_users_for_manager_support():
     """Gibt alle Nutzer mit Rolle 'User' zurück (Empolyee)"""
     current_user = get_current_user()
     # Hole die Rollenbezeichnung des aktuellen Nutzers
-    rolle_bedeutung = UserOps.get_role_bedeutung_by_id(current_user.get("RolleID"))
-    if rolle_bedeutung != "Empolyee":
+    if current_user.get("RolleID") != 3:
         return jsonify({"msg": "Unauthorized"}), 403
 
     users = UserOps.get_users_by_role_bedeutung(["User"])
