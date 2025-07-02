@@ -42,7 +42,7 @@ def get_reservierung(reservierung_id):
 @bp.route("/<int:reservierung_id>", methods=["PUT"])
 def update_reservierung(reservierung_id):
     data = request.get_json()
-    if not ReservierungOps.get_by_id(reservierung_id):
+    if not ReservierungOps.get_by_user_id(reservierung_id):
         return jsonify({"error": "Not found"}), 404
     ReservierungOps.update(
         reservierung_id, 
