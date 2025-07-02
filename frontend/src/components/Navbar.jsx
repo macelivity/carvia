@@ -15,17 +15,17 @@ export default function Navbar() {
                 <Link to="/search">Fahrzeuge</Link>
                 {user.role === "Mitarbeiter" && (
                     <>
-                    <Link to="/vehicle-management">Fahrzeugverwaltung</Link>
-                    <Link to="/management/users">Mitglieder bearbeiten</Link>
-                        </>
+                        <Link to="/vehicle-management">Fahrzeugverwaltung</Link>
+                        <Link to="/user-management">Mitgliederverwaltung</Link>
+                    </>
                 )}
                 {user.role !== "guest" ? (
                     <>
                         <Link to="/account">Account</Link>
                         <Link to="/reservations">Reservierungen</Link>
-                        
+
                         {user.role === "Admin" && (
-                            <Link to="/management/mitarbeiter">Mitarbeiter verwalten</Link>
+                            <Link to="/mitarbeiter-management">Mitarbeiter verwalten</Link>
                         )}
                         <button onClick={() => { logout(); navigate('/'); }}>Logout</button>
                     </>

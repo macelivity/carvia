@@ -8,11 +8,6 @@ export default function EmployeeManagement() {
   const [employees, setEmployees] = useState([]);
   const [editUser, setEditUser] = useState(null);
 
-  // Nur Admin darf diese Seite sehen
-  if (!user || user.RolleID !== 2) {
-    return <Navigate to="/" replace />;
-  }
-
   // Mitarbeiter laden
   const fetchEmployees = () => {
     fetch("/api/auth/users", {

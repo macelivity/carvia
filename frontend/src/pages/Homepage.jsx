@@ -33,12 +33,12 @@ export default function Homepage() {
                             )}
                             {(user.role === 'Admin') && (
                                 <>
-                                    <Link to="/management/mitarbeiter" className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Mitarbeiter verwalten</Link>
+                                    <Link to="/mitarbeiter-management" className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Mitarbeiter verwalten</Link>
                                 </>
                             )}
                             {(user.role === 'Mitarbeiter') && (
                                 <>
-                                    <Link to="/management/users" className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Mitglieder bearbeiten</Link>
+                                    <Link to="/user-management" className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Mitglieder bearbeiten</Link>
                                 </>
                             )}
                         </div>

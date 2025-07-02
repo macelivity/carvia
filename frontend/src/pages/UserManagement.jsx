@@ -8,11 +8,6 @@ export default function UserManagement() {
   const [members, setMembers] = useState([]);
   const [editUser, setEditUser] = useState(null);
 
-  // Nur Mitarbeiter darf diese Seite sehen
-  if (!user || user.RolleID !== 3) {
-    return <Navigate to="/" replace />;
-  }
-
   // Mitglieder laden (RolleID === 1)
   const fetchMembers = () => {
     fetch("/api/auth/users", {

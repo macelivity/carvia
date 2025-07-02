@@ -61,12 +61,26 @@ export default function App() {
 							</ProtectedRoute>
 						}
 					/>
+					<Route
+						path="/user-management"
+						element={
+							<ProtectedRoute allowedRoles={['Mitarbeiter']}>
+								<UserManagement />
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/mitarbeiter-management"
+						element={
+							<ProtectedRoute allowedRoles={['Admin']}>
+								<EmployeeManagement />
+							</ProtectedRoute>
+						}
+					/>
 					<Route path="/search" element={<VehicleSearch />} />
 					<Route path="/impressum" element={<Impressum />} />
 					<Route path="/datenschutz" element={<Datenschutz />} />
 					<Route path="*" element={<NotFound />} />
-					<Route path="/management/users" element={<UserManagement />} />
-					<Route path="/management/mitarbeiter" element={<EmployeeManagement />} />
 				</Routes>
 				
 				<Footer />
