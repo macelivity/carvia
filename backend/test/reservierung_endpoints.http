@@ -7,7 +7,7 @@
 ###
 
 # Get all Reservierungen
-GET {{baseUrl}}/reservations/
+GET {{baseUrl}}/reservierung/
 
 ###
 
