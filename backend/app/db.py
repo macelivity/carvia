@@ -179,6 +179,7 @@ def init_db():
         db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (1, 'User')")
         db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (2, 'Admin')")
         db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (3, 'Manager')")
+        db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (4, 'Vehicle')")
         db.execute("""INSERT OR IGNORE INTO Nutzer
                         (Username, PasswordHash, RolleID, Vorname, Nachname, Email,
                         Geburtsdatum, BeitrittsDatum, Führerschein, IBAN, BIC, 

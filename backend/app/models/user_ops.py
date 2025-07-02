@@ -116,6 +116,8 @@ class UserOps:
 
     @staticmethod
     @jwt_required()
-    def is_authorized(user_id, accepted_roles):
-        role_entry = RolleOps.get_by_user_id(user_id)
+    def is_authorized(jwt_identity, accepted_roles):
+        if not jwt_identity:
+            return False
+        role_entry = RolleOps.get_by_user_id(int(jwt_identity))
         return role_entry and role_entry['Bedeutung'] in accepted_roles
