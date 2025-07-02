@@ -120,6 +120,7 @@ def init_db():
             PasswordHash TEXT NOT NULL,
             Vorname TEXT NOT NULL,
             Nachname TEXT NOT NULL,
+            Email TEXT NOT NULL,
             Geburtsdatum {date_type} NOT NULL,
             BeitrittsDatum {date_type} NOT NULL,
             Führerschein TEXT,
@@ -128,7 +129,8 @@ def init_db():
             HausNummer TEXT NOT NULL,
             PLZ TEXT NOT NULL,
             Ort TEXT NOT NULL,
-            Strasse TEXT NOT NULL
+            Strasse TEXT NOT NULL,
+            Angenommen {boolean_type} NOT NULL DEFAULT 0
         );
         """)
 
@@ -138,7 +140,8 @@ def init_db():
             TarifID {primary_key},
             Name TEXT NOT NULL,
             Freikilometer INTEGER NOT NULL,
-            Versicherungsschutz TEXT NOT NULL
+            Versicherungsschutz TEXT NOT NULL,
+            Multiplikator {numeric_type} NOT NULL
         );
         """)
 
@@ -146,11 +149,16 @@ def init_db():
         db.execute(f"""
         CREATE TABLE IF NOT EXISTS Rechnung (
             RechnungID {primary_key},
+            ReservierungID INTEGER NOT NULL,
+            UserID INTEGER NOT NULL,
             FahrzeugID INTEGER NOT NULL,
+            Preis {numeric_type} NOT NULL,
             Bezahlt {boolean_type},
             Austellungsdatum {date_type}
         );
-        """)        # Tabelle: Reservierung
+        """)
+        
+        # Tabelle: Reservierung
         db.execute(f"""
         CREATE TABLE IF NOT EXISTS Reservierung (
             ReservierungID {primary_key},
@@ -171,6 +179,15 @@ def init_db():
         db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (1, 'User')")
         db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (2, 'Admin')")
         db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (3, 'Manager')")
+        db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (4, 'Vehicle')")
+        db.execute("""INSERT OR IGNORE INTO Nutzer
+                        (Username, PasswordHash, RolleID, Vorname, Nachname, Email,
+                        Geburtsdatum, BeitrittsDatum, Führerschein, IBAN, BIC, 
+                        HausNummer, PLZ, Ort, Strasse, Angenommen)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        ('Admin', '$2b$12$lFA/3Gzzy.WOV0Rm8AZF6.5KyJJyLgii5Rrd2nA7ftKgzcY.W2mBe', 2, 'Admin', 'User', 'admin@example.com',
+                        '1990-01-01', '1990-01-01', None, None, None,
+                        '', '', '', '', True))
         db.commit()
     db.close()
 

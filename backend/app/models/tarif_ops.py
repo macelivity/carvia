@@ -16,26 +16,26 @@ class TarifOps:
         return dict(result) if result else None
         
     @staticmethod
-    def create(name, freikilometer, versicherungsschutz):
+    def create(name, freikilometer, versicherungsschutz, multiplikator):
         """Erstellt einen neuen Tarif"""
         with get_db() as conn:
             cursor = conn.execute("""
-                INSERT INTO Tarif (Name, Freikilometer, Versicherungsschutz)
-                VALUES (?, ?, ?)
-            """, (name, freikilometer, versicherungsschutz))
+                INSERT INTO Tarif (Name, Freikilometer, Versicherungsschutz, Multiplikator)
+                VALUES (?, ?, ?, ?)
+            """, (name, freikilometer, versicherungsschutz, multiplikator))
             tarif_id = cursor.lastrowid
             conn.commit()
             return tarif_id
 
     @staticmethod
-    def update(tarif_id, name, freikilometer, versicherungsschutz):
+    def update(tarif_id, name, freikilometer, versicherungsschutz, multiplikator):
         """Aktualisiert einen Tarif"""
         with get_db() as conn:
             conn.execute("""
                 UPDATE Tarif
-                SET Name = ?, Freikilometer = ?, Versicherungsschutz = ?
+                SET Name = ?, Freikilometer = ?, Versicherungsschutz = ?, Multiplikator = ?
                 WHERE TarifID = ?
-            """, (name, freikilometer, versicherungsschutz, tarif_id))
+            """, (name, freikilometer, versicherungsschutz, multiplikator, tarif_id))
             conn.commit()
 
     @staticmethod

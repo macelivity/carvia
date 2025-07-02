@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.models.modell_ops import ModellOps
+from backend.app.models.user_ops import UserOps
+from flask_jwt_extended import jwt_required, get_jwt_identity # Import für Autorisierung
 
 bp = Blueprint("modell", __name__, url_prefix="/modell")
 
@@ -9,7 +11,11 @@ def list_modells():
     return jsonify(modells)
 
 @bp.route("/", methods=["POST"])
+@jwt_required()
 def create_modell():
+    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+        return jsonify({"error": "Zugriff verweigert"}), 403
+
     data = request.get_json()
     modell_id = ModellOps.create(data["ModellName"], data["Hersteller"], data["Fahrzeugtyp"], data["Getriebeart"], 
                      data["Kraftstoffart"], data["Leistung"], data["Türen"], data["Sitze"], 
@@ -24,7 +30,11 @@ def get_modell(modell_id):
     return jsonify(modell)
 
 @bp.route("/<int:modell_id>", methods=["PUT"])
+@jwt_required()
 def update_modell(modell_id):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+        return jsonify({"error": "Zugriff verweigert"}), 403
+
     data = request.get_json()
     if not ModellOps.get_by_id(modell_id):
         return jsonify({"error": "Not found"}), 404
@@ -34,7 +44,11 @@ def update_modell(modell_id):
     return jsonify({"msg": "Modell updated"})
 
 @bp.route("/<int:modell_id>", methods=["DELETE"])
+@jwt_required()
 def delete_modell(modell_id):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+        return jsonify({"error": "Zugriff verweigert"}), 403
+
     if not ModellOps.get_by_id(modell_id):
         return jsonify({"error": "Not found"}), 404
     ModellOps.delete(modell_id)

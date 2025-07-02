@@ -72,7 +72,7 @@ def create_app():
     api.register_blueprint(rolle_bp, url_prefix="/rolle")
     api.register_blueprint(tarif_bp, url_prefix="/tarif")
     api.register_blueprint(rechnung_bp, url_prefix="/rechnung")
-    api.register_blueprint(reservierung_bp, url_prefix="/reservations")
+    api.register_blueprint(reservierung_bp, url_prefix="/reservierung")
 
     app.register_blueprint(api, url_prefix="/api")
 
