@@ -51,6 +51,13 @@ class ReservierungOps:
             return cursor.rowcount if cursor.rowcount > 0 else None
             
     @staticmethod
+    def get_by_id(id):
+        """Holt eine Reservierung nach ID"""
+        with get_db() as conn:
+            result = conn.execute("SELECT * FROM Reservierung WHERE ReservierungID = ?", (id,)).fetchall()
+        return [dict(row) for row in result]
+            
+    @staticmethod
     def get_by_user_id(user_id):
         """Holt alle Reservierungen für einen Benutzer"""
         with get_db() as conn:

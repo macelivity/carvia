@@ -16,6 +16,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './pages/NotFound';
 import Account from './pages/Account';
 import UserReservations from './pages/UserReservations'; // Importiere die neue Seite
+import Rechnung from './pages/Rechnung';
 
 
 export default function App() {
@@ -70,6 +71,7 @@ export default function App() {
 						}
 					/>
 					<Route path="/search" element={<VehicleSearch />} />
+					<Route path="/rechnung" element={<Rechnung />} />
 					<Route path="/impressum" element={<Impressum />} />
 					<Route path="/datenschutz" element={<Datenschutz />} />
 					<Route path="*" element={<NotFound />} />

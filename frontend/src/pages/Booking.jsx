@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 import {
@@ -11,6 +10,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { de } from 'date-fns/locale';
+import { getModellById, getTarife, getVehicleById, reservieren } from '../api/api';
 
 // Helper function to format Date object to 'YYYY-MM-DDTHH:mm' string for API
 function formatToISOStringForAPI(date) {
@@ -29,8 +29,8 @@ export default function Booking() {
 
 	const [vehicle, setVehicle] = useState(null);
 	const [model, setModel] = useState(null);
-	const [tariffs, setTariffs] = useState([]);
-	const [selectedTariffId, setSelectedTariffId] = useState('');
+	const [tarife, setTarife] = useState([]);
+	const [selectedTarifId, setSelectedTarifId] = useState('');
 
 	const [startDate, setStartDate] = useState(
 		passedState?.start_datum && passedState.start_datum !== 'Jetzt'
@@ -50,7 +50,7 @@ export default function Booking() {
 	const [calculatedPrice, setCalculatedPrice] = useState(0);
 
 	const [loadingVehicle, setLoadingVehicle] = useState(true);
-	const [loadingTariffs, setLoadingTariffs] = useState(true);
+	const [loadingTarife, setLoadingTarife] = useState(true);
 	const [error, setError] = useState('');
 	const [bookingMessage, setBookingMessage] = useState('');
 	const [bookingError, setBookingError] = useState('');
@@ -60,11 +60,11 @@ export default function Booking() {
 		if (vehicle_id) {
 			setLoadingVehicle(true);
 			setError('');
-			axios.get(`/api/fahrzeug/${vehicle_id}`)
+			getVehicleById(vehicle_id)
 				.then(res => {
 					setVehicle(res.data);
 					if (res.data && res.data.ModellID) {
-						return axios.get(`/api/modell/${res.data.ModellID}`);
+						return getModellById(res.data.ModellID);
 					}
 					throw new Error('ModellID nicht im Fahrzeugobjekt gefunden.');
 				})
@@ -81,14 +81,14 @@ export default function Booking() {
 		}
 	}, [vehicle_id]);
 
-	// Fetch tariffs
+	// Fetch tarifs
 	useEffect(() => {
-		setLoadingTariffs(true);
-		axios.get('/api/tarif/')
+		setLoadingTarife(true);
+		getTarife()
 			.then(res => {
-				setTariffs(res.data);
+				setTarife(res.data);
 				if (res.data.length > 0) {
-					setSelectedTariffId(res.data[0].TarifID); // Select first tariff by default
+					setSelectedTarifId(res.data[0].TarifID); // Select first tarif by default
 				}
 			})
 			.catch(err => {
@@ -96,32 +96,26 @@ export default function Booking() {
 				setError(prev => prev + (prev ? '; ' : '') + 'Tarife konnten nicht geladen werden.');
 			})
 			.finally(() => {
-				setLoadingTariffs(false);
+				setLoadingTarife(false);
 			});
 	}, []);
 
 	// Calculate price
 	const calculatePriceCallback = useCallback(() => {
-		if (startDate && endDate && selectedTariffId && tariffs.length > 0 && model) {
+		if (startDate && endDate && selectedTarifId && tarife.length > 0 && model) {
 			const start = startDate; // Already a Date object
 			const end = endDate;     // Already a Date object
-			const tariff = tariffs.find(t => t.TarifID === parseInt(selectedTariffId));
+			const tarif = tarife.find(t => t.TarifID === parseInt(selectedTarifId));
 
 			if (start >= end) {
 				setCalculatedPrice(0);
 				return;
 			}
 
-			if (tariff && tariff.PreisProTag !== undefined && tariff.PreisProTag !== null) {
+			if (tarif && tarif.Multiplikator !== undefined && tarif.Multiplikator !== null && model.Stundenpreis !== undefined && model.Stundenpreis !== null) {
 				const durationMs = end.getTime() - start.getTime();
 				const durationHours = durationMs / (1000 * 60 * 60);
-				const pricePerHour = tariff.PreisProTag / 24;
-				const total = durationHours * pricePerHour;
-				setCalculatedPrice(total);
-			} else if (model.Stundenpreis !== undefined && model.Stundenpreis !== null) {
-				const durationMs = end.getTime() - start.getTime();
-				const durationHours = durationMs / (1000 * 60 * 60);
-				const total = durationHours * model.Stundenpreis;
+				const total = durationHours * model.Stundenpreis * tarif.Multiplikator;
 				setCalculatedPrice(total);
 			} else {
 				setCalculatedPrice(0);
@@ -129,7 +123,7 @@ export default function Booking() {
 		} else {
 			setCalculatedPrice(0);
 		}
-	}, [startDate, endDate, selectedTariffId, tariffs, model]);
+	}, [startDate, endDate, selectedTarifId, tarife, model]);
 
 	useEffect(() => {
 		calculatePriceCallback();
@@ -145,7 +139,7 @@ export default function Booking() {
 			setBookingError('Sie müssen angemeldet sein, um zu buchen.');
 			return;
 		}
-		if (!startDate || !endDate || !selectedTariffId ||
+		if (!startDate || !endDate || !selectedTarifId ||
 			!abholPlz || !abholort || !rueckgabePlz || !rueckgabeort) {
 			setBookingError('Bitte füllen Sie alle erforderlichen Felder aus (Zeitraum, Orte, Tarif).');
 			return;
@@ -160,20 +154,21 @@ export default function Booking() {
 			FahrzeugID: parseInt(vehicle_id),
 			StartDatum: formatToISOStringForAPI(startDate),
 			EndDatum: formatToISOStringForAPI(endDate),
-			TarifID: parseInt(selectedTariffId),
+			TarifID: parseInt(selectedTarifId),
 			RechnungID: null,
 			AbholPlz: abholPlz,
 			Abholort: abholort,
 			RueckgabePlz: rueckgabePlz,
 			Rueckgabeort: rueckgabeort,
+			Preis: calculatedPrice.toFixed(2)
 		};
 
 		try {
-			const response = await axios.post('/api/reservations/', reservationData, {
-				headers: {
-					'Authorization': `Bearer ${localStorage.getItem('token')}`
-				}
-			});
+			const response = await reservieren(reservationData);
+			if (response.status !== 201) {
+				setBookingError('Reservierung fehlgeschlagen. Bitte versuchen Sie es später erneut.');
+				throw new Error('Reservierung fehlgeschlagen: ' + response.statusText);
+			}
 			setBookingMessage(`Reservierung erfolgreich! ID: ${response.data.id}. Sie werden in Kürze weitergeleitet...`);
 			setTimeout(() => {
 				navigate('/reservations');
@@ -209,7 +204,7 @@ export default function Booking() {
 		);
 	}
 
-	const selectedTariffDetails = tariffs.find(t => t.TarifID === parseInt(selectedTariffId));
+	const selectedtarifDetails = tarife.find(t => t.TarifID === parseInt(selectedTarifId));
 
 	return (
 		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={de}>
@@ -230,8 +225,8 @@ export default function Booking() {
 					<Grid item xs={12} md={6} size={8}>
 						<Paper elevation={3} sx={{ p: 2, height: '100%' }}> {/* Added height 100% for consistent card height */}
 							<Typography variant="h6" gutterBottom>Fahrzeugspezifikationen</Typography>
-							<Typography><strong>Modell:</strong> {model.ModellName}</Typography>
 							<Typography><strong>Hersteller:</strong> {model.Hersteller}</Typography>
+							<Typography><strong>Modell:</strong> {model.ModellName}</Typography>
 							<Typography><strong>Fahrzeugtyp:</strong> {model.Fahrzeugtyp}</Typography>
 							<Typography><strong>Kennzeichen:</strong> {vehicle.Kennzeichen}</Typography>
 							<Typography><strong>Getriebe:</strong> {model.Getriebeart}</Typography>
@@ -239,27 +234,22 @@ export default function Booking() {
 							<Typography><strong>Türen:</strong> {model.Tueren}</Typography>
 							<Typography><strong>Kraftstoff:</strong> {model.Kraftstoffart}</Typography>
 							<Typography><strong>Leistung:</strong> {model.Leistung} PS</Typography>
-							{model.Stundenpreis && <Typography><strong>Basis-Stundenpreis (Modell):</strong> {model.Stundenpreis.toFixed(2)} €</Typography>}
-							<Typography variant="caption" display="block" sx={{ mt: 1, color: 'text.secondary' }}>
-								Hinweis: Der angezeigte Modell-Stundenpreis dient als Referenz. Der Endpreis basiert auf dem gewählten Tarif.
-							</Typography>
 						</Paper>
 					</Grid>
 
 					<Grid item xs={12} md={6} size={4}>
 						<Paper elevation={3} sx={{ p: 2, height: '100%' }}> {/* Added height 100% */}
 							<Typography variant="h6" gutterBottom>Tarifdetails (Ausgewählt)</Typography>
-							{loadingTariffs && <CircularProgress size={20} />}
-							{!loadingTariffs && tariffs.length === 0 && <Typography>Keine Tarife verfügbar.</Typography>}
-							{selectedTariffDetails ? (
+							{loadingTarife && <CircularProgress size={20} />}
+							{!loadingTarife && tarife.length === 0 && <Typography>Keine Tarife verfügbar.</Typography>}
+							{selectedtarifDetails ? (
 								<>
-									<Typography><strong>Tarifname:</strong> {selectedTariffDetails.Name}</Typography>
-									<Typography><strong>Preis pro Tag:</strong> {selectedTariffDetails.PreisProTag ? `${selectedTariffDetails.PreisProTag.toFixed(2)} €` : 'N/A'}</Typography>
-									<Typography><strong>Freikilometer:</strong> {selectedTariffDetails.Freikilometer !== null ? `${selectedTariffDetails.Freikilometer} km` : 'Unbegrenzt'}</Typography>
-									<Typography><strong>Versicherung:</strong> {selectedTariffDetails.Versicherungsschutz}</Typography>
+									<Typography><strong>Tarifname:</strong> {selectedtarifDetails.Name}</Typography>
+									<Typography><strong>Freikilometer:</strong> {selectedtarifDetails.Freikilometer !== null ? `${selectedtarifDetails.Freikilometer} km` : 'Unbegrenzt'}</Typography>
+									<Typography><strong>Versicherung:</strong> {selectedtarifDetails.Versicherungsschutz}</Typography>
 								</>
 							) : (
-								!loadingTariffs && <Typography>Bitte wählen Sie einen Tarif.</Typography>
+								!loadingTarife && <Typography>Bitte wählen Sie einen Tarif.</Typography>
 							)}
 						</Paper>
 					</Grid>
@@ -346,20 +336,20 @@ export default function Booking() {
 							</Grid>
 							<Grid item xs={12}>
 								<FormControl fullWidth required margin="normal">
-									<InputLabel id="tariff-select-label">Tarif auswählen</InputLabel>
+									<InputLabel id="tarif-select-label">Tarif auswählen</InputLabel>
 									<Select
-										labelId="tariff-select-label"
-										id="tariff"
-										value={selectedTariffId}
+										labelId="tarif-select-label"
+										id="tarif"
+										value={selectedTarifId}
 										label="Tarif auswählen"
-										onChange={e => setSelectedTariffId(e.target.value)}
-										disabled={loadingTariffs || tariffs.length === 0}
+										onChange={e => setSelectedTarifId(e.target.value)}
+										disabled={loadingTarife || tarife.length === 0}
 									>
-										{loadingTariffs && <MenuItem value=""><em>Lade Tarife...</em></MenuItem>}
-										{!loadingTariffs && tariffs.length === 0 && <MenuItem value=""><em>Keine Tarife verfügbar</em></MenuItem>}
-										{tariffs.map(tariff => (
-											<MenuItem key={tariff.TarifID} value={tariff.TarifID}>
-												{tariff.Name} ({tariff.PreisProTag ? tariff.PreisProTag.toFixed(2) + '€/Tag' : 'Preis nicht spezifiziert'})
+										{loadingTarife && <MenuItem value=""><em>Lade Tarife...</em></MenuItem>}
+										{!loadingTarife && tarife.length === 0 && <MenuItem value=""><em>Keine Tarife verfügbar</em></MenuItem>}
+										{tarife.map(tarif => (
+											<MenuItem key={tarif.TarifID} value={tarif.TarifID}>
+												{tarif.Name}
 											</MenuItem>
 										))}
 									</Select>
@@ -373,7 +363,7 @@ export default function Booking() {
 								{calculatedPrice.toFixed(2)} €
 							</Typography>
 							<Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
-								Basierend auf der Dauer und dem gewählten Tarif (Preis pro Tag / 24 für Stundenbasis).
+								Basierend auf der Dauer und dem gewählten Tarif.
 							</Typography>
 						</Box>
 
@@ -387,7 +377,7 @@ export default function Booking() {
 							fullWidth
 							size="large"
 							sx={{ mt: 3, py: 1.5 }}
-							disabled={loadingVehicle || loadingTariffs || !vehicle || !model || tariffs.length === 0 || !startDate || !endDate || !abholPlz || !abholort || !rueckgabePlz || !rueckgabeort}
+							disabled={loadingVehicle || loadingTarife || !vehicle || !model || tarife.length === 0 || !startDate || !endDate || !abholPlz || !abholort || !rueckgabePlz || !rueckgabeort}
 						>
 							Jetzt kostenpflichtig reservieren
 						</Button>

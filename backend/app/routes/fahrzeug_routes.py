@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify
 from app.models.fahrzeug_ops import FahrzeugOps
 from app.models.geodatum_ops import GeodatumOps # Import für Geodaten
 from app.models.rolle_ops import RolleOps # Import für Rollenoperationen
+from backend.app.models.user_ops import UserOps
 from flask_jwt_extended import jwt_required, get_jwt_identity # Import für Autorisierung
 
 # Expose the blueprint as 'bp' for test imports
@@ -68,7 +69,11 @@ def list_filtered_fahrzeuge():
 
 
 @bp.route("/", methods=["POST"])
+@jwt_required()
 def create_fahrzeug():
+    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+        return jsonify({"error": "Zugriff verweigert"}), 403
+
     data = request.get_json()
     fahrzeug_id = FahrzeugOps.create(data["ModellID"], data["Kennzeichen"], data["Reperaturzustand"], data["Aktiv"],
                      data["Reifen"], data["Kilometerstand"], data["LetzterService"], data["TuevDatum"],
@@ -87,7 +92,11 @@ def get_fahrzeug(fahrzeug_id):
     return jsonify(fahrzeug)
 
 @bp.route("/<int:fahrzeug_id>", methods=["PUT"])
+@jwt_required()
 def update_fahrzeug(fahrzeug_id):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+        return jsonify({"error": "Zugriff verweigert"}), 403
+
     data = request.get_json()
     fahrzeug = FahrzeugOps.get_by_id(fahrzeug_id)
     if not fahrzeug:
@@ -105,7 +114,11 @@ def update_fahrzeug(fahrzeug_id):
     return jsonify({"msg": "Fahrzeug updated"})
 
 @bp.route("/<int:fahrzeug_id>", methods=["DELETE"])
+@jwt_required()
 def delete_fahrzeug(fahrzeug_id):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+        return jsonify({"error": "Zugriff verweigert"}), 403
+
     if not FahrzeugOps.get_by_id(fahrzeug_id):
         return jsonify({"error": "Not found"}), 404
     FahrzeugOps.delete(fahrzeug_id)
@@ -121,7 +134,13 @@ def get_fahrzeug_location(fahrzeug_id):
     - Manager: Immer Zugriff.
     - User: Nur Zugriff, wenn das Fahrzeug zum angefragten Zeitpunkt (oder aktuell) nicht gebucht ist.
     """
-    user_id = int(get_jwt_identity())
+
+    jwt_identity = get_jwt_identity()
+
+    if not jwt_identity:
+        return jsonify({"error": "Zugriff verweigert"}), 403
+
+    user_id = int(jwt_identity)
     role_entry = RolleOps.get_by_user_id(user_id)
 
     if not role_entry:

@@ -6,6 +6,7 @@ from datetime import timedelta
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 @bp.route("/register", methods=["POST"])
+@jwt_required(optional=True)
 def register():
     """Registriert einen neuen Nutzer"""
     data = request.get_json()
@@ -19,6 +20,11 @@ def register():
     email = data.get("email")
     username = data.get("username")
     password = data.get("password")
+    angenommen = data.get("angenommen", False)
+    
+    jwt_identity = get_jwt_identity()
+    if not jwt_identity or not UserOps.is_authorized(int(jwt_identity), ["Manager", "Admin"]):
+        angenommen = False
     
     # Check if username already exists
     if UserOps.username_exists(username):
@@ -28,31 +34,28 @@ def register():
     if len(password) < 6:
         return jsonify({"msg": "Password must be at least 6 characters long"}), 400
     
-    try:
-        # Create user with default role (assuming RolleID 1 is for regular users)
-        user_id = UserOps.create_user(
-            username=username,
-            password=password,
-            rolle_id=data.get("rolle_id", 1),  # Default to role 1
-            vorname=data.get("vorname"),
-            nachname=data.get("nachname"),
-            geburtsdatum=data.get("geburtsdatum"),
-            fuehrerschein=data.get("fuehrerschein"),
-            iban=data.get("iban"),
-            bic=data.get("bic"),
-            hausnummer=data.get("hausnummer", ""),
-            plz=data.get("plz", ""),
-            ort=data.get("ort", ""),
-            strasse=data.get("strasse", "")
-        )
-        
-        return jsonify({
-            "msg": "User created successfully", 
-            "user_id": user_id
-        }), 201
-        
-    except Exception as e:
-        return jsonify({"msg": "Error creating user", "error": str(e)}), 500
+    user_id = UserOps.create_user(
+        username=username,
+        password=password,
+        rolle_id=data.get("rolle_id", 1),
+        vorname=data.get("vorname"),
+        nachname=data.get("nachname"),
+        email=email,
+        geburtsdatum=data.get("geburtsdatum"),
+        fuehrerschein=data.get("fuehrerschein"),
+        iban=data.get("iban"),
+        bic=data.get("bic"),
+        hausnummer=data.get("hausnummer", ""),
+        plz=data.get("plz", ""),
+        ort=data.get("ort", ""),
+        strasse=data.get("strasse", ""),
+        angenommen=angenommen
+    )
+    
+    return jsonify({
+        "msg": "User created successfully", 
+        "user_id": user_id
+    }), 201
 
 @bp.route("/login", methods=["POST"])
 def login():
@@ -70,6 +73,9 @@ def login():
     if not user:
         return jsonify({"msg": "Invalid username or password"}), 401
     
+    if not user["Angenommen"]:
+        return jsonify({"msg": "User not accepted yet"}), 403
+
     # Check password
     if not UserOps.check_password(user["PasswordHash"], password):
         return jsonify({"msg": "Invalid username or password"}), 401
@@ -95,13 +101,68 @@ def login():
         }
     }), 200
 
+@bp.route("/users", methods=["GET"])
+@jwt_required()
+def get_all_users():
+    """Gibt eine Liste aller Nutzer zurück"""
+    if not UserOps.is_authorized(int(get_jwt_identity()), ["Manager", "Admin"]):
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    try:
+        users = UserOps.get_all_users()
+        
+        user_list = []
+        for user in users:
+            user_data = user.copy()
+            user_data.pop("PasswordHash", None) # Passwort-Hash entfernen
+            user_list.append(user_data)
+            
+        return jsonify(user_list), 200
+    except Exception as e:
+        return jsonify({"msg": "Error retrieving users", "error": str(e)}), 500
+
+@bp.route("/users/not-approved", methods=["GET"])
+@jwt_required()
+def get_all_not_approved_users():
+    """Gibt eine Liste aller nicht akzeptierten Nutzer zurück"""
+
+    if not UserOps.is_authorized(int(get_jwt_identity()), ["Manager"]):
+        return jsonify({"msg": "Unauthorized"}), 403
+        
+    try:
+        users = UserOps.get_all_not_approved_users()
+        
+        # Entferne sensible Informationen und bereite die Ausgabe vor
+        user_list = []
+        for user in users:
+            user_data = user.copy()
+            user_data.pop("PasswordHash", None)  # Passwort-Hash entfernen
+            user_list.append(user_data)
+            
+        return jsonify(user_list), 200
+    except Exception as e:
+        return jsonify({"msg": "Error retrieving not approved users", "error": str(e)}), 500
+    
+@bp.route("/users/<int:user_id>/approve", methods=["PUT"])
+@jwt_required()
+def approve_user(user_id):
+    """Genehmigt einen Nutzer"""
+    if not UserOps.is_authorized(int(get_jwt_identity()), ["Manager"]):
+        return jsonify({"msg": "Unauthorized"}), 403
+
+    try:
+        UserOps.approve_user(user_id)
+        return jsonify({"msg": "User approved successfully"}), 200
+    except Exception as e:
+        return jsonify({"msg": "Error approving user", "error": str(e)}), 500
+
 @bp.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh():
     """Erneuert den Access Token mit einem Refresh Token"""
-    current_user_id = int(get_jwt_identity())  # Convert back to int
+    user_id = int(get_jwt_identity())  # Convert back to int
     new_token = create_access_token(
-        identity=str(current_user_id),  # Convert to string for token
+        identity=str(user_id),  # Convert to string for token
         expires_delta=timedelta(hours=1)
     )
     return jsonify({"access_token": new_token}), 200
@@ -110,8 +171,8 @@ def refresh():
 @jwt_required()
 def get_profile():
     """Gibt das Profil des aktuell authentifizierten Nutzers zurück"""
-    current_user_id = int(get_jwt_identity())  # Convert back to int
-    user = UserOps.get_user_by_id(current_user_id)
+    user_id = int(get_jwt_identity())  # Convert back to int
+    user = UserOps.get_user_by_id(user_id)
     
     if not user:
         return jsonify({"msg": "User not found"}), 404
@@ -173,14 +234,3 @@ def change_password():
         return jsonify({"msg": "Password changed successfully"}), 200
     except Exception as e:
         return jsonify({"msg": "Error changing password", "error": str(e)}), 500
-
-# Protected route example
-@bp.route("/protected", methods=["GET"])
-@jwt_required()
-def protected():
-    """Beispiel für eine geschützte Route"""
-    current_user_id = int(get_jwt_identity())  # Convert back to int
-    return jsonify({
-        "msg": "This is a protected route",
-        "logged_in_as": current_user_id
-    }), 200

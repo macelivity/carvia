@@ -11,36 +11,38 @@ GET {{baseUrl}}/tarif
 ###
 
 # Create a new Tarif
-POST {{baseUrl}}/tarife
+POST {{baseUrl}}/tarif
 Content-Type: application/json
 
 {
-  "Name": "Basic Tarif",
+  "Name": "Basis Tarif",
   "Freikilometer": 100,
-  "Versicherungsschutz": "Vollkasko"
+  "Versicherungsschutz": "Teilkasko",
+  "Multiplikator": 1.0
 }
 
 ###
 
 # Create another Tarif
-POST {{baseUrl}}/tarife
+POST {{baseUrl}}/tarif
 Content-Type: application/json
 
 {
   "Name": "Premium Tarif",
   "Freikilometer": 500,
-  "Versicherungsschutz": "Vollkasko Plus"
+  "Versicherungsschutz": "Vollkasko Plus",
+  "Multiplikator": 1.5
 }
 
 ###
 
 # Get specific Tarif by ID
-GET {{baseUrl}}/tarife/1
+GET {{baseUrl}}/tarif/1
 
 ###
 
 # Update specific Tarif
-PUT {{baseUrl}}/tarife/1
+PUT {{baseUrl}}/tarif/1
 Content-Type: application/json
 
 {
@@ -52,4 +54,4 @@ Content-Type: application/json
 ###
 
 # Delete specific Tarif
-DELETE {{baseUrl}}/tarife/2
+DELETE {{baseUrl}}/tarif/2

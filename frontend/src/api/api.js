@@ -22,17 +22,23 @@ export const getProfile = () => API.get('/auth/profile'); // Neuer Endpunkt für
 // JWT-Logout ist primär clientseitig (Token entfernen).
 // export const logout = () => API.post('/auth/logout'); 
 
-export const getReservations = () => API.get('/reservations');
-export const createReservation = (data) => API.post('/reservations', data);
+export const getReservations = () => API.get('/reservierung');
+export const createReservation = (data) => API.post('/reservierung', data);
+export const getRechnung = (rechnungId) => API.get(`/rechnung/${rechnungId}`);
+export const getRechnungByReservierungsId = (reservierungsId) => API.get(`/reservierung/${reservierungsId}/rechnung`);
 
 
 export const getAllVehicles = () => API.get('/fahrzeug?detailed=true');
 export const getFilteredVehicles = (params) => API.get(`/fahrzeug/filter?${params.toString()}`);
 export const getVehicleLocation = (vehicle_id, date) => API.get(`/fahrzeug/${vehicle_id}/location${date ? `?date=${date}` : ''}`);
-export const updateVehicle = (fahrzeugId, data) => {
-	console.log("Update Vehicle Data:", data); // Debugging-Ausgabe
-	API.put(`/fahrzeug/${fahrzeugId}`, data);
-}
+export const getVehicleById = (fahrzeugId) => API.get(`/fahrzeug/${fahrzeugId}`);
+export const updateVehicle = (fahrzeugId, data) => API.put(`/fahrzeug/${fahrzeugId}`, data);
+
+export const getModellById = (modellId) => API.get(`/modell/${modellId}`);
+
+export const getTarife = () => API.get('/tarif');
+
+export const reservieren = (data) => API.post('/reservations', data);
 
 export default API;
 
