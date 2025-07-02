@@ -14,15 +14,16 @@ export default function Navbar() {
             <div className="space-x-4">
                 <Link to="/search">Fahrzeuge</Link>
                 {user.role === "Mitarbeiter" && (
+                    <>
                     <Link to="/vehicle-management">Fahrzeugverwaltung</Link>
+                    <Link to="/management/users">Mitglieder bearbeiten</Link>
+                        </>
                 )}
                 {user.role !== "guest" ? (
                     <>
                         <Link to="/account">Account</Link>
                         <Link to="/reservations">Reservierungen</Link>
-                        {user.role === "Mitarbeiter" && (
-                            <Link to="/management/users">Mitglieder bearbeiten</Link>
-                        )}
+                        
                         {user.role === "Admin" && (
                             <Link to="/management/mitarbeiter">Mitarbeiter verwalten</Link>
                         )}
