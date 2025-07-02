@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from '../context/AuthContext';
-import { Navigate } from "react-router-dom";
 import UserEditFormTable from "../components/UserEditFormTable";
 
 export default function UserManagement() {
-  const { user } = useAuth();
   const [members, setMembers] = useState([]);
   const [editUser, setEditUser] = useState(null);
 
