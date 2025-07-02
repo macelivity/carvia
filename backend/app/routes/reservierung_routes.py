@@ -34,7 +34,7 @@ def create_reservierung():
 
 @bp.route("/<int:reservierung_id>", methods=["GET"])
 def get_reservierung(reservierung_id):
-    reservierung = ReservierungOps.get_by_id(reservierung_id)
+    reservierung = ReservierungOps.get_by_reservation_id(reservierung_id)
     if not reservierung:
         return jsonify({"error": "Not found"}), 404
     return jsonify(reservierung)
@@ -61,10 +61,11 @@ def update_reservierung(reservierung_id):
 
 @bp.route("/<int:reservierung_id>", methods=["DELETE"])
 def delete_reservierung(reservierung_id):
-    if not ReservierungOps.get_by_id(reservierung_id):
+    print("Deleting", reservierung_id)
+    if not ReservierungOps.delete(reservierung_id):
         return jsonify({"error": "Not found"}), 404
-    ReservierungOps.delete(reservierung_id)
-    return jsonify({"msg": "Reservierung deleted"}), 204
+    else:
+        return jsonify({"msg": "Reservierung deleted"}), 204
 
 @bp.route("/user/<int:user_id>", methods=["GET"])
 def get_reservierungen_by_user(user_id):
