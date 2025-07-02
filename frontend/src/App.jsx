@@ -15,6 +15,7 @@ import Datenschutz from './pages/Datenschutz';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './pages/NotFound';
 import Account from './pages/Account';
+import UserReservations from './pages/UserReservations'; // Importiere die neue Seite
 import Rechnung from './pages/Rechnung';
 
 
@@ -58,6 +59,14 @@ export default function App() {
 						element={
 							<ProtectedRoute allowedRoles={['Mitarbeiter']}>
 								<VehicleManagement />
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/user-reservations"
+						element={
+							<ProtectedRoute allowedRoles={['Admin', 'Mitarbeiter']}>
+								<UserReservations />
 							</ProtectedRoute>
 						}
 					/>

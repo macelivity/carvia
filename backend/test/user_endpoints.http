@@ -1,0 +1,17 @@
+### Alle User
+GET http://127.0.0.1:5000/api/user/users
+
+### Suche nach User ohne Parameter
+GET http://127.0.0.1:5000/api/user/search
+
+### Suche nach User mit nicht existierendem Namen
+GET http://127.0.0.1:5000/api/user/search?vorname=doesnotexist&nachname=doesnotexist
+
+### Suche nach User mit existierendem Namen (passe ggf. an)
+GET http://127.0.0.1:5000/api/user/search?vorname=Max&nachname=Mustermann
+
+### Reservierungen für User mit keiner Reservierung
+GET http://127.0.0.1:5000/api/user/999999/reservations
+
+### Reservierungen für User mit Reservierungen (passe ggf. an)
+GET http://127.0.0.1:5000/api/user/1/reservations

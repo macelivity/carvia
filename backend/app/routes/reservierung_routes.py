@@ -65,7 +65,6 @@ def get_reservierung(reservierung_id):
     
     if reservierung["UserID"] != int(get_jwt_identity()) and not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
-    
     if not reservierung:
         return jsonify({"error": "Not found"}), 404
     return jsonify(reservierung)
@@ -77,7 +76,7 @@ def update_reservierung(reservierung_id):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     data = request.get_json()
-    if not ReservierungOps.get_by_id(reservierung_id):
+    if not ReservierungOps.get_by_reservation_id(reservierung_id):
         return jsonify({"error": "Not found"}), 404
     ReservierungOps.update(
         reservierung_id, 

@@ -47,7 +47,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "username": "mathias",
+  "username": "mathias4",
   "password": "sein_geburtstag",
   "vorname": "Mathias",
   "nachname": "Mitarbeiter",

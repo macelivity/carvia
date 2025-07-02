@@ -40,6 +40,12 @@ def list_filtered_fahrzeuge():
         sitze_str = request.args.get("sitze")
         stundenpreis_str = request.args.get("stundenpreis")
 
+        # test endpoint TODO remove later
+        if hersteller == "test":
+            print("returning Testvehicles")
+            return jsonify(FahrzeugOps.get_all_detailed()), 200
+        
+
         sitze = int(sitze_str) if sitze_str else None
         stundenpreis = float(stundenpreis_str) if stundenpreis_str else None
 

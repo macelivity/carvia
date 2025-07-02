@@ -111,9 +111,23 @@ class UserOps:
         """Überprüft, ob ein Nutzername bereits existiert"""
         db = get_db()
         user = db.execute("SELECT UserID FROM Nutzer WHERE Username = ?", (username,)).fetchone()
-        return user is not None#
-    
+        return user is not None
 
+    @staticmethod
+    def search_users(vorname, nachname):
+        """Sucht Nutzer anhand von Vor- und Nachname (LIKE-Suche, beide optional)"""
+        db = get_db()
+        query = "SELECT * FROM Nutzer WHERE 1=1"
+        params = []
+        if vorname:
+            query += " AND Vorname LIKE ?"
+            params.append(f"%{vorname}%")
+        if nachname:
+            query += " AND Nachname LIKE ?"
+            params.append(f"%{nachname}%")
+        result = db.execute(query, params).fetchall()
+        return user is not None
+    
     @staticmethod
     @jwt_required()
     def is_authorized(jwt_identity, accepted_roles):

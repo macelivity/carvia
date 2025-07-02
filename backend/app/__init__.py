@@ -15,7 +15,7 @@ from .routes.auth_routes import bp as auth_bp
 from .routes.rolle_routes import bp as rolle_bp
 from .routes.tarif_routes import bp as tarif_bp
 from .routes.rechnung_routes import bp as rechnung_bp
-from .routes.reservierung_routes import bp as reservierung_bp
+from .routes.user_routes import bp as user_bp
 
 def create_app():
     app = Flask(__name__)
@@ -73,6 +73,7 @@ def create_app():
     api.register_blueprint(tarif_bp, url_prefix="/tarif")
     api.register_blueprint(rechnung_bp, url_prefix="/rechnung")
     api.register_blueprint(reservierung_bp, url_prefix="/reservierung")
+    app.register_blueprint(user_bp, url_prefix="user")
 
     app.register_blueprint(api, url_prefix="/api")
 
