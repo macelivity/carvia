@@ -34,19 +34,21 @@ class ReservierungOps:
     def update(reservierung_id, fahrzeug_id, user_id, rechnung_id, tarif_id, start_datum, end_datum, abholort, abholplz, rueckgabeort, rueckgabeplz):
         """Aktualisiert eine Reservierung"""
         with get_db() as conn:
-            conn.execute("""
+            cursor = conn.execute("""
                 UPDATE Reservierung
                 SET FahrzeugID = ?, UserID = ?, RechnungID = ?, TarifID = ?, StartDatum = ?, EndDatum = ?, Abholort = ?, AbholPlz = ?, Rueckgabeort = ?, RueckgabePlz = ?
                 WHERE ReservierungID = ?
             """, (fahrzeug_id, user_id, rechnung_id, tarif_id, start_datum, end_datum, abholort, abholplz, rueckgabeort, rueckgabeplz, reservierung_id))
             conn.commit()
+            return cursor.rowcount if cursor.rowcount > 0 else None
 
     @staticmethod
     def delete(reservierung_id):
         """Löscht eine Reservierung"""
         with get_db() as conn:
-            conn.execute("DELETE FROM Reservierung WHERE ReservierungID = ?", (reservierung_id,))
+            cursor = conn.execute("DELETE FROM Reservierung WHERE ReservierungID = ?", (reservierung_id,))
             conn.commit()
+            return cursor.rowcount if cursor.rowcount > 0 else None
             
     @staticmethod
     def get_by_user_id(user_id):
@@ -61,3 +63,10 @@ class ReservierungOps:
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Reservierung WHERE FahrzeugID = ?", (fahrzeug_id,)).fetchall()
         return [dict(row) for row in result]
+    
+    @staticmethod
+    def get_by_reservation_id(reservierung_id):
+        """Holt eine Reservierung anhand der ReservierungID"""
+        with get_db() as conn:
+            result = conn.execute("SELECT * FROM Reservierung WHERE ReservierungID = ?", (reservierung_id,)).fetchone()
+        return dict(result) if result else None
