@@ -37,10 +37,11 @@ export default function Rechnung() {
         const kundeRes = await getProfile();
         if (!isMounted) return;
         setKunde(kundeRes.data.user || kundeRes.data);
-      } catch {
-        // Fehlerbehandlung
+      } catch (error) {
+        console.error('Fehler beim Laden der Rechnung:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchData();
     return () => { isMounted = false; };
@@ -81,7 +82,6 @@ export default function Rechnung() {
     doc.setFontSize(12);
     doc.text('Carvia GmbH\nMusterstraße 1\n12345 Musterstadt', 14, 30);
 
-    // Kundendaten und Bankdaten nebeneinander (wie im HTML)
     doc.setFontSize(12);
     doc.text('Kunde:', 14, 50);
     doc.text(kundeInfo, 14, 56);

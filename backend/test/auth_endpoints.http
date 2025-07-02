@@ -2,17 +2,25 @@
 
 @host = http://127.0.0.1:5000
 @baseUrl = {{host}}/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1MTQ0NjExNywianRpIjoiNDAzYmM1MmMtYTgxMS00NDEzLWIwZTMtYTZhYzhiZDc5YTQ4IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjMiLCJuYmYiOjE3NTE0NDYxMTcsImNzcmYiOiI3ZWU1OThlMy0xZGUxLTQ3ZjktYjA5OS1jNjA1NGUwZDY1MmIiLCJleHAiOjE3NTE0NDk3MTd9.SP7WXZtZQBhe6YmHyDsfE1WZOPKkSPrdU-Cwq3ewxMU
 
 
 ###
 
 GET {{baseUrl}}/auth/users
+Authorization: Bearer {{token}}
+
+###
+
+GET {{baseUrl}}/auth/users/not-approved
+Authorization: Bearer {{token}}
 
 ###
 
 # Register a new user
 POST {{baseUrl}}/auth/register
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "username": "Chrizzl",
@@ -27,7 +35,8 @@ Content-Type: application/json
   "ort": "Stuhr",
   "strasse": "Ricarda-Huch-Str. ",
   "iban": "DE4309874087309401",
-  "bic": "COBAHAETTETIHRGERNE"
+  "bic": "COBAHAETTETIHRGERNE",
+  "angenommen": false
 }
 
 ###
@@ -35,6 +44,7 @@ Content-Type: application/json
 # Register a new user
 POST {{baseUrl}}/auth/register
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "username": "mathias",
@@ -49,7 +59,24 @@ Content-Type: application/json
   "ort": "Achim",
   "strasse": "Bremer Str.",
   "iban": "DE89370400440532013000",
-  "bic": "COBADEFFXXX"
+  "bic": "COBADEFFXXX",
+  "angenommen": true
+}
+
+###
+
+PUT {{baseUrl}}/auth/users/7/approve
+Authorization: Bearer {{token}}
+
+###
+
+# Login user
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "Admin",
+  "password": "admin"
 }
 
 ###
@@ -59,22 +86,22 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "username": "test",
-  "password": "password123"
+  "username": "mathias",
+  "password": "sein_geburtstag"
 }
 
 ###
 
 # Get user profile (requires JWT token - replace YOUR_TOKEN_HERE with actual token)
 GET {{baseUrl}}/auth/profile
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0OTA3MDQxNiwianRpIjoiMzg5OTY1MDctMTk4NS00OGIyLTgyMTktZjBkMTgyOTM2NTlmIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjEiLCJuYmYiOjE3NDkwNzA0MTYsImNzcmYiOiJjOTUzOTY0MC0wOWEzLTQ0YWUtYmFlNC02NzA4NmU0N2M0N2YiLCJleHAiOjE3NDkwNzQwMTZ9.BuMUFti6zva1xXvxa43h2H0OeXue3WudzeO_AUqM4AE
+Authorization: Bearer {{token}}
 
 ###
 
 # Update user profile (requires JWT token)
 PUT {{baseUrl}}/auth/profile
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0OTA3MDQxNiwianRpIjoiMzg5OTY1MDctMTk4NS00OGIyLTgyMTktZjBkMTgyOTM2NTlmIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjEiLCJuYmYiOjE3NDkwNzA0MTYsImNzcmYiOiJjOTUzOTY0MC0wOWEzLTQ0YWUtYmFlNC02NzA4NmU0N2M0N2YiLCJleHAiOjE3NDkwNzQwMTZ9.BuMUFti6zva1xXvxa43h2H0OeXue3WudzeO_AUqM4AE
+Authorization: Bearer {{token}}
 
 {
   "Vorname": "Maximilian",
