@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify
 from app.models.fahrzeug_ops import FahrzeugOps
 from app.models.geodatum_ops import GeodatumOps # Import für Geodaten
 from app.models.rolle_ops import RolleOps # Import für Rollenoperationen
-from backend.app.models.user_ops import UserOps
+from app.models.user_ops import UserOps
 from flask_jwt_extended import jwt_required, get_jwt_identity # Import für Autorisierung
 
 # Expose the blueprint as 'bp' for test imports

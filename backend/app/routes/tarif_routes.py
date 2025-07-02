@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.models.tarif_ops import TarifOps
-from backend.app.models.user_ops import UserOps
+from app.models.user_ops import UserOps
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 bp = Blueprint("tarif", __name__)

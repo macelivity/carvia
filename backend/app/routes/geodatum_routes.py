@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.models.geodatum_ops import GeodatumOps
-from backend.app.models.user_ops import UserOps
+from app.models.user_ops import UserOps
 from flask_jwt_extended import jwt_required, get_jwt_identity # Import für Autorisierung
 
 bp = Blueprint("geodatum", __name__, url_prefix="/geodatum")

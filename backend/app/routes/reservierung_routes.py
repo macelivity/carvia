@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.models.reservierung_ops import ReservierungOps
 from app.models.rechnung_ops import RechnungOps
-from backend.app.models.user_ops import UserOps
+from app.models.user_ops import UserOps
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 
