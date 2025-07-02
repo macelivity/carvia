@@ -5,7 +5,7 @@ export default function Homepage() {
     const { user } = useAuth();
 
     return (
-        <div className="min-h-screen bg-gray-100 p-8">
+        <div className="bg-gray-100 p-8">
             <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
                 <h1 className="text-3xl font-bold mb-4 text-blue-700">Willkommen bei CarVia</h1>
                 <p className="mb-6 text-gray-700">
@@ -28,7 +28,7 @@ export default function Homepage() {
                             <Link to="/reservations" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Reservierungen</Link>
                             {(user.role === 'Mitarbeiter') && (
                                 <>
-                                    <Link to="/management/vehicles" className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Fahrzeuge verwalten</Link>
+                                    <Link to="/vehicle-management" className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Fahrzeuge verwalten</Link>
                                 </>
                             )}
                             {(user.role === 'Admin') && (

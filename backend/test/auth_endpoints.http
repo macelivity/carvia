@@ -35,16 +35,19 @@ POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "username": "test",
-  "password": "password123",
-  "vorname": "Max",
-  "nachname": "Mustermann",
-  "geburtsdatum": "1990-01-01",
-  "rolle_id": 1,
-  "hausnummer": "123",
-  "plz": "12345",
-  "ort": "Berlin",
-  "strasse": "Musterstraße"
+  "username": "mathias",
+  "password": "sein_geburtstag",
+  "vorname": "Mathias",
+  "nachname": "Mitarbeiter",
+  "geburtsdatum": "1998-05-14",
+  "rolle_id": 3,
+  "email": "mitarbeiterm@localhost.de",
+  "hausnummer": "56",
+  "plz": "28832",
+  "ort": "Achim",
+  "strasse": "Bremer Str.",
+  "iban": "DE89370400440532013000",
+  "bic": "COBADEFFXXX"
 }
 
 ###

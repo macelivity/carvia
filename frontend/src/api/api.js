@@ -25,8 +25,14 @@ export const getProfile = () => API.get('/auth/profile'); // Neuer Endpunkt für
 export const getReservations = () => API.get('/reservations');
 export const createReservation = (data) => API.post('/reservations', data);
 
+
+export const getAllVehicles = () => API.get('/fahrzeug?detailed=true');
 export const getFilteredVehicles = (params) => API.get(`/fahrzeug/filter?${params.toString()}`);
 export const getVehicleLocation = (vehicle_id, date) => API.get(`/fahrzeug/${vehicle_id}/location${date ? `?date=${date}` : ''}`);
+export const updateVehicle = (fahrzeugId, data) => {
+	console.log("Update Vehicle Data:", data); // Debugging-Ausgabe
+	API.put(`/fahrzeug/${fahrzeugId}`, data);
+}
 
 export default API;
 

@@ -55,7 +55,7 @@ Content-Type: application/json
 ###
 
 # DELETE modell
-DELETE {{baseUrl}}/modell/1
+DELETE {{baseUrl}}/modell/13
 
 ### Add Multiple Example Models ###
 
