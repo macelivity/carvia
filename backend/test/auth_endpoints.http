@@ -7,7 +7,27 @@
 ###
 
 GET {{baseUrl}}/auth/users
+###
 
+# Register a new employee (Mitarbeiter)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "Test7",
+  "password": "mitarbeiter",
+  "vorname": "Mama Mia",
+  "nachname": "Mitarbeiter",
+  "geburtsdatum": "1995-04-20",
+  "rolle_id": 3,
+  "hausnummer": "7",
+  "plz": "12345",
+  "ort": "Musterstadt",
+  "strasse": "Arbeitsweg",
+  "email": "mia.mitarbeiter@example.com",
+  "iban": "DE89370400440532013000",
+  "bic": "COBADEFFXXX"
+}
 ###
 
 # Register a new user
@@ -25,23 +45,6 @@ Content-Type: application/json
   "plz": "12345",
   "ort": "Berlin",
   "strasse": "Musterstraße"
-}
-
-###
-POST http://127.0.0.1:5000/api/auth/register
-Content-Type: application/json
-
-{
-  "username": "admin",
-  "password": "adminpass123",
-  "vorname": "Admin",
-  "nachname": "User",
-  "geburtsdatum": "1980-01-01",
-  "rolle_id": 2,
-  "hausnummer": "1",
-  "plz": "00000",
-  "ort": "Adminstadt",
-  "strasse": "Adminstraße"
 }
 
 ###

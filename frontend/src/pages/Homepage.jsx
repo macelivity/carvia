@@ -26,10 +26,14 @@ export default function Homepage() {
                         <p className="text-gray-600">Willkommen zurück, <strong>{user.username}</strong>!</p>
                         <div className="flex space-x-4">
                             <Link to="/reservations" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Reservierungen</Link>
-                            {(user.role === 'Mitarbeiter' || user.role === 'Admin') && (
+                            {(user.role === 'Mitarbeiter') && (
                                 <>
                                     <Link to="/management/vehicles" className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Fahrzeuge verwalten</Link>
-                                    <Link to="/management/users" className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Mitgliederdaten bearbeiten</Link>
+                                </>
+                            )}
+                            {(user.role === 'Admin') && (
+                                <>
+                                    <Link to="/management/mitarbeiter" className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Mitarbeiter verwalten</Link>
                                 </>
                             )}
                         </div>

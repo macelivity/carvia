@@ -1,15 +1,43 @@
 import React, { useEffect, useState } from "react";
+import { useAuth } from '../context/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 export default function UserManagement() {
+  const { user } = useAuth();
+
+  // Nur Mitarbeiter (RolleID === 3) dürfen diese Seite sehen
+  if (!user || user.RolleID !== 3) {
+    return <Navigate to="/" replace />;
+  }
+
   const [users, setUsers] = useState([]);
   const [editUser, setEditUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newMember, setNewMember] = useState({
+    Username: "",
+    Password: "",
+    Vorname: "",
+    Nachname: "",
+    Geburtsdatum: "",
+    Email: "",
+    Hausnummer: "",
+    PLZ: "",
+    Ort: "",
+    Strasse: "",
+    IBAN: "",
+    BIC: ""
+  });
 
   useEffect(() => {
-    fetch("/api/auth/users")
+    fetch("/api/auth/users", {
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
-        setUsers(data);
+        setUsers(data.filter(user => user.RolleID === 1));
         setLoading(false);
       });
   }, []);
@@ -25,24 +53,29 @@ export default function UserManagement() {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem("accessToken")}` // <--- Token hier einfügen
+        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
       },
       body: JSON.stringify(editUser),
     }).then(() => {
       setEditUser(null);
       fetch("/api/auth/users", {
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("accessToken")}` // <--- Auch hier!
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
         }
       })
         .then(res => res.json())
-        .then(data => setUsers(data));
+        .then(data => setUsers(data.filter(user => user.RolleID === 1)));
     });
   };
 
-  const handleDelete = () => {
+  // Korrigierte handleDelete-Funktion
+  const handleDelete = (user) => {
+    if (!user || !user.UserID) {
+      alert("UserID fehlt!");
+      return;
+    }
     if (window.confirm("Diesen Account wirklich löschen?")) {
-      fetch(`/api/auth/user/${editUser.UserID}`, {
+      fetch(`/api/auth/user/${user.UserID}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
@@ -55,14 +88,106 @@ export default function UserManagement() {
           }
         })
           .then(res => res.json())
-          .then(data => setUsers(data));
+          .then(data => setUsers(data.filter(u => u.RolleID === 1)));
       });
     }
+  };
+
+  const handleCreateChange = (e) => {
+    setNewMember({ ...newMember, [e.target.name]: e.target.value });
+  };
+
+  const handleCreateMember = (e) => {
+    e.preventDefault();
+    fetch("/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+      },
+      body: JSON.stringify({
+        username: newMember.Username,
+        password: newMember.Password,
+        email: newMember.Email,
+        rolle_id: 1,
+        vorname: newMember.Vorname,
+        nachname: newMember.Nachname,
+        geburtsdatum: newMember.Geburtsdatum,
+        iban: newMember.IBAN,
+        bic: newMember.BIC,
+        hausnummer: newMember.Hausnummer,
+        plz: newMember.PLZ,
+        ort: newMember.Ort,
+        strasse: newMember.Strasse
+      })
+    })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(data => { throw new Error(JSON.stringify(data)); });
+        }
+        return res.json();
+      })
+      .then(() => {
+        setShowCreate(false);
+        setNewMember({
+          Username: "",
+          Password: "",
+          Vorname: "",
+          Nachname: "",
+          Geburtsdatum: "",
+          Email: "",
+          Hausnummer: "",
+          PLZ: "",
+          Ort: "",
+          Strasse: "",
+          IBAN: "",
+          BIC: ""
+        });
+        // Mitgliederliste neu laden
+        fetch("/api/auth/users", {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+          }
+        })
+          .then(res => res.json())
+          .then(data => setUsers(data.filter(user => user.RolleID === 1)));
+      })
+      .catch(err => alert("Fehler beim Anlegen: " + err.message));
   };
 
   return (
     <div className="p-8">
       <h2 className="text-2xl font-bold mb-4">Mitgliederdaten verwalten</h2>
+      {/* Button zum Anlegen eines neuen Mitglieds */}
+      <button
+        className="bg-green-600 text-white px-4 py-2 rounded mb-4"
+        onClick={() => setShowCreate(true)}
+      >
+        Mitglied anlegen
+      </button>
+      {/* Formular anzeigen, wenn showCreate true */}
+      {showCreate && (
+        <form className="flex flex-wrap gap-4 mb-6" onSubmit={handleCreateMember}>
+          <input name="Username" placeholder="Username" value={newMember.Username} onChange={handleCreateChange} required />
+          <input name="Password" placeholder="Passwort" type="password" value={newMember.Password} onChange={handleCreateChange} required />
+          <input name="Vorname" placeholder="Vorname" value={newMember.Vorname} onChange={handleCreateChange} required />
+          <input name="Nachname" placeholder="Nachname" value={newMember.Nachname} onChange={handleCreateChange} required />
+          <input name="Geburtsdatum" placeholder="Geburtsdatum" type="date" value={newMember.Geburtsdatum} onChange={handleCreateChange} required />
+          <input name="Email" placeholder="E-Mail" type="email" value={newMember.Email} onChange={handleCreateChange} required />
+          <input name="Hausnummer" placeholder="Hausnummer" value={newMember.Hausnummer} onChange={handleCreateChange} />
+          <input name="PLZ" placeholder="PLZ" value={newMember.PLZ} onChange={handleCreateChange} />
+          <input name="Ort" placeholder="Ort" value={newMember.Ort} onChange={handleCreateChange} />
+          <input name="Strasse" placeholder="Straße" value={newMember.Strasse} onChange={handleCreateChange} />
+          <input name="IBAN" placeholder="IBAN" value={newMember.IBAN} onChange={handleCreateChange} />
+          <input name="BIC" placeholder="BIC" value={newMember.BIC} onChange={handleCreateChange} />
+          <button className="bg-blue-600 text-white px-4 py-2 rounded" type="submit">
+            Anlegen
+          </button>
+          <button className="ml-2 px-4 py-2" type="button" onClick={() => setShowCreate(false)}>
+            Abbrechen
+          </button>
+        </form>
+      )}
       {editUser ? (
         <div className="mb-6">
           <form className="flex space-x-4 items-end">
@@ -76,19 +201,6 @@ export default function UserManagement() {
                 placeholder="UserID"
                 disabled
               />
-            </div>
-            <div className="flex flex-col">
-              <label className="mb-1 text-sm font-semibold">RolleID</label>
-              <select
-                className="border p-2"
-                name="RolleID"
-                value={editUser.RolleID}
-                onChange={handleChange}
-              >
-                <option value={1}>Benutzer</option>
-                <option value={2}>Admin</option>
-                <option value={3}>Mitarbeiter</option>
-              </select>
             </div>
             <div className="flex flex-col">
               <label className="mb-1 text-sm font-semibold">Username</label>
@@ -128,13 +240,6 @@ export default function UserManagement() {
             <button className="ml-2 px-4 py-2" onClick={() => setEditUser(null)} type="button">
               Abbrechen
             </button>
-            <button
-              className="bg-red-600 text-white px-4 py-2 rounded ml-4"
-              onClick={handleDelete}
-              type="button"
-            >
-              Account löschen
-            </button>
           </form>
         </div>
       ) : loading ? (
@@ -144,7 +249,6 @@ export default function UserManagement() {
           <thead>
             <tr>
               <th className="py-2">UserID</th>
-              <th className="py-2">RolleID</th>
               <th className="py-2">Username</th>
               <th className="py-2">Beitrittsdatum</th>
               <th className="py-2">Geburtsdatum</th>
@@ -155,17 +259,21 @@ export default function UserManagement() {
             {users.map(user => (
               <tr key={user.UserID}>
                 <td className="py-2">{user.UserID}</td>
-                <td className="py-2">{user.RolleID}</td>
                 <td className="py-2">{user.Username}</td>
                 <td className="py-2">{user.BeitrittsDatum}</td>
                 <td className="py-2">{user.Geburtsdatum}</td>
-                <td className="py-2">{user.PasswordHash}</td>
-                <td className="py-2">
+                <td className="py-2 space-x-2">
                   <button
                     className="bg-purple-600 text-white px-3 py-1 rounded"
                     onClick={() => handleEdit(user)}
                   >
                     Bearbeiten
+                  </button>
+                  <button
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    onClick={() => handleDelete(user)}
+                  >
+                    Löschen
                   </button>
                 </td>
               </tr>

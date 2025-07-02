@@ -233,7 +233,7 @@ def delete_user_by_id(user_id):
     try:
         success = UserOps.delete_user(user_id)
         if success:
-            return jsonify({"msg": "User deleted successfully"}), 200
+            return '', 204  # Erfolgreich gelöscht, kein Inhalt
         else:
             return jsonify({"msg": "User not found"}), 404
     except Exception as e:
