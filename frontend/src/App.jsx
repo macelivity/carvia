@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext'
+import Booking from './pages/Booking';
 import Navbar from './components/Navbar'
 import Footer from './components/Footer';
 import Login from './pages/Login';
@@ -10,6 +11,7 @@ import Homepage from './pages/Homepage';
 import UserManagement from './pages/UserManagement';
 import EmployeeManagement from './pages/EmployeeManagement';
 import VehicleManagement from './pages/VehicleManagement';
+import VehicleSearch from './pages/VehicleSearch';
 import Impressum from './pages/Impressum';
 import Datenschutz from './pages/Datenschutz';
 import ProtectedRoute from './components/ProtectedRoute';

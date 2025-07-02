@@ -1,25 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from "react-router-dom";
+import UserEditFormTable from "../components/UserEditFormTable";
 
 export default function EmployeeManagement() {
   const { user } = useAuth();
   const [employees, setEmployees] = useState([]);
-  const [showCreate, setShowCreate] = useState(false);
-  const [newEmployee, setNewEmployee] = useState({
-    username: "",
-    password: "",
-    vorname: "",
-    nachname: "",
-    geburtsdatum: "",
-    email: "",
-    hausnummer: "",
-    plz: "",
-    ort: "",
-    strasse: "",
-    iban: "",
-    bic: ""
-  });
+  const [editUser, setEditUser] = useState(null);
 
   // Nur Admin darf diese Seite sehen
   if (!user || user.RolleID !== 2) {
@@ -41,129 +28,47 @@ export default function EmployeeManagement() {
     fetchEmployees();
   }, []);
 
-  const handleCreateChange = (e) => {
-    setNewEmployee({ ...newEmployee, [e.target.name]: e.target.value });
-  };
-
-  const handleCreateEmployee = (e) => {
-    e.preventDefault();
-    fetch("/api/auth/register", {
-      method: "POST",
+  // Speichern-Handler für das Bearbeiten-Menü
+  const handleEditSave = (updatedUser) => {
+    fetch(`/api/auth/user/${updatedUser.UserID}`, {
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
       },
-      body: JSON.stringify({
-        username: newEmployee.username,
-        password: newEmployee.password,
-        email: newEmployee.email,
-        rolle_id: 3,
-        vorname: newEmployee.vorname,
-        nachname: newEmployee.nachname,
-        geburtsdatum: newEmployee.geburtsdatum,
-        iban: newEmployee.iban,
-        bic: newEmployee.bic,
-        hausnummer: newEmployee.hausnummer,
-        plz: newEmployee.plz,
-        ort: newEmployee.ort,
-        strasse: newEmployee.strasse
-      })
+      body: JSON.stringify(updatedUser)
     })
       .then(res => {
-        if (!res.ok) {
-          return res.json().then(data => { throw new Error(JSON.stringify(data)); });
-        }
+        if (!res.ok) throw new Error("Fehler beim Speichern");
         return res.json();
       })
-      .then((response) => {
-        console.log("Mitarbeiter erfolgreich erstellt:", response); // <-- Response ausgeben
-        setShowCreate(false);
-        setNewEmployee({
-          username: "",
-          password: "",
-          vorname: "",
-          nachname: "",
-          geburtsdatum: "",
-          email: "",
-          hausnummer: "",
-          plz: "",
-          ort: "",
-          strasse: "",
-          iban: "",
-          bic: ""
-        });
+      .then(() => {
+        setEditUser(null);
         fetchEmployees();
       })
-      .catch(err => alert("Fehler beim Anlegen: " + err.message));
+      .catch(err => alert(err.message));
   };
 
-  // NEU: Mitarbeiter löschen
-  const handleDelete = (emp) => {
-    if (window.confirm("Diesen Mitarbeiter wirklich löschen?")) {
-      fetch(`/api/auth/user/${emp.UserID}`, {
+  // Löschen-Handler
+  const handleDelete = (userToDelete) => {
+    if (window.confirm(`Sind Sie sicher, dass Sie ${userToDelete.Username} löschen möchten?`)) {
+      fetch(`/api/auth/user/${userToDelete.UserID}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
         }
       })
         .then(res => {
-          if (res.status === 204) {
-            fetchEmployees();
-            return;
-          }
-          if (!res.ok) {
-            fetchEmployees();
-            return res.text().then(text => {
-              let data;
-              try {
-                data = text ? JSON.parse(text) : {};
-              } catch {
-                data = { message: text };
-              }
-              alert("Fehler beim Löschen: " + (data.message || JSON.stringify(data)));
-              // Kein throw mehr hier!
-            });
-          }
+          if (!res.ok) throw new Error("Fehler beim Löschen");
           fetchEmployees();
         })
-        .catch(err => {
-          // Nur noch unerwartete Fehler landen hier
-          console.error("Delete error:", err);
-        });
+        .catch(err => alert(err.message));
     }
   };
 
   return (
     <div className="p-8">
       <h2 className="text-2xl font-bold mb-4">Mitarbeiter verwalten</h2>
-      <button
-        className="bg-green-600 text-white px-4 py-2 rounded mb-4"
-        onClick={() => setShowCreate(true)}
-      >
-        Mitarbeiter anlegen
-      </button>
-      {showCreate && (
-        <form className="flex flex-wrap gap-4 mb-6" onSubmit={handleCreateEmployee}>
-          <input name="username" placeholder="Username" value={newEmployee.username} onChange={handleCreateChange} required />
-          <input name="password" placeholder="Passwort" type="password" value={newEmployee.password} onChange={handleCreateChange} required />
-          <input name="vorname" placeholder="Vorname" value={newEmployee.vorname} onChange={handleCreateChange} required />
-          <input name="nachname" placeholder="Nachname" value={newEmployee.nachname} onChange={handleCreateChange} required />
-          <input name="geburtsdatum" placeholder="Geburtsdatum" type="date" value={newEmployee.geburtsdatum} onChange={handleCreateChange} required />
-          <input name="email" placeholder="E-Mail" type="email" value={newEmployee.email} onChange={handleCreateChange} required />
-          <input name="hausnummer" placeholder="Hausnummer" value={newEmployee.hausnummer} onChange={handleCreateChange} />
-          <input name="plz" placeholder="PLZ" value={newEmployee.plz} onChange={handleCreateChange} />
-          <input name="ort" placeholder="Ort" value={newEmployee.ort} onChange={handleCreateChange} />
-          <input name="strasse" placeholder="Straße" value={newEmployee.strasse} onChange={handleCreateChange} />
-          <input name="iban" placeholder="IBAN" value={newEmployee.iban} onChange={handleCreateChange} />
-          <input name="bic" placeholder="BIC" value={newEmployee.bic} onChange={handleCreateChange} />
-          <button className="bg-blue-600 text-white px-4 py-2 rounded" type="submit">
-            Anlegen
-          </button>
-          <button className="ml-2 px-4 py-2" type="button" onClick={() => setShowCreate(false)}>
-            Abbrechen
-          </button>
-        </form>
-      )}
       <table className="min-w-full bg-white">
         <thead>
           <tr>
@@ -172,7 +77,6 @@ export default function EmployeeManagement() {
             <th className="py-2">Vorname</th>
             <th className="py-2">Nachname</th>
             <th className="py-2">Geburtsdatum</th>
-            <th className="py-2">E-Mail</th>
             <th className="py-2">Aktion</th>
           </tr>
         </thead>
@@ -184,8 +88,13 @@ export default function EmployeeManagement() {
               <td className="py-2">{emp.Vorname}</td>
               <td className="py-2">{emp.Nachname}</td>
               <td className="py-2">{emp.Geburtsdatum}</td>
-              <td className="py-2">{emp.Email}</td>
               <td className="py-2">
+                <button
+                  className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
+                  onClick={() => setEditUser(emp)}
+                >
+                  Bearbeiten
+                </button>
                 <button
                   className="bg-red-600 text-white px-3 py-1 rounded"
                   onClick={() => handleDelete(emp)}
@@ -197,6 +106,20 @@ export default function EmployeeManagement() {
           ))}
         </tbody>
       </table>
+
+      {/* Bearbeiten-Menü als Modal */}
+      {editUser && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white p-6 rounded shadow-lg">
+            <h3 className="text-xl font-bold mb-4">Mitarbeiter bearbeiten</h3>
+            <UserEditFormTable
+              userData={editUser}
+              onSave={handleEditSave}
+              onCancel={() => setEditUser(null)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
