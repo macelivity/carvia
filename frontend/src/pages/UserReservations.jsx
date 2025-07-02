@@ -29,7 +29,7 @@ function UserList({ users, onSelect }) {
   );
 }
 
-function ReservationList({ reservations, onEdit }) {
+function ReservationList({ reservations, onEdit, onDelete }) {
   return reservations.map(r => (
     <Card key={r.ReservierungID} sx={{ mb: 2 }}>
       <CardContent>
@@ -40,6 +40,7 @@ function ReservationList({ reservations, onEdit }) {
       </CardContent>
       <CardActions>
         <Button onClick={() => onEdit(r)}>Edit</Button>
+        <Button color="error" onClick={() => onDelete(r)} sx={{ ml: 1 }}>Löschen</Button>
       </CardActions>
     </Card>
   ));
@@ -94,6 +95,7 @@ export default function UserReservations() {
   const [reservationError, setReservationError] = useState(null); // Fehler für Reservierungen
   const [createError, setCreateError] = useState(null);
   const [tariffs, setTariffs] = useState([]);
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, reservation: null });
 
   // Lade Tarife, wenn Dialog geöffnet wird
   useEffect(() => {
@@ -201,6 +203,21 @@ export default function UserReservations() {
   };
   const handleCreateBack = () => setCreateDialog(prev => ({ ...prev, page: Math.max(0, prev.page - 1) }));
 
+  // --- Reservierung löschen ---
+  const handleDeleteReservation = (reservation) => setDeleteDialog({ open: true, reservation });
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.reservation) return;
+    try {
+      await axios.delete(`/api/reservierung/${deleteDialog.reservation.ReservierungID}`);
+      setDeleteDialog({ open: false, reservation: null });
+      handleSelectUser(selectedUser);
+    } catch (e) {
+      setDeleteDialog({ open: false, reservation: null });
+      setReservationError(e.message || 'Fehler beim Löschen der Reservierung');
+    }
+  };
+  const handleDeleteCancel = () => setDeleteDialog({ open: false, reservation: null });
+
   // --- Render ---
   return (
     <Container maxWidth="md" sx={{ mt: { xs: 2, sm: 6 }, mb: 6 }}>
@@ -298,7 +315,7 @@ export default function UserReservations() {
               </Typography>
               {reservationError && <Alert severity="info" sx={{ mb: 2 }}>{reservationError}</Alert>}
               <Box>
-                <ReservationList reservations={reservations} onEdit={handleEditOpen} />
+                <ReservationList reservations={reservations} onEdit={handleEditOpen} onDelete={handleDeleteReservation} />
               </Box>
             </Box>
           </Grid>
@@ -455,6 +472,21 @@ export default function UserReservations() {
             </>
           )}
         </DialogContent>
+      </Dialog>
+      {/* --- Delete Reservation Dialog --- */}
+      <Dialog open={deleteDialog.open} onClose={handleDeleteCancel}
+        PaperProps={{ sx: { borderRadius: 3 } }}>
+        <DialogTitle>Reservierung löschen</DialogTitle>
+        <DialogContent>
+          <Typography>Möchten Sie die Reservierung wirklich löschen?</Typography>
+          <Typography sx={{ mt: 2, fontWeight: 700 }}>
+            ID: {deleteDialog.reservation?.ReservierungID}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Abbrechen</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">Löschen</Button>
+        </DialogActions>
       </Dialog>
     </Container>
   );
