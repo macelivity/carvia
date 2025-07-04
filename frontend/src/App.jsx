@@ -17,6 +17,7 @@ import NotFound from './pages/NotFound';
 import Account from './pages/Account';
 import UserReservations from './pages/UserReservations'; // Importiere die neue Seite
 import Rechnung from './pages/Rechnung';
+import { Box } from '@mui/material';
 import './i18n'; // Initialize i18n
 
 
@@ -24,59 +25,67 @@ export default function App() {
 	return (
 		<AuthProvider>
 			<BrowserRouter>
-				<Navbar />
+				<Box sx={{ 
+					display: 'flex', 
+					flexDirection: 'column', 
+					minHeight: '100vh' 
+				}}>
+					<Navbar />
 
-				<Routes>
-					<Route path="/" element={<Homepage />} />
-					<Route path="/login" element={<Login />} />
-					<Route path="/register" element={<Register />} />
-					<Route path='/account' element={<Account />} />
-					<Route
-						path="/reservations"
-						element={
-							<ProtectedRoute allowedRoles={['Mitglied', 'Admin', 'Mitarbeiter']}>
-								<Reservations />
-							</ProtectedRoute>
-						}
-					/>
-					<Route
-						path="/vehicles"
-						element={
-								<Vehicles />
-						}
-					/>
-					<Route
-						path="/booking/:vehicle_id"
-						element={
-							<ProtectedRoute allowedRoles={['Mitglied', 'Admin', 'Mitarbeiter']}>
-								<Booking />
-							</ProtectedRoute>
-						}
-					/>
-					<Route
-						path="/vehicle-management"
-						element={
-							<ProtectedRoute allowedRoles={['Mitarbeiter']}>
-								<VehicleManagement />
-							</ProtectedRoute>
-						}
-					/>
-					<Route
-						path="/user-reservations"
-						element={
-							<ProtectedRoute allowedRoles={['Mitarbeiter']}>
-								<UserReservations />
-							</ProtectedRoute>
-						}
-					/>
-					<Route path="/search" element={<VehicleSearch />} />
-					<Route path="/rechnung" element={<Rechnung />} />
-					<Route path="/impressum" element={<Impressum />} />
-					<Route path="/datenschutz" element={<Datenschutz />} />
-					<Route path="*" element={<NotFound />} />
-				</Routes>
-				
-				<Footer />
+					<Box sx={{ flex: 1 }}>
+						<Routes>
+							<Route path="/" element={<Homepage />} />
+							<Route path="/login" element={<Login />} />
+							<Route path="/register" element={<Register />} />
+							<Route path='/account' element={<Account />} />
+							<Route
+								path="/reservations"
+								element={
+									<ProtectedRoute allowedRoles={['Mitglied', 'Admin', 'Mitarbeiter']}>
+										<Reservations />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/vehicles"
+								element={
+										<Vehicles />
+								}
+							/>
+							<Route
+								path="/booking/:vehicle_id"
+								element={
+									<ProtectedRoute allowedRoles={['Mitglied', 'Admin', 'Mitarbeiter']}>
+										<Booking />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/vehicle-management"
+								element={
+									<ProtectedRoute allowedRoles={['Mitarbeiter']}>
+										<VehicleManagement />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/user-reservations"
+								element={
+									<ProtectedRoute allowedRoles={['Mitarbeiter']}>
+										<UserReservations />
+									</ProtectedRoute>
+								}
+							/>
+							<Route path="/search" element={<VehicleSearch />} />
+							<Route path="/rechnung" element={<Rechnung />} />
+							<Route path="/impressum" element={<Impressum />} />
+							<Route path="/datenschutz" element={<Datenschutz />} />
+							<Route path="*" element={<NotFound />} />
+						</Routes>
+					</Box>
+					
+					<Footer />
+				</Box>
 			</BrowserRouter>
 		</AuthProvider>
 	)
