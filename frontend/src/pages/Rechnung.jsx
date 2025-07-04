@@ -1,5 +1,6 @@
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import jsPDF from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
 import { getRechnungByReservierungsId, getRechnung, getVehicleById, getProfile } from '../api/api';
@@ -7,6 +8,7 @@ import { getRechnungByReservierungsId, getRechnung, getVehicleById, getProfile }
 export default function Rechnung() {
   const { rechnungID } = useParams();
   const [searchParams] = useSearchParams();
+  const { t } = useTranslation();
   const reservierungsId = searchParams.get('reservation');
   const [rechnung, setRechnung] = useState(null);
   const [fahrzeug, setFahrzeug] = useState(null);
@@ -63,27 +65,27 @@ export default function Rechnung() {
         (kunde.Strasse || kunde.strasse || '') + " " + (kunde.HausNummer || kunde.hausnummer || ''),
         (kunde.PLZ || kunde.plz || '') + " " + (kunde.Ort || kunde.ort || '')
       ].filter(line => line.trim()).join('\n')
-    : 'Kundendaten nicht verfügbar.';
+    : t('invoice.customerDataNotAvailable');
 
   const bankInfo = kunde
     ? [
         kunde.IBAN || kunde.iban || '',
         kunde.BIC || kunde.bic || ''
       ].filter(Boolean).join('\n')
-    : 'Kundendaten nicht verfügbar.';
+    : t('invoice.customerDataNotAvailable');
 
   const downloadPDF = () => {
     if (!rechnung) return;
     const doc = new jsPDF();
 
     doc.setFontSize(18);
-    doc.text('Rechnung', 14, 18);
+    doc.text(t('invoice.title'), 14, 18);
 
     doc.setFontSize(12);
     doc.text('Carvia GmbH\nMusterstraße 1\n12345 Musterstadt', 14, 30);
 
     doc.setFontSize(12);
-    doc.text('Kunde:', 14, 50);
+    doc.text(t('invoice.customer') + ':', 14, 50);
     doc.text(kundeInfo, 14, 56);
 
     doc.text('Bank:', 110, 50);
@@ -91,25 +93,25 @@ export default function Rechnung() {
 
     autoTable(doc, {
       startY: 80,
-      head: [['Leistung', 'Fahrzeug', 'Bezahlt', 'Ausstellungsdatum', 'Preis (€)']],
+      head: [[t('invoice.service'), t('invoice.vehicle'), t('invoice.paid'), t('invoice.issueDate'), t('invoice.price')]],
       body: [
         [
-          'Fahrzeugmiete',
+          t('invoice.vehicleRental'),
           fahrzeugInfo || '-',
-          rechnung.Bezahlt ? 'Ja' : 'Nein',
+          rechnung.Bezahlt ? t('common.yes') : t('common.no'),
           rechnung.Austellungsdatum || '-',
           preis
         ]
       ]
     });
 
-    doc.text(`Gesamtbetrag: ${preis} €`, 14, doc.lastAutoTable.finalY + 15);
+    doc.text(`${t('invoice.totalAmount')}: ${preis} €`, 14, doc.lastAutoTable.finalY + 15);
 
-    doc.save(`Rechnung_${rechnung.id || reservierungsId}.pdf`);
+    doc.save(`${t('invoice.title')}_${rechnung.id || reservierungsId}.pdf`);
   };
 
-  if (loading) return <div className="p-6">Lade Rechnung...</div>;
-  if (!rechnung) return <div className="p-6 text-red-500">Rechnung nicht gefunden.</div>;
+  if (loading) return <div className="p-6">{t('invoice.loading')}</div>;
+  if (!rechnung) return <div className="p-6 text-red-500">{t('invoice.errorLoading')}</div>;
 
   return (
     <div className="p-8 max-w-2xl mx-auto bg-white rounded shadow border">
@@ -119,19 +121,19 @@ export default function Rechnung() {
           <div>Musterstraße 1<br />12345 Musterstadt</div>
         </div>
         <div className="text-right">
-          <div><strong>Rechnungsdatum:</strong> {rechnung.Austellungsdatum || '-'}</div>
-          <div><strong>Rechnungsnummer:</strong> {rechnung.id || reservierungsId}</div>
+          <div><strong>{t('invoice.issueDate')}:</strong> {rechnung.Austellungsdatum || '-'}</div>
+          <div><strong>{t('invoice.invoiceNumber')}:</strong> {rechnung.id || reservierungsId}</div>
         </div>
       </div>
       <div className="flex justify-between mb-8">
         <div>
-          <h3 className="font-semibold">Kunde</h3>
+          <h3 className="font-semibold">{t('invoice.customer')}</h3>
           <div style={{ whiteSpace: 'pre-line' }}>
             {kunde ? [
               kunde.Vorname + " " + kunde.Nachname,
               kunde.Strasse + " " + kunde.HausNummer,
               kunde.PLZ + " " + kunde.Ort
-            ].filter(Boolean).join('\n') : 'Kundendaten nicht verfügbar.'}
+            ].filter(Boolean).join('\n') : t('invoice.customerDataNotAvailable')}
           </div>
         </div>
         <div>
@@ -140,38 +142,38 @@ export default function Rechnung() {
             {kunde ? [
               kunde.IBAN,
               kunde.BIC
-            ].filter(Boolean).join('\n') : 'Kundendaten nicht verfügbar.'}
+            ].filter(Boolean).join('\n') : t('invoice.customerDataNotAvailable')}
           </div>
         </div>
       </div>
       <table className="w-full mb-8 border">
         <thead>
           <tr className="bg-gray-100">
-            <th className="border px-2 py-1 text-left">Leistung</th>
-            <th className="border px-2 py-1 text-left">Fahrzeug</th>
-            <th className="border px-2 py-1 text-left">Bezahlt</th>
-            <th className="border px-2 py-1 text-left">Ausstellungsdatum</th>
-            <th className="border px-2 py-1 text-left">Preis (€)</th>
+            <th className="border px-2 py-1 text-left">{t('invoice.service')}</th>
+            <th className="border px-2 py-1 text-left">{t('invoice.vehicle')}</th>
+            <th className="border px-2 py-1 text-left">{t('invoice.paid')}</th>
+            <th className="border px-2 py-1 text-left">{t('invoice.issueDate')}</th>
+            <th className="border px-2 py-1 text-left">{t('invoice.price')}</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td className="border px-2 py-1">Fahrzeugmiete</td>
+            <td className="border px-2 py-1">{t('invoice.vehicleRental')}</td>
             <td className="border px-2 py-1">{fahrzeugInfo}</td>
-            <td className="border px-2 py-1">{rechnung.Bezahlt ? 'Ja' : 'Nein'}</td>
+            <td className="border px-2 py-1">{rechnung.Bezahlt ? t('common.yes') : t('common.no')}</td>
             <td className="border px-2 py-1">{rechnung.Austellungsdatum || '-'}</td>
             <td className="border px-2 py-1">{preis}</td>
           </tr>
         </tbody>
       </table>
       <div className="text-right text-lg font-bold mb-8">
-        Gesamtbetrag: {preis} €
+        {t('invoice.totalAmount')}: {preis} €
       </div>
       <button
         onClick={downloadPDF}
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
       >
-        Als PDF herunterladen
+        {t('invoice.downloadPdf')}
       </button>
     </div>
   );

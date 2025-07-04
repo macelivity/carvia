@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation, Trans } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet'; // Import Circle
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.webpack.css';
@@ -25,6 +26,8 @@ const OptionalFilterModal = ({
 	onCancel,
 	onApply
 }) => {
+	const { t } = useTranslation();
+	
 	if (!isOpen) {
 		return null;
 	}
@@ -32,62 +35,62 @@ const OptionalFilterModal = ({
     return (
         <Dialog open={isOpen} onClose={onCancel} maxWidth="sm" fullWidth>
             <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold', borderBottom: 1, borderColor: 'divider', pb: 2 }}>
-                Filter
+                {t('vehicles.filter')}
             </DialogTitle>
             <DialogContent sx={{ pt: '20px !important' }}> {/* Add padding top to content */}
                 <Grid container spacing={2}>
                     <Grid item size={4}>
                         <TextField
-                            label="Hersteller"
+                            label={t('vehicles.manufacturer')}
                             name="hersteller"
                             value={currentFilters.hersteller || ''}
                             onChange={onFilterChange}
-                            placeholder="z.B. VW"
+                            placeholder={t('vehicles.manufacturerPlaceholder')}
                             fullWidth
                             variant="outlined"
                         />
                     </Grid>
                     <Grid item size={8}>
                         <TextField
-                            label="Modell"
+                            label={t('vehicles.model')}
                             name="modell"
                             value={currentFilters.modell || ''}
                             onChange={onFilterChange}
-                            placeholder="z.B. Golf"
+                            placeholder={t('vehicles.modelPlaceholder')}
                             fullWidth
                             variant="outlined"
                         />
                     </Grid>
                     <Grid item size={12}>
                         <TextField
-                            label="Fahrzeugtyp"
+                            label={t('vehicles.vehicleType')}
                             name="fahrzeugtyp"
                             value={currentFilters.fahrzeugtyp || ''}
                             onChange={onFilterChange}
-                            placeholder="z.B. SUV"
+                            placeholder={t('vehicles.vehicleTypePlaceholder')}
                             fullWidth
                             variant="outlined"
                         />
                     </Grid>
                     <Grid item size={12}>
                         <TextField
-                            label="Getriebeart"
+                            label={t('vehicles.transmission')}
                             name="getriebeart"
                             value={currentFilters.getriebeart || ''}
                             onChange={onFilterChange}
-                            placeholder="z.B. Automatik"
+                            placeholder={t('vehicles.transmissionPlaceholder')}
                             fullWidth
                             variant="outlined"
                         />
                     </Grid>
                     <Grid item size={12}>
                         <TextField
-                            label="Sitze (mind.)"
+                            label={t('vehicles.seats')}
                             type="number"
                             name="sitze"
                             value={currentFilters.sitze || 0}
                             onChange={onFilterChange}
-                            placeholder="z.B. 5"
+                            placeholder={t('vehicles.seatsPlaceholder')}
                             fullWidth
                             variant="outlined"
                             InputProps={{ inputProps: { min: 0 } }}
@@ -95,12 +98,12 @@ const OptionalFilterModal = ({
                     </Grid>
                     <Grid item size={12}>
                         <TextField
-                            label="Max. Preis/Stunde"
+                            label={t('vehicles.maxPricePerHour')}
                             type="number"
                             name="stundenpreis"
                             value={currentFilters.stundenpreis || 0}
                             onChange={onFilterChange}
-                            placeholder="z.B. 15.50"
+                            placeholder={t('vehicles.maxPricePerHourPlaceholder')}
                             fullWidth
                             variant="outlined"
                             InputProps={{
@@ -112,9 +115,9 @@ const OptionalFilterModal = ({
                 </Grid>
             </DialogContent>
             <DialogActions sx={{ p: '16px 24px', borderTop: 1, borderColor: 'divider' }}>
-                <Button onClick={onReset} color="inherit">Zurücksetzen</Button>
-                <Button onClick={onCancel} color="secondary">Abbrechen</Button>
-                <Button onClick={onApply} variant="contained" color="primary">Anwenden</Button>
+                <Button onClick={onReset} color="inherit">{t('vehicles.resetFilters')}</Button>
+                <Button onClick={onCancel} color="secondary">{t('vehicles.cancelFilters')}</Button>
+                <Button onClick={onApply} variant="contained" color="primary">{t('vehicles.applyFilters')}</Button>
             </DialogActions>
         </Dialog>
     );
@@ -144,6 +147,7 @@ export default function Vehicles() {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth(); // Auth context for JWT
+    const { t } = useTranslation();
 
     const [vehicles, setVehicles] = useState([]);
 	const [vehiclesToDisplay, setVehiclesToDisplay] = useState([]); // For displaying vehicles after fetching
@@ -363,7 +367,7 @@ export default function Vehicles() {
 			<div className={`w-full ${user.role !== "guest" ? 'md:w-3/5 lg:w-2/3' : 'md:w-full'} p-6 overflow-y-auto`}>
 				<div className="mb-6 p-4 border rounded-lg shadow bg-gray-50 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-3">
 					<div className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0 w-full sm:w-auto">
-						<h2 className="text-xl font-semibold text-gray-700">Suchergebnisse</h2>
+						<h2 className="text-xl font-semibold text-gray-700">{t('vehicles.searchResults')}</h2>
 						{
 							location.state &&
 								<>
@@ -376,12 +380,12 @@ export default function Vehicles() {
 						{
 							user.role !== 'guest' && 
 							<TextField
-								label="Max. Umkreis (km)"
+								label={t('vehicles.maxRadius')}
 								type="number"
 								name="radius"
 								value={currentActiveFilters.radius}
 								onChange={handleRadiusChange}
-								placeholder="z.B. 10"
+								placeholder={t('vehicles.maxRadiusPlaceholder')}
 								variant="outlined"
 								className="w-full sm:w-48"
 								InputProps={{ inputProps: { step: 1, min: 1, max: 50 } }}
@@ -392,14 +396,14 @@ export default function Vehicles() {
 							onClick={handleOpenFilterModal}
 							className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow"
 						>
-							Filter
+							{t('vehicles.filter')}
 						</button>
 						<button
 							type="button"
 							onClick={() => navigate('/search')}
 							className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md shadow"
 						>
-							Neue Suche starten
+							{t('vehicles.newSearch')}
 						</button>
 					</div>
 				</div>
@@ -407,12 +411,17 @@ export default function Vehicles() {
 				{!hasSearched && !loading && (
 					<div className="text-center p-10 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
 						<p className="text-lg text-gray-600">
-							Bitte starten Sie eine <Link to="/search" className="text-blue-600 hover:underline">neue Suche</Link>, um Fahrzeuge anzuzeigen.
+							<Trans 
+								i18nKey="vehicles.noSearchYet" 
+								components={{ 
+									newSearchLink: <Link to="/search" className="text-blue-600 hover:underline" />
+								}} 
+							/>
 						</p>
 					</div>
 				)}
 
-				{loading && <div className="text-center py-10"><p className="text-lg text-blue-600">Lade Fahrzeuge...</p></div>}
+				{loading && <div className="text-center py-10"><p className="text-lg text-blue-600">{t('vehicles.loadingVehicles')}</p></div>}
 
 				{hasSearched && !loading && error && (
 					<div className="text-center py-10 bg-red-50 p-6 rounded-lg">
@@ -422,8 +431,15 @@ export default function Vehicles() {
 
 				{hasSearched && !loading && !error && vehiclesToDisplay.length === 0 && (
 					<div className="text-center py-10 bg-yellow-50 p-6 rounded-lg">
-						<p className="text-lg text-gray-700 font-semibold">Keine Fahrzeuge für die aktuellen Kriterien gefunden.</p>
-						<p className="text-gray-600 mt-2">Versuchen Sie, Ihre Suchkriterien anzupassen oder eine <Link to="/search" className="text-blue-600 hover:underline">neue Suche</Link> zu starten.</p>
+						<p className="text-lg text-gray-700 font-semibold">{t('vehicles.noVehiclesFound')}</p>
+						<p className="text-gray-600 mt-2">
+							<Trans 
+								i18nKey="vehicles.adjustCriteria" 
+								components={{ 
+									newSearchLink: <Link to="/search" className="text-blue-600 hover:underline" />
+								}} 
+							/>
+						</p>
 					</div>
 				)}
 
@@ -432,12 +448,12 @@ export default function Vehicles() {
 						{vehiclesToDisplay.map(car => 
 							<li key={car.FahrzeugID} className="p-4 border rounded-lg shadow-md bg-white flex flex-col justify-between hover:shadow-xl transition-shadow">
 								<div>
-									<h3 className="font-semibold text-lg mb-1 text-blue-700">{car.ModellName || 'Unbekanntes selectedVehicleModell'}</h3>
-									<p className="text-sm text-gray-600">Hersteller: {car.Hersteller}</p>
-									<p className="text-sm text-gray-600">Typ: {car.Fahrzeugtyp}</p>
-									<p className="text-sm text-gray-600">Standort: {car.latitude && car.longitude ? 'Echtzeit-Position' : 'Nicht verfügbar'}</p>
+									<h3 className="font-semibold text-lg mb-1 text-blue-700">{car.ModellName || t('vehicles.unknownModel')}</h3>
+									<p className="text-sm text-gray-600">{t('vehicles.manufacturer')}: {car.Hersteller}</p>
+									<p className="text-sm text-gray-600">{t('vehicles.type')}: {car.Fahrzeugtyp}</p>
+									<p className="text-sm text-gray-600">{t('vehicles.location')}: {car.latitude && car.longitude ? t('vehicles.realtimePosition') : t('vehicles.notAvailable')}</p>
 									{car.latitude && car.longitude && ( 
-										<p className="text-xs text-gray-500">Geo: {car.latitude.toFixed(4)}, {car.longitude.toFixed(4)}</p>
+										<p className="text-xs text-gray-500">{t('vehicles.geoCoords')}: {car.latitude.toFixed(4)}, {car.longitude.toFixed(4)}</p>
 									)}
 								</div>
 								<Link
@@ -453,7 +469,7 @@ export default function Vehicles() {
 									}}
 									className="mt-4 block w-full bg-blue-500 hover:bg-blue-600 text-white text-center font-semibold py-2 px-3 rounded-md text-sm"
 								>
-									Details & Buchen
+									{t('vehicles.detailsAndBook')}
 								</Link>
 							</li>
 						)}
@@ -481,7 +497,7 @@ export default function Vehicles() {
 									iconAnchor: [32, 48]
 								})}
 							>
-								<Popup>Abholort: {currentActiveFilters.abholort_stadt}, {currentActiveFilters.abholort_plz}</Popup>
+								<Popup>{t('vehicles.pickupLocation')}: {currentActiveFilters.abholort_stadt}, {currentActiveFilters.abholort_plz}</Popup>
 							</Marker>
 						}
 
@@ -507,7 +523,7 @@ export default function Vehicles() {
 									<Popup>
 										<b>{car.Hersteller} {car.ModellName}</b> <br />
 										({car.Kennzeichen}) <br />
-										Standort: {popupLocationText} <br />
+										{t('vehicles.location')}: {popupLocationText} <br />
 										<Link
 											to={`/booking/${car.FahrzeugID}`}
 											state={{
@@ -520,7 +536,7 @@ export default function Vehicles() {
 												fahrzeugId: car.FahrzeugID
 											}}
 										>
-											Details & Buchen
+											{t('vehicles.detailsAndBook')}
 										</Link>
 									</Popup>
 								</Marker>

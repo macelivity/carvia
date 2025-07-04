@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { getAllVehicles, updateVehicle, getVehicleLocation } from '../api/api';
 import API from '../api/api';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -58,6 +59,42 @@ const TUEREN_OPTIONS = [
 
 export default function VehicleManagement() {
     const { user } = useAuth();
+    const { t } = useTranslation();
+
+    // Localized option arrays
+    const getRepairStatusOptions = () => [
+        { value: "Sehr gut", label: t('vehicleManagement.veryGood') },
+        { value: "Gut", label: t('vehicleManagement.good') },
+        { value: "Befriedigend", label: t('vehicleManagement.satisfactory') },
+        { value: "Ausreichend", label: t('vehicleManagement.sufficient') },
+        { value: "Mangelhaft", label: t('vehicleManagement.deficient') }
+    ];
+
+    const getTireOptions = () => [
+        { value: "Sommerreifen", label: t('vehicleManagement.summerTires') },
+        { value: "Winterreifen", label: t('vehicleManagement.winterTires') },
+        { value: "Allwetterreifen", label: t('vehicleManagement.allSeasonTires') }
+    ];
+
+    const getTransmissionOptions = () => [
+        { value: "Manuell", label: t('vehicleManagement.manual') },
+        { value: "Automatik", label: t('vehicleManagement.automatic') }
+    ];
+
+    const getFuelTypeOptions = () => [
+        { value: "Benzin", label: t('vehicleManagement.gasoline') },
+        { value: "Benzin (E10 tauglich)", label: t('vehicleManagement.gasolineE10') },
+        { value: "Diesel", label: t('vehicleManagement.diesel') },
+        { value: "Elektro", label: t('vehicleManagement.electric') },
+        { value: "Hybrid (Diesel)", label: t('vehicleManagement.hybridDiesel') },
+        { value: "Hybrid (Benzin)", label: t('vehicleManagement.hybridGasoline') }
+    ];
+
+    const getDoorsOptions = () => [
+        { value: "2/3", label: t('vehicleManagement.doors23') },
+        { value: "4/5", label: t('vehicleManagement.doors45') },
+        { value: "6/7", label: t('vehicleManagement.doors67') }
+    ];
     const [vehicles, setVehicles] = useState([]);
     const [vehicleEdits, setVehicleEdits] = useState({});
     const [loading, setLoading] = useState(true);
@@ -74,7 +111,7 @@ export default function VehicleManagement() {
         return (
             <Container sx={{ mt: 6 }}>
                 <Typography variant="h5" color="error" align="center">
-                    Zugriff verweigert. Diese Seite ist nur für Mitarbeiter sichtbar.
+                    {t('vehicleManagement.accessDenied')}
                 </Typography>
             </Container>
         );
@@ -107,7 +144,7 @@ export default function VehicleManagement() {
             }));
             setLocations(locs);
         } catch {
-            setError('Fahrzeuge konnten nicht geladen werden.');
+            setError(t('vehicleManagement.errorLoading'));
         }
         setLoading(false);
     };
@@ -134,20 +171,20 @@ export default function VehicleManagement() {
                 return rest;
             });
         } catch {
-            setError('Fehler beim Speichern.');
-            window.alert('Fehler beim Speichern des Fahrzeugs.\nBitte versuchen Sie es später erneut.');
+            setError(t('vehicleManagement.errorSaving'));
+            window.alert(t('vehicleManagement.errorSavingDetailed'));
         }
         setSaving(false);
     };
 
     // Fahrzeug löschen
     const handleDelete = async (id) => {
-        if (!window.confirm('Fahrzeug wirklich aus dem Pool entfernen?')) return;
+        if (!window.confirm(t('vehicleManagement.deleteConfirmation'))) return;
         try {
             await API.delete(`/fahrzeug/${id}`);
             setVehicles(vehicles => vehicles.filter(v => v.FahrzeugID !== id));
         } catch {
-            window.alert('Fehler beim Entfernen des Fahrzeugs.');
+            window.alert(t('vehicleManagement.errorDeleting'));
         }
     };
 
@@ -187,7 +224,7 @@ export default function VehicleManagement() {
     const handleAddVehicle = async () => {
         setAddError('');
         if (!isValidNewVehicle()) {
-            setAddError('Bitte alle Felder korrekt ausfüllen.');
+            setAddError(t('vehicleManagement.fillAllFields'));
             return;
         }
         setAddLoading(true);
@@ -223,7 +260,7 @@ export default function VehicleManagement() {
             setAddOpen(false);
             fetchVehicles();
         } catch (err) {
-            setAddError('Fehler beim Hinzufügen. Prüfe die Eingaben und versuche es erneut.');
+            setAddError(t('vehicleManagement.errorAdding'));
         }
         setAddLoading(false);
     };
@@ -238,14 +275,14 @@ export default function VehicleManagement() {
             {/* Linke Seite: Fahrzeugliste */}
             <Box sx={{ flex: 2, overflowY: 'auto', p: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h4">Fahrzeugverwaltung</Typography>
+                    <Typography variant="h4">{t('vehicleManagement.title')}</Typography>
                     <Button
                         variant="contained"
                         color="success"
                         startIcon={<AddIcon />}
                         onClick={handleAddOpen}
                     >
-                        Fahrzeug hinzufügen
+                        {t('vehicleManagement.addVehicle')}
                     </Button>
                 </Box>
                 {error && <Typography color="error">{error}</Typography>}
@@ -271,7 +308,7 @@ export default function VehicleManagement() {
                                     </AccordionSummary>
                                     <AccordionDetails>
                                         <TextField
-                                            label="Basispreis"
+                                            label={t('vehicleManagement.basePrice')}
                                             value={edit.Stundenpreis ?? vehicle.Stundenpreis}
                                             onChange={e => handleEditChange(vehicle.FahrzeugID, 'Stundenpreis', e.target.value)}
                                             fullWidth sx={{ mt: 1 }}
@@ -279,7 +316,7 @@ export default function VehicleManagement() {
                                             InputProps={{ inputProps: { min: 0, step: 0.01 } }}
                                         />
                                         <TextField
-                                            label="Kilometerstand"
+                                            label={t('vehicleManagement.mileage')}
                                             value={edit.Kilometerstand ?? vehicle.Kilometerstand}
                                             onChange={e => handleEditChange(vehicle.FahrzeugID, 'Kilometerstand', e.target.value)}
                                             fullWidth sx={{ mt: 1 }}
@@ -287,38 +324,38 @@ export default function VehicleManagement() {
                                             InputProps={{ inputProps: { min: 0 } }}
                                         />
                                         <FormControl fullWidth sx={{ mt: 1 }}>
-                                            <InputLabel>Reparaturzustand</InputLabel>
+                                            <InputLabel>{t('vehicleManagement.repairStatus')}</InputLabel>
                                             <Select
-                                              label="Reparaturzustand"
+                                              label={t('vehicleManagement.repairStatus')}
                                               value={edit.Reperaturzustand ?? vehicle.Reperaturzustand}
                                               onChange={e => handleEditChange(vehicle.FahrzeugID, 'Reperaturzustand', e.target.value)}
                                             >
-                                              {REPARATURZUSTAND_OPTIONS.map(opt => (
-                                                <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                                              {getRepairStatusOptions().map(opt => (
+                                                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
                                               ))}
                                             </Select>
                                         </FormControl>
                                         <FormControl fullWidth sx={{ mt: 1 }}>
-                                            <InputLabel>Reifen</InputLabel>
+                                            <InputLabel>{t('vehicleManagement.tires')}</InputLabel>
                                             <Select
-                                              label="Reifen"
+                                              label={t('vehicleManagement.tires')}
                                               value={edit.Reifen ?? vehicle.Reifen}
                                               onChange={e => handleEditChange(vehicle.FahrzeugID, 'Reifen', e.target.value)}
                                             >
-                                              {REIFEN_OPTIONS.map(opt => (
-                                                <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                                              {getTireOptions().map(opt => (
+                                                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
                                               ))}
                                             </Select>
                                         </FormControl>
                                         <DatePicker
-                                            label="Letzter Service"
+                                            label={t('vehicleManagement.lastService')}
                                             value={edit.LetzterService ? new Date(edit.LetzterService) : (vehicle.LetzterService ? new Date(vehicle.LetzterService) : null)}
                                             onChange={date => handleEditChange(vehicle.FahrzeugID, 'LetzterService', date ? date.toISOString().slice(0, 10) : '')}
                                             format="yyyy-MM-dd"
                                             slotProps={{ textField: { fullWidth: true, sx: { mt: 1 } } }}
                                         />
                                         <DatePicker
-                                            label="Letzter TÜV"
+                                            label={t('vehicleManagement.lastTuev')}
                                             views={['year', 'month']}
                                             value={edit.TuevDatum ? new Date(edit.TuevDatum + '-01') : (vehicle.TuevDatum ? new Date(vehicle.TuevDatum + '-01') : null)}
                                             onChange={date => handleEditChange(vehicle.FahrzeugID, 'TuevDatum', date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` : '')}
@@ -334,7 +371,7 @@ export default function VehicleManagement() {
                                                         color="primary"
                                                     />
                                                 }
-                                                label={edit.Aktiv ?? vehicle.Aktiv ? "Verfügbar" : "Nicht verfügbar"}
+                                                label={edit.Aktiv ?? vehicle.Aktiv ? t('vehicleManagement.available') : t('vehicleManagement.unavailable')}
                                             />
                                             <Button
                                                 variant="contained"
@@ -342,7 +379,7 @@ export default function VehicleManagement() {
                                                 onClick={() => handleSave(vehicle.FahrzeugID)}
                                                 disabled={saving || Object.keys(vehicleEdits).length === 0}
                                             >
-                                                Speichern
+                                                {t('vehicleManagement.save')}
                                             </Button>
                                         </Box>
                                     </AccordionDetails>
@@ -389,87 +426,87 @@ export default function VehicleManagement() {
             </Box>
             {/* Dialog für neues Fahrzeug */}
             <Dialog open={addOpen} onClose={handleAddClose} maxWidth="md" fullWidth>
-                <DialogTitle>Neues Fahrzeug</DialogTitle>
+                <DialogTitle>{t('vehicleManagement.newVehicle')}</DialogTitle>
                 <DialogContent>
-                    <Typography variant="subtitle1" sx={{ mt: 1, mb: 1 }}>Modell</Typography>
+                    <Typography variant="subtitle1" sx={{ mt: 1, mb: 1 }}>{t('vehicleManagement.model')}</Typography>
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={6} size={5}>
-                            <TextField label="Hersteller" value={newVehicle.Hersteller}
+                            <TextField label={t('vehicleManagement.manufacturer')} value={newVehicle.Hersteller}
                                 onChange={e => setNewVehicle(v => ({ ...v, Hersteller: e.target.value }))} required fullWidth />
                         </Grid>
                         <Grid item xs={12} sm={6} size={7}>
-                            <TextField label="Name" value={newVehicle.ModellName}
+                            <TextField label={t('vehicleManagement.name')} value={newVehicle.ModellName}
                                 onChange={e => setNewVehicle(v => ({ ...v, ModellName: e.target.value }))} required fullWidth />
                         </Grid>
                         <Grid item xs={12} sm={6} size={12}>
-                            <TextField label="Fahrzeugtyp" value={newVehicle.Fahrzeugtyp}
+                            <TextField label={t('vehicleManagement.vehicleType')} value={newVehicle.Fahrzeugtyp}
                                 onChange={e => setNewVehicle(v => ({ ...v, Fahrzeugtyp: e.target.value }))} required fullWidth />
                         </Grid>
                         <Grid item xs={12} sm={6} size={6}>
                             <FormControl fullWidth sx={{ mt: 1 }}>
-                                <InputLabel>Getriebeart</InputLabel>
+                                <InputLabel>{t('vehicleManagement.transmission')}</InputLabel>
                                 <Select
-                                    label="Getriebeart"
+                                    label={t('vehicleManagement.transmission')}
                                     value={newVehicle.Getriebeart}
                                     onChange={e => setNewVehicle(v => ({ ...v, Getriebeart: e.target.value }))}
                                 >
-                                {GETRIEBEART_OPTIONS.map(opt => (
-                                <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                                {getTransmissionOptions().map(opt => (
+                                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
                                 ))}
                                 </Select>
                             </FormControl>
                         </Grid>
                         <Grid item xs={12} sm={4} size={6}>
                             <FormControl fullWidth sx={{ mt: 1 }}>
-                                <InputLabel>Kraftstoffart</InputLabel>
+                                <InputLabel>{t('vehicleManagement.fuelType')}</InputLabel>
                                 <Select
-                                    label="Kraftstoffart"
+                                    label={t('vehicleManagement.fuelType')}
                                     value={newVehicle.Kraftstoffart}
                                     onChange={e => setNewVehicle(v => ({ ...v, Kraftstoffart: e.target.value }))}
                                 >
-                                    {KRAFTSTOFFART_OPTIONS.map(opt => (
-                                    <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                                    {getFuelTypeOptions().map(opt => (
+                                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
                         </Grid>
                         <Grid item xs={12} sm={4} size={4}>
                             <FormControl fullWidth sx={{ mt: 1 }}>
-                                <InputLabel>Türen</InputLabel>
+                                <InputLabel>{t('vehicleManagement.doors')}</InputLabel>
                                 <Select
-                                    label="Türen"
+                                    label={t('vehicleManagement.doors')}
                                     value={newVehicle.Türen}
                                     onChange={e => setNewVehicle(v => ({ ...v, Türen: e.target.value }))}
                                 >
-                                    {TUEREN_OPTIONS.map(opt => (
-                                    <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                                    {getDoorsOptions().map(opt => (
+                                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
                         </Grid>
                         <Grid item xs={12} sm={4} size={4} alignContent={'end'}>
-                            <TextField label="Sitze" type="number" value={newVehicle.Sitze}
+                            <TextField label={t('vehicleManagement.seats')} type="number" value={newVehicle.Sitze}
                                 onChange={e => setNewVehicle(v => ({ ...v, Sitze: e.target.value }))} required fullWidth />
                         </Grid>
                         <Grid item xs={12} sm={6} size={4} alignContent={'end'}>
-                            <TextField label="Kofferraumvolumen (Liter)" type="number" value={newVehicle.Kofferraumvolumen}
+                            <TextField label={t('vehicleManagement.trunkVolumeLiters')} type="number" value={newVehicle.Kofferraumvolumen}
                                 onChange={e => setNewVehicle(v => ({ ...v, Kofferraumvolumen: e.target.value }))} required fullWidth
                             />
                         </Grid>
                         <Grid item xs={12} sm={6} size={6}>
-                            <TextField label="Leistung (PS)" type="number" value={newVehicle.Leistung}
+                            <TextField label={t('vehicleManagement.powerPS')} type="number" value={newVehicle.Leistung}
                                 onChange={e => setNewVehicle(v => ({ ...v, Leistung: e.target.value }))} required fullWidth />
                         </Grid>
                         <Grid item xs={12} sm={6} size={6}>
-                            <TextField label="Stundenpreis (€)" type="number" value={newVehicle.Stundenpreis}
+                            <TextField label={t('vehicleManagement.hourlyPrice')} type="number" value={newVehicle.Stundenpreis}
                                 onChange={e => setNewVehicle(v => ({ ...v, Stundenpreis: e.target.value }))} required fullWidth />
                         </Grid>
                     </Grid>
-                    <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>Fahrzeug</Typography>
+                    <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>{t('vehicleManagement.vehicle')}</Typography>
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={6} size={12}>
                             <TextField
-                                label="Kennzeichen"
+                                label={t('vehicleManagement.licensePlate')}
                                 value={newVehicle.Kennzeichen}
                                 onChange={e => setNewVehicle(v => ({ ...v, Kennzeichen: e.target.value }))}
                                 required
@@ -478,35 +515,35 @@ export default function VehicleManagement() {
                         </Grid>
                         <Grid item xs={12} sm={6} size={6}>
                             <FormControl fullWidth required>
-                                <InputLabel>Reparaturzustand</InputLabel>
+                                <InputLabel>{t('vehicleManagement.repairStatus')}</InputLabel>
                                 <Select
-                                    label="Reparaturzustand"
+                                    label={t('vehicleManagement.repairStatus')}
                                     value={newVehicle.Reperaturzustand}
                                     onChange={e => setNewVehicle(v => ({ ...v, Reperaturzustand: e.target.value }))}
                                 >
-                                    {REPARATURZUSTAND_OPTIONS.map(opt => (
-                                        <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                                    {getRepairStatusOptions().map(opt => (
+                                        <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
                         </Grid>
                         <Grid item xs={12} sm={6} size={6}>
                             <FormControl fullWidth required>
-                                <InputLabel>Reifen</InputLabel>
+                                <InputLabel>{t('vehicleManagement.tires')}</InputLabel>
                                 <Select
-                                    label="Reifen"
+                                    label={t('vehicleManagement.tires')}
                                     value={newVehicle.Reifen}
                                     onChange={e => setNewVehicle(v => ({ ...v, Reifen: e.target.value }))}
                                 >
-                                    {REIFEN_OPTIONS.map(opt => (
-                                        <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                                    {getTireOptions().map(opt => (
+                                        <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
                         </Grid>
                         <Grid item xs={12} sm={6} size={12}>
                             <TextField
-                                label="Kilometerstand"
+                                label={t('vehicleManagement.mileage')}
                                 value={newVehicle.Kilometerstand}
                                 onChange={e => setNewVehicle(v => ({ ...v, Kilometerstand: e.target.value }))}
                                 required
@@ -517,7 +554,7 @@ export default function VehicleManagement() {
                         </Grid>
                         <Grid item xs={12} sm={6} size={4}>
                             <DatePicker
-                                label="Erstzulassung"
+                                label={t('vehicleManagement.firstRegistration')}
                                 value={newVehicle.ErstzulassungsDatum ? new Date(newVehicle.ErstzulassungsDatum) : null}
                                 onChange={date => setNewVehicle(v => ({ ...v, ErstzulassungsDatum: date ? date.toISOString().slice(0, 10) : '' }))
                                 }
@@ -527,7 +564,7 @@ export default function VehicleManagement() {
                         </Grid>
                         <Grid item xs={12} sm={6} size={4}>
                             <DatePicker
-                                label="Letzter TÜV"
+                                label={t('vehicleManagement.lastTuev')}
                                 views={['year', 'month']}
                                 value={newVehicle.TuevDatum ? new Date(newVehicle.TuevDatum + '-01') : null}
                                 onChange={date => setNewVehicle(v => ({
@@ -540,7 +577,7 @@ export default function VehicleManagement() {
                         </Grid>
                         <Grid item xs={12} sm={6} size={4}>
                             <DatePicker
-                                label="Letzter Service"
+                                label={t('vehicleManagement.lastService')}
                                 value={newVehicle.LetzterService ? new Date(newVehicle.LetzterService) : null}
                                 onChange={date => setNewVehicle(v => ({ ...v, LetzterService: date ? date.toISOString().slice(0, 10) : '' }))
                                 }
@@ -557,21 +594,21 @@ export default function VehicleManagement() {
                                         color="primary"
                                     />
                                 }
-                                label={newVehicle.Aktiv ? "Verfügbar" : "Nicht verfügbar"}
+                                label={newVehicle.Aktiv ? t('vehicleManagement.available') : t('vehicleManagement.unavailable')}
                             />
                         </Grid>
                     </Grid>
                     {addError && <Typography color="error" sx={{ mt: 2 }}>{addError}</Typography>}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleAddClose} color="secondary">Abbrechen</Button>
+                    <Button onClick={handleAddClose} color="secondary">{t('vehicleManagement.cancel')}</Button>
                     <Button
                         onClick={handleAddVehicle}
                         color="primary"
                         variant="contained"
                         disabled={!isValidNewVehicle() || addLoading}
                     >
-                        Hinzufügen
+                        {t('vehicleManagement.add')}
                     </Button>
                 </DialogActions>
             </Dialog>

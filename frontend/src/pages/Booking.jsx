@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 import {
 	Container, Typography, Button, Grid, Paper, TextField, Box,
@@ -24,6 +25,7 @@ export default function Booking() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { user } = useAuth();
+	const { t } = useTranslation();
 
 	const passedState = location.state; // Directly use location.state
 
@@ -66,14 +68,14 @@ export default function Booking() {
 					if (res.data && res.data.ModellID) {
 						return getModellById(res.data.ModellID);
 					}
-					throw new Error('ModellID nicht im Fahrzeugobjekt gefunden.');
+					throw new Error(t('booking.modelIdNotFound'));
 				})
 				.then(res => {
 					setModel(res.data);
 				})
 				.catch(err => {
 					console.error("Fehler beim Laden der Fahrzeugdetails:", err);
-					setError('Fahrzeugdetails konnten nicht geladen werden.');
+					setError(t('booking.errorLoadingVehicle'));
 				})
 				.finally(() => {
 					setLoadingVehicle(false);
@@ -93,7 +95,7 @@ export default function Booking() {
 			})
 			.catch(err => {
 				console.error("Fehler beim Laden der Tarife:", err);
-				setError(prev => prev + (prev ? '; ' : '') + 'Tarife konnten nicht geladen werden.');
+				setError(prev => prev + (prev ? '; ' : '') + t('booking.errorLoadingTariffs'));
 			})
 			.finally(() => {
 				setLoadingTarife(false);
@@ -136,16 +138,16 @@ export default function Booking() {
 		setBookingError('');
 
 		if (!user) {
-			setBookingError('Sie müssen angemeldet sein, um zu buchen.');
+			setBookingError(t('booking.loginRequired'));
 			return;
 		}
 		if (!startDate || !endDate || !selectedTarifId ||
 			!abholPlz || !abholort || !rueckgabePlz || !rueckgabeort) {
-			setBookingError('Bitte füllen Sie alle erforderlichen Felder aus (Zeitraum, Orte, Tarif).');
+			setBookingError(t('booking.fillAllFields'));
 			return;
 		}
 		if (startDate >= endDate) {
-			setBookingError('Das Enddatum muss nach dem Startdatum liegen.');
+			setBookingError(t('booking.invalidDateRange'));
 			return;
 		}
 
@@ -166,16 +168,16 @@ export default function Booking() {
 		try {
 			const response = await reservieren(reservationData);
 			if (response.status !== 201) {
-				setBookingError('Reservierung fehlgeschlagen. Bitte versuchen Sie es später erneut.');
+				setBookingError(t('booking.bookingError'));
 				throw new Error('Reservierung fehlgeschlagen: ' + response.statusText);
 			}
-			setBookingMessage(`Reservierung erfolgreich! ID: ${response.data.id}. Sie werden in Kürze weitergeleitet...`);
+			setBookingMessage(t('booking.bookingSuccess', { id: response.data.id }));
 			setTimeout(() => {
 				navigate('/reservations');
 			}, 3000);
 		} catch (err) {
 			console.error('Fehler bei der Reservierung:', err.response?.data || err);
-			setBookingError(err.response?.data?.msg || err.response?.data?.error || 'Reservierung fehlgeschlagen. Überprüfen Sie die Fahrzeugverfügbarkeit und Ihre Eingaben.');
+			setBookingError(err.response?.data?.msg || err.response?.data?.error || t('booking.checkAvailability'));
 		}
 	};
 
@@ -183,7 +185,7 @@ export default function Booking() {
 		return (
 			<Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
 				<CircularProgress />
-				<Typography sx={{ ml: 2 }}>Lade Fahrzeugdetails...</Typography>
+				<Typography sx={{ ml: 2 }}>{t('booking.loadingVehicle')}</Typography>
 			</Container>
 		);
 	}
@@ -199,7 +201,7 @@ export default function Booking() {
 	if (!vehicle || !model) {
 		return (
 			<Container sx={{ textAlign: 'center', mt: 4 }}>
-				<Alert severity="warning">Fahrzeug nicht gefunden oder Modelldetails fehlen.</Alert>
+				<Alert severity="warning">{t('booking.vehicleNotFound')}</Alert>
 			</Container>
 		);
 	}
@@ -210,10 +212,10 @@ export default function Booking() {
 		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={de}>
 			<Container maxWidth="lg" sx={{ py: 4 }}> {/* Changed to lg for better spacing if needed */}
 				<Button onClick={() => navigate(-1)} sx={{ mb: 2 }}>
-					&larr; Zurück zur Fahrzeugübersicht
+					{t('booking.backToVehicles')}
 				</Button>
 				<Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-					Fahrzeug buchen: {model.ModellName}
+					{t('booking.title', { model: model.ModellName })}
 				</Typography>
 
 				{error && !loadingVehicle && (
@@ -224,32 +226,32 @@ export default function Booking() {
 					{/* Fahrzeugspezifikationen und Tarifdetails nebeneinander */}
 					<Grid item xs={12} md={6} size={8}>
 						<Paper elevation={3} sx={{ p: 2, height: '100%' }}> {/* Added height 100% for consistent card height */}
-							<Typography variant="h6" gutterBottom>Fahrzeugspezifikationen</Typography>
-							<Typography><strong>Hersteller:</strong> {model.Hersteller}</Typography>
-							<Typography><strong>Modell:</strong> {model.ModellName}</Typography>
-							<Typography><strong>Fahrzeugtyp:</strong> {model.Fahrzeugtyp}</Typography>
-							<Typography><strong>Kennzeichen:</strong> {vehicle.Kennzeichen}</Typography>
-							<Typography><strong>Getriebe:</strong> {model.Getriebeart}</Typography>
-							<Typography><strong>Sitze:</strong> {model.Sitze}</Typography>
-							<Typography><strong>Türen:</strong> {model.Tueren}</Typography>
-							<Typography><strong>Kraftstoff:</strong> {model.Kraftstoffart}</Typography>
-							<Typography><strong>Leistung:</strong> {model.Leistung} PS</Typography>
+							<Typography variant="h6" gutterBottom>{t('booking.vehicleSpecs')}</Typography>
+							<Typography><strong>{t('booking.manufacturer')}:</strong> {model.Hersteller}</Typography>
+							<Typography><strong>{t('booking.model')}:</strong> {model.ModellName}</Typography>
+							<Typography><strong>{t('booking.vehicleType')}:</strong> {model.Fahrzeugtyp}</Typography>
+							<Typography><strong>{t('booking.licensePlate')}:</strong> {vehicle.Kennzeichen}</Typography>
+							<Typography><strong>{t('booking.transmission')}:</strong> {model.Getriebeart}</Typography>
+							<Typography><strong>{t('booking.seats')}:</strong> {model.Sitze}</Typography>
+							<Typography><strong>{t('booking.doors')}:</strong> {model.Tueren}</Typography>
+							<Typography><strong>{t('booking.fuel')}:</strong> {model.Kraftstoffart}</Typography>
+							<Typography><strong>{t('booking.power')}:</strong> {model.Leistung} PS</Typography>
 						</Paper>
 					</Grid>
 
 					<Grid item xs={12} md={6} size={4}>
 						<Paper elevation={3} sx={{ p: 2, height: '100%' }}> {/* Added height 100% */}
-							<Typography variant="h6" gutterBottom>Tarifdetails (Ausgewählt)</Typography>
+							<Typography variant="h6" gutterBottom>{t('booking.tariffDetails')}</Typography>
 							{loadingTarife && <CircularProgress size={20} />}
-							{!loadingTarife && tarife.length === 0 && <Typography>Keine Tarife verfügbar.</Typography>}
+							{!loadingTarife && tarife.length === 0 && <Typography>{t('booking.noTariffsAvailable')}</Typography>}
 							{selectedtarifDetails ? (
 								<>
-									<Typography><strong>Tarifname:</strong> {selectedtarifDetails.Name}</Typography>
-									<Typography><strong>Freikilometer:</strong> {selectedtarifDetails.Freikilometer !== null ? `${selectedtarifDetails.Freikilometer} km` : 'Unbegrenzt'}</Typography>
-									<Typography><strong>Versicherung:</strong> {selectedtarifDetails.Versicherungsschutz}</Typography>
+									<Typography><strong>{t('booking.tariffName')}:</strong> {selectedtarifDetails.Name}</Typography>
+									<Typography><strong>{t('booking.freeKm')}:</strong> {selectedtarifDetails.Freikilometer !== null ? `${selectedtarifDetails.Freikilometer} km` : t('booking.unlimited')}</Typography>
+									<Typography><strong>{t('booking.insurance')}:</strong> {selectedtarifDetails.Versicherungsschutz}</Typography>
 								</>
 							) : (
-								!loadingTarife && <Typography>Bitte wählen Sie einen Tarif.</Typography>
+								!loadingTarife && <Typography>{t('booking.selectTariff')}</Typography>
 							)}
 						</Paper>
 					</Grid>
@@ -260,7 +262,7 @@ export default function Booking() {
 						<Grid container spacing={2}>
 							<Grid item size={12}>
 								<DateTimePicker
-									label="Abholdatum und -zeit*"
+									label={t('booking.startDateTime')}
 									value={startDate}
 									onChange={(newValue) => setStartDate(newValue)}
 									ampm={false} // Use 24-hour format
@@ -272,7 +274,7 @@ export default function Booking() {
 							</Grid>
 							<Grid item size={6}>
 								<TextField
-									label="AbholPlz PLZ"
+									label={t('booking.pickupPostalCode')}
 									id="abholPlz"
 									name="abholPlz"
 									value={abholPlz}
@@ -280,12 +282,12 @@ export default function Booking() {
 									required
 									fullWidth
 									margin="normal"
-									placeholder="z.B. 28195"
+									placeholder={t('booking.pickupPostalCodePlaceholder')}
 								/>
 							</Grid>
 							<Grid item size={6}>
 								<TextField
-									label="AbholPlz Stadt"
+									label={t('booking.pickupCity')}
 									id="abholort"
 									name="abholort"
 									value={abholort}
@@ -293,12 +295,12 @@ export default function Booking() {
 									required
 									fullWidth
 									margin="normal"
-									placeholder="z.B. Bremen"
+									placeholder={t('booking.pickupCityPlaceholder')}
 								/>
 							</Grid>
 							<Grid item size={12}>
 								<DateTimePicker
-									label="Rückgabedatum und -zeit*"
+									label={t('booking.endDateTime')}
 									value={endDate}
 									onChange={(newValue) => setEndDate(newValue)}
 									ampm={false} // Use 24-hour format
@@ -310,7 +312,7 @@ export default function Booking() {
 							</Grid>
 							<Grid item size={6}>
 								<TextField
-									label="Rückgabeort PLZ"
+									label={t('booking.returnPostalCode')}
 									id="rueckgabePlz"
 									name="rueckgabePlz"
 									value={rueckgabePlz}
@@ -318,12 +320,12 @@ export default function Booking() {
 									required
 									fullWidth
 									margin="normal"
-									placeholder="z.B. 28215"
+									placeholder={t('booking.returnPostalCodePlaceholder')}
 								/>
 							</Grid>
 							<Grid item size={6}>
 								<TextField
-									label="Rückgabeort Stadt"
+									label={t('booking.returnCity')}
 									id="rueckgabeort"
 									name="rueckgabeort"
 									value={rueckgabeort}
@@ -331,22 +333,22 @@ export default function Booking() {
 									required
 									fullWidth
 									margin="normal"
-									placeholder="z.B. Bremen"
+									placeholder={t('booking.returnCityPlaceholder')}
 								/>
 							</Grid>
 							<Grid item xs={12}>
 								<FormControl fullWidth required margin="normal">
-									<InputLabel id="tarif-select-label">Tarif auswählen</InputLabel>
+									<InputLabel id="tarif-select-label">{t('booking.selectTariffLabel')}</InputLabel>
 									<Select
 										labelId="tarif-select-label"
 										id="tarif"
 										value={selectedTarifId}
-										label="Tarif auswählen"
+										label={t('booking.selectTariffLabel')}
 										onChange={e => setSelectedTarifId(e.target.value)}
 										disabled={loadingTarife || tarife.length === 0}
 									>
-										{loadingTarife && <MenuItem value=""><em>Lade Tarife...</em></MenuItem>}
-										{!loadingTarife && tarife.length === 0 && <MenuItem value=""><em>Keine Tarife verfügbar</em></MenuItem>}
+										{loadingTarife && <MenuItem value=""><em>{t('booking.loadingTariffs')}</em></MenuItem>}
+										{!loadingTarife && tarife.length === 0 && <MenuItem value=""><em>{t('booking.noTariffsAvailable')}</em></MenuItem>}
 										{tarife.map(tarif => (
 											<MenuItem key={tarif.TarifID} value={tarif.TarifID}>
 												{tarif.Name}
@@ -358,12 +360,12 @@ export default function Booking() {
 						</Grid>
 
 						<Box sx={{ mt: 3, p: 2, borderTop: 1, borderColor: 'divider' }}>
-							<Typography variant="h6">Geschätzter Gesamtpreis:</Typography>
+							<Typography variant="h6">{t('booking.estimatedTotalPrice')}</Typography>
 							<Typography variant="h4" component="p" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
 								{calculatedPrice.toFixed(2)} €
 							</Typography>
 							<Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
-								Basierend auf der Dauer und dem gewählten Tarif.
+								{t('booking.priceBasedOn')}
 							</Typography>
 						</Box>
 
@@ -379,7 +381,7 @@ export default function Booking() {
 							sx={{ mt: 3, py: 1.5 }}
 							disabled={loadingVehicle || loadingTarife || !vehicle || !model || tarife.length === 0 || !startDate || !endDate || !abholPlz || !abholort || !rueckgabePlz || !rueckgabeort}
 						>
-							Jetzt kostenpflichtig reservieren
+							{t('booking.reserveNow')}
 						</Button>
 					</Box>
 				</Paper>

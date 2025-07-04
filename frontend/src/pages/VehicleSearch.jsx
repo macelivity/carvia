@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import TextField from '@mui/material/TextField';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
@@ -26,6 +27,7 @@ function formatToDateTimeLocalString(date) {
 
 export default function VehicleSearch() {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const initialSearchFilters = {
         start_datum: null, // Use null for DateTimePicker
         end_datum: null,   // Use null for DateTimePicker
@@ -74,12 +76,12 @@ export default function VehicleSearch() {
         if ((!useCurrentTime && !startDateToValidate) || !endDateToValidate ||
             !searchFilters.abholort_plz || !searchFilters.abholort_stadt ||
             !searchFilters.rueckgabeort_plz || !searchFilters.rueckgabeort_stadt) {
-            setPageError('Bitte füllen Sie alle erforderlichen Felder aus.');
+            setPageError(t('vehicleSearch.fillAllFields'));
             return;
         }
 
         if (startDateToValidate && endDateToValidate && new Date(startDateToValidate) >= new Date(endDateToValidate)) {
-            setPageError('Das Rückgabedatum muss nach dem Abholdatum liegen.');
+            setPageError(t('vehicleSearch.invalidDateRange'));
             return;
         }
 
@@ -108,14 +110,14 @@ export default function VehicleSearch() {
             <Box sx={{ p: 3, maxWidth: 'md', mx: 'auto' }}>
                 <Paper elevation={3} sx={{ p: { xs: 2, sm: 3, md: 4 }, mb: 4 }}>
                     <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ fontWeight: 'bold', color: 'text.primary', pb: 2, mb: 4, borderBottom: 1 }}>
-                        Fahrzeug finden
+                        {t('vehicleSearch.title')}
                     </Typography>
 
                     <form onSubmit={handleSearchSubmit}>
                         <Grid container spacing={2}>
                             <Grid item size={12}>
                                 <DateTimePicker
-                                    label="Abholdatum und -zeit*"
+                                    label={t('vehicleSearch.startDateTime')}
                                     value={searchFilters.start_datum}
                                     onChange={handleStartDateChange}
                                     ampm={false} // Use 24-hour format
@@ -130,10 +132,10 @@ export default function VehicleSearch() {
                                     type="text"
                                     name="abholort_plz"
                                     id="abholort_plz"
-                                    label="Abholort PLZ*"
+                                    label={t('vehicleSearch.pickupPostalCode')}
                                     value={searchFilters.abholort_plz}
                                     onChange={handleInputChange}
-                                    placeholder="z.B. 28195"
+                                    placeholder={t('vehicleSearch.pickupPostalCodePlaceholder')}
                                     fullWidth
                                     variant="outlined"
                                     margin="normal"
@@ -144,10 +146,10 @@ export default function VehicleSearch() {
                                     type="text"
                                     name="abholort_stadt"
                                     id="abholort_stadt"
-                                    label="Abholort Stadt*"
+                                    label={t('vehicleSearch.pickupCity')}
                                     value={searchFilters.abholort_stadt}
                                     onChange={handleInputChange}
-                                    placeholder="z.B. Bremen"
+                                    placeholder={t('vehicleSearch.pickupCityPlaceholder')}
                                     fullWidth
                                     variant="outlined"
                                     margin="normal"
@@ -155,7 +157,7 @@ export default function VehicleSearch() {
                             </Grid>
                             <Grid item size={12}>
                                 <DateTimePicker
-                                    label="Rückgabedatum und -zeit*"
+                                    label={t('vehicleSearch.endDateTime')}
                                     value={searchFilters.end_datum}
                                     onChange={handleEndDateChange}
                                     ampm={false} // Use 24-hour format
@@ -170,10 +172,10 @@ export default function VehicleSearch() {
                                     type="text"
                                     name="rueckgabeort_plz"
                                     id="rueckgabeort_plz"
-                                    label="Rückgabeort PLZ*"
+                                    label={t('vehicleSearch.returnPostalCode')}
                                     value={searchFilters.rueckgabeort_plz}
                                     onChange={handleInputChange}
-                                    placeholder="z.B. 28195"
+                                    placeholder={t('vehicleSearch.returnPostalCodePlaceholder')}
                                     fullWidth
                                     variant="outlined"
                                     margin="normal"
@@ -184,10 +186,10 @@ export default function VehicleSearch() {
                                     type="text"
                                     name="rueckgabeort_stadt"
                                     id="rueckgabeort_stadt"
-                                    label="Rückgabeort Stadt*"
+                                    label={t('vehicleSearch.returnCity')}
                                     value={searchFilters.rueckgabeort_stadt}
                                     onChange={handleInputChange}
-                                    placeholder="z.B. Bremen"
+                                    placeholder={t('vehicleSearch.returnCityPlaceholder')}
                                     fullWidth
                                     variant="outlined"
                                     margin="normal"
@@ -207,7 +209,7 @@ export default function VehicleSearch() {
                                 size="large"
                                 sx={{ flexGrow: { sm: 1 } }}
                             >
-                                Fahrzeuge suchen
+                                {t('vehicleSearch.searchVehicles')}
                             </Button>
                             <Button
                                 type="button"
@@ -217,7 +219,7 @@ export default function VehicleSearch() {
                                 size="large"
                                 sx={{ flexGrow: { sm: 1 } }}
                             >
-                                Suche zurücksetzen
+                                {t('vehicleSearch.resetSearch')}
                             </Button>
                         </Box>
                     </form>
