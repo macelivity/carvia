@@ -62,7 +62,16 @@
     "loginButton": "Login",
     "registerButton": "Registrieren",
     "reservationsButton": "Reservierungen",
-    "vehicleManagementButton": "Fahrzeuge verwalten"
+    "vehicleManagementButton": "Fahrzeuge verwalten",
+    "makeNewReservation": "Neue Reservierung",
+    "searchDescription": "Finde und buche das perfekte Fahrzeug für deine Bedürfnisse.",
+    "startSearch": "Fahrzeugsuche starten",
+    "seeReservations": "Reservierungen ansehen",
+    "reservationsDescription": "Verwalte deine aktuellen und vergangenen Buchungen.",
+    "viewReservations": "Meine Reservierungen ansehen",
+    "adminTools": "Admin-Tools",
+    "exploreVehicles": "Unsere Flotte entdecken",
+    "exploreDescription": "Durchstöbere alle verfügbaren Fahrzeuge ohne eine Reservierung zu machen."
   },
   "login": {
     "title": "Login",

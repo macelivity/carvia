@@ -62,7 +62,16 @@
     "loginButton": "Iniciar sesión",
     "registerButton": "Registrarse",
     "reservationsButton": "Reservas",
-    "vehicleManagementButton": "Gestionar vehículos"
+    "vehicleManagementButton": "Gestionar vehículos",
+    "makeNewReservation": "Nueva Reserva",
+    "searchDescription": "Busca y reserva el vehículo perfecto para tus necesidades.",
+    "startSearch": "Iniciar búsqueda",
+    "seeReservations": "Ver Reservas",
+    "reservationsDescription": "Consulta y gestiona tus reservas actuales y pasadas.",
+    "viewReservations": "Ver mis reservas",
+    "adminTools": "Herramientas de Admin",
+    "exploreVehicles": "Explorar nuestra flota",
+    "exploreDescription": "Navega por todos los vehículos disponibles sin hacer una reserva."
   },
   "login": {
     "title": "Iniciar sesión",

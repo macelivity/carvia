@@ -104,7 +104,16 @@
     "loginButton": "Connexion",
     "registerButton": "S'inscrire",
     "reservationsButton": "Réservations",
-    "vehicleManagementButton": "Gérer les véhicules"
+    "vehicleManagementButton": "Gérer les véhicules",
+    "makeNewReservation": "Nouvelle Réservation",
+    "searchDescription": "Recherchez et réservez le véhicule parfait pour vos besoins.",
+    "startSearch": "Démarrer la recherche",
+    "seeReservations": "Voir les Réservations",
+    "reservationsDescription": "Consultez et gérez vos réservations actuelles et passées.",
+    "viewReservations": "Voir mes réservations",
+    "adminTools": "Outils Admin",
+    "exploreVehicles": "Explorer notre flotte",
+    "exploreDescription": "Parcourez tous les véhicules disponibles sans faire de réservation."
   },
   "login": {
     "title": "Connexion",
