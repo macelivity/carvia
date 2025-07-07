@@ -1,8 +1,10 @@
 // filepath: [Account.jsx](http://_vscodecontentref_/1)
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useTranslation } from 'react-i18next';
 
 export default function Account() {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -43,7 +45,7 @@ export default function Account() {
         setLoading(false);
       })
       .catch(() => {
-        setError("Fehler beim Laden des Profils.");
+        setError(t('account.errorLoadingProfile'));
         setLoading(false);
       });
   }, []);
@@ -65,9 +67,9 @@ export default function Account() {
       });
       setProfile({ ...profile, ...form });
       setEdit(false);
-      setSuccessMsg("Profil erfolgreich aktualisiert.");
+      setSuccessMsg(t('account.profileUpdateSuccess'));
     } catch {
-      setError("Fehler beim Aktualisieren.");
+      setError(t('account.profileUpdateError'));
     }
   };
 
@@ -80,14 +82,29 @@ export default function Account() {
     e.preventDefault();
     setPwMsg("");
     setPwError("");
+    
+    // Custom validation
+    if (!pwForm.current_password) {
+      setPwError(t('account.currentPasswordRequired'));
+      return;
+    }
+    if (!pwForm.new_password) {
+      setPwError(t('account.newPasswordRequired'));
+      return;
+    }
+    if (!pwForm.new_password_repeat) {
+      setPwError(t('account.confirmPasswordRequired'));
+      return;
+    }
     if (pwForm.new_password !== pwForm.new_password_repeat) {
-      setPwError("Die neuen Passwörter stimmen nicht überein.");
+      setPwError(t('account.passwordMismatch'));
       return;
     }
     if (pwForm.new_password.length < 6) {
-      setPwError("Das neue Passwort muss mindestens 6 Zeichen lang sein.");
+      setPwError(t('account.passwordTooShort'));
       return;
     }
+    
     const token = localStorage.getItem("accessToken");
     try {
       await axios.put("/api/auth/change-password", {
@@ -98,7 +115,7 @@ export default function Account() {
           Authorization: `Bearer ${token}`
         }
       });
-      setPwMsg("Passwort erfolgreich geändert.");
+      setPwMsg(t('account.passwordChangeSuccess'));
       setPwForm({
         current_password: "",
         new_password: "",
@@ -106,17 +123,21 @@ export default function Account() {
       });
       setShowPwForm(false);
     } catch (err) {
-      setPwError(
-        err?.response?.data?.msg ||
-        "Fehler beim Ändern des Passworts."
-      );
+      // Provide specific error messages based on status code
+      if (err?.response?.status === 400) {
+        setPwError(t('account.passwordIncorrect'));
+      } else if (err?.response?.status >= 500) {
+        setPwError(t('account.passwordChangeServerError'));
+      } else {
+        setPwError(t('account.passwordChangeError'));
+      }
     }
   };
 
   return (
     <div className="p-6">
-      <h2 className="text-xl font-bold mb-4">Mein Account</h2>
-      {loading && <p>Lade...</p>}
+      <h2 className="text-xl font-bold mb-4">{t('account.title')}</h2>
+      {loading && <p>{t('account.loadingProfile')}</p>}
       {error && <p className="text-red-600">{error}</p>}
       {successMsg && <p className="text-green-600">{successMsg}</p>}
       {!loading && !error && profile && (
@@ -125,18 +146,18 @@ export default function Account() {
             <div>
               <table className="min-w-[350px] border border-gray-300 bg-white shadow rounded">
                 <tbody>
-                  <tr><td className="font-semibold p-2 border">Benutzername:</td><td className="p-2 border">{profile.Username}</td></tr>
-                  <tr><td className="font-semibold p-2 border">Vorname:</td><td className="p-2 border">{profile.Vorname}</td></tr>
-                  <tr><td className="font-semibold p-2 border">Nachname:</td><td className="p-2 border">{profile.Nachname}</td></tr>
-                  <tr><td className="font-semibold p-2 border">Geburtsdatum:</td><td className="p-2 border">{profile.Geburtsdatum}</td></tr>
-                  <tr><td className="font-semibold p-2 border">Beitrittsdatum:</td><td className="p-2 border">{profile.BeitrittsDatum}</td></tr>
-                  <tr><td className="font-semibold p-2 border">Ort:</td><td className="p-2 border">{profile.Ort}</td></tr>
-                  <tr><td className="font-semibold p-2 border">PLZ:</td><td className="p-2 border">{profile.PLZ}</td></tr>
-                  <tr><td className="font-semibold p-2 border">Straße:</td><td className="p-2 border">{profile.Strasse}</td></tr>
-                  <tr><td className="font-semibold p-2 border">Hausnummer:</td><td className="p-2 border">{profile.HausNummer}</td></tr>
-                  <tr><td className="font-semibold p-2 border">Führerschein:</td><td className="p-2 border">{profile.Führerschein}</td></tr>
-                  <tr><td className="font-semibold p-2 border">IBAN:</td><td className="p-2 border">{profile.IBAN}</td></tr>
-                  <tr><td className="font-semibold p-2 border">BIC:</td><td className="p-2 border">{profile.BIC}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('auth.username')}:</td><td className="p-2 border">{profile.Username}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('auth.firstName')}:</td><td className="p-2 border">{profile.Vorname}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('auth.lastName')}:</td><td className="p-2 border">{profile.Nachname}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('auth.birthDate')}:</td><td className="p-2 border">{profile.Geburtsdatum}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('account.joinDate')}:</td><td className="p-2 border">{profile.BeitrittsDatum}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('account.city')}:</td><td className="p-2 border">{profile.Ort}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('account.postalCode')}:</td><td className="p-2 border">{profile.PLZ}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('account.street')}:</td><td className="p-2 border">{profile.Strasse}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('account.houseNumber')}:</td><td className="p-2 border">{profile.HausNummer}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('account.driverLicense')}:</td><td className="p-2 border">{profile.Führerschein}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('account.iban')}:</td><td className="p-2 border">{profile.IBAN}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('account.bic')}:</td><td className="p-2 border">{profile.BIC}</td></tr>
                 </tbody>
               </table>
               <div className="mt-4 flex gap-2">
@@ -145,58 +166,55 @@ export default function Account() {
                   className="bg-blue-600 text-white px-4 py-2 rounded"
                   onClick={() => setEdit(true)}
                 >
-                  Bearbeiten
+                  {t('account.editProfile')}
                 </button>
                 <button
                   type="button"
                   className="bg-yellow-600 text-white px-4 py-2 rounded"
                   onClick={() => setShowPwForm(!showPwForm)}
                 >
-                  Passwort ändern
+                  {t('account.changePassword')}
                 </button>
               </div>
-              {pwMsg && <p className="text-green-600 mt-2">{pwMsg}</p>}
-              {pwError && <p className="text-red-600 mt-2">{pwError}</p>}
               {showPwForm && (
                 <form onSubmit={handlePwSave} className="mt-4 max-w-md">
                   <div className="mb-2">
-                    <label className="block font-semibold">Aktuelles Passwort</label>
+                    <label className="block font-semibold">{t('account.currentPassword')}</label>
                     <input
                       type="password"
                       name="current_password"
                       value={pwForm.current_password}
                       onChange={handlePwChange}
                       className="border px-2 py-1 rounded w-full"
-                      required
                     />
                   </div>
                   <div className="mb-2">
-                    <label className="block font-semibold">Neues Passwort</label>
+                    <label className="block font-semibold">{t('account.newPassword')}</label>
                     <input
                       type="password"
                       name="new_password"
                       value={pwForm.new_password}
                       onChange={handlePwChange}
                       className="border px-2 py-1 rounded w-full"
-                      required
                     />
                   </div>
                   <div className="mb-2">
-                    <label className="block font-semibold">Neues Passwort wiederholen</label>
+                    <label className="block font-semibold">{t('account.repeatNewPassword')}</label>
                     <input
                       type="password"
                       name="new_password_repeat"
                       value={pwForm.new_password_repeat}
                       onChange={handlePwChange}
                       className="border px-2 py-1 rounded w-full"
-                      required
                     />
                   </div>
+                  {pwError && <p className="text-red-600 mb-2">{pwError}</p>}
+                  {pwMsg && <p className="text-green-600 mb-2">{pwMsg}</p>}
                   <button
                     type="submit"
                     className="bg-green-600 text-white px-4 py-2 rounded"
                   >
-                    Passwort speichern
+                    {t('account.savePassword')}
                   </button>
                   <button
                     type="button"
@@ -212,7 +230,7 @@ export default function Account() {
                       setPwMsg("");
                     }}
                   >
-                    Abbrechen
+                    {t('common.cancel')}
                   </button>
                 </form>
               )}
@@ -221,13 +239,13 @@ export default function Account() {
             <form onSubmit={handleSave}>
               <table className="min-w-[350px] border border-gray-300 bg-white shadow rounded">
                 <tbody>
-                  <tr><td className="font-semibold p-2 border">Benutzername:</td><td className="p-2 border">{profile.Username}</td></tr>
-                  <tr><td className="font-semibold p-2 border">Vorname:</td><td className="p-2 border">{profile.Vorname}</td></tr>
-                  <tr><td className="font-semibold p-2 border">Nachname:</td><td className="p-2 border">{profile.Nachname}</td></tr>
-                  <tr><td className="font-semibold p-2 border">Geburtsdatum:</td><td className="p-2 border">{profile.Geburtsdatum}</td></tr>
-                  <tr><td className="font-semibold p-2 border">Beitrittsdatum:</td><td className="p-2 border">{profile.BeitrittsDatum}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('auth.username')}:</td><td className="p-2 border">{profile.Username}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('auth.firstName')}:</td><td className="p-2 border">{profile.Vorname}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('auth.lastName')}:</td><td className="p-2 border">{profile.Nachname}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('auth.birthDate')}:</td><td className="p-2 border">{profile.Geburtsdatum}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('account.joinDate')}:</td><td className="p-2 border">{profile.BeitrittsDatum}</td></tr>
                   <tr>
-                    <td className="font-semibold p-2 border">Ort:</td>
+                    <td className="font-semibold p-2 border">{t('account.city')}:</td>
                     <td className="p-2 border">
                       <input
                         name="Ort"
@@ -238,7 +256,7 @@ export default function Account() {
                     </td>
                   </tr>
                   <tr>
-                    <td className="font-semibold p-2 border">PLZ:</td>
+                    <td className="font-semibold p-2 border">{t('account.postalCode')}:</td>
                     <td className="p-2 border">
                       <input
                         name="PLZ"
@@ -249,7 +267,7 @@ export default function Account() {
                     </td>
                   </tr>
                   <tr>
-                    <td className="font-semibold p-2 border">Straße:</td>
+                    <td className="font-semibold p-2 border">{t('account.street')}:</td>
                     <td className="p-2 border">
                       <input
                         name="Strasse"
@@ -260,7 +278,7 @@ export default function Account() {
                     </td>
                   </tr>
                   <tr>
-                    <td className="font-semibold p-2 border">Hausnummer:</td>
+                    <td className="font-semibold p-2 border">{t('account.houseNumber')}:</td>
                     <td className="p-2 border">
                       <input
                         name="HausNummer"
@@ -270,9 +288,9 @@ export default function Account() {
                       />
                     </td>
                   </tr>
-                  <tr><td className="font-semibold p-2 border">Führerschein:</td><td className="p-2 border">{profile.Führerschein}</td></tr>
-                  <tr><td className="font-semibold p-2 border">IBAN:</td><td className="p-2 border">{profile.IBAN}</td></tr>
-                  <tr><td className="font-semibold p-2 border">BIC:</td><td className="p-2 border">{profile.BIC}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('account.driverLicense')}:</td><td className="p-2 border">{profile.Führerschein}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('account.iban')}:</td><td className="p-2 border">{profile.IBAN}</td></tr>
+                  <tr><td className="font-semibold p-2 border">{t('account.bic')}:</td><td className="p-2 border">{profile.BIC}</td></tr>
                 </tbody>
               </table>
               <div className="mt-4">
@@ -280,7 +298,7 @@ export default function Account() {
                   type="submit"
                   className="bg-green-600 text-white px-4 py-2 rounded mr-2"
                 >
-                  Speichern
+                  {t('account.saveProfile')}
                 </button>
                 <button
                   type="button"
@@ -295,7 +313,7 @@ export default function Account() {
                     });
                   }}
                 >
-                  Abbrechen
+                  {t('common.cancel')}
                 </button>
               </div>
             </form>

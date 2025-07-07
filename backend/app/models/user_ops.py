@@ -125,8 +125,8 @@ class UserOps:
         if nachname:
             query += " AND Nachname LIKE ?"
             params.append(f"%{nachname}%")
-        result = db.execute(query, params).fetchall()
-        return user is not None
+        users = db.execute(query, params).fetchall()
+        return [dict(row) for row in users]
     
     @staticmethod
     @jwt_required()

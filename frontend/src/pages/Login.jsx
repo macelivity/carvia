@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { login as loginAPI } from '../api/api';
+import { useTranslation } from 'react-i18next';
 
 export default function Login() {
+    const { t } = useTranslation();
     const { user, login: contextLogin } = useAuth();
     // Loggen des User-Objekts bei jedem Rendern von Login.jsx
     console.log('[Login.jsx] Component rendered. User from context:', user); 
@@ -20,7 +22,7 @@ export default function Login() {
         e.preventDefault();
         setError('');
         if (!form.username || !form.password) {
-            setError('Benutzername und Passwort sind erforderlich.');
+            setError(t('login.usernameRequired'));
             return;
         }
         try {
@@ -31,7 +33,7 @@ export default function Login() {
             if (err.response && err.response.data && err.response.data.msg) {
                 setError(err.response.data.msg);
             } else {
-                setError('Login fehlgeschlagen. Bitte versuchen Sie es erneut.');
+                setError(t('login.loginFailed'));
             }
         }
     };
@@ -44,15 +46,15 @@ export default function Login() {
 
     return (
         <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow">
-            <h2 className="text-xl font-bold mb-4 text-center">Login</h2>
+            <h2 className="text-xl font-bold mb-4 text-center">{t('login.title')}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label htmlFor="username" className="block text-sm font-medium text-gray-700">Benutzername</label>
+                    <label htmlFor="username" className="block text-sm font-medium text-gray-700">{t('login.username')}</label>
                     <input 
                         id="username"
                         name="username" 
                         type="text"
-                        placeholder="Benutzername" 
+                        placeholder={t('login.usernamePlaceholder')} 
                         value={form.username}
                         onChange={handleChange} 
                         className="mt-1 w-full p-2 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500" 
@@ -60,12 +62,12 @@ export default function Login() {
                     />
                 </div>
                 <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">Passwort</label>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">{t('login.password')}</label>
                     <input 
                         id="password"
                         name="password" 
                         type="password" 
-                        placeholder="Passwort" 
+                        placeholder={t('login.passwordPlaceholder')} 
                         value={form.password}
                         onChange={handleChange} 
                         className="mt-1 w-full p-2 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500" 
@@ -77,7 +79,7 @@ export default function Login() {
                     type="submit" 
                     className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                 >
-                    Einloggen
+                    {t('login.loginButton')}
                 </button>
             </form>
         </div>

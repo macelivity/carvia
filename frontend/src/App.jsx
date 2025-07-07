@@ -17,6 +17,7 @@ import NotFound from './pages/NotFound';
 import Account from './pages/Account';
 import UserReservations from './pages/UserReservations'; // Importiere die neue Seite
 import Rechnung from './pages/Rechnung';
+import './i18n'; // Initialize i18n
 
 
 export default function App() {
@@ -41,9 +42,7 @@ export default function App() {
 					<Route
 						path="/vehicles"
 						element={
-							<ProtectedRoute allowedRoles={['Mitglied', 'Admin', 'Mitarbeiter']}>
 								<Vehicles />
-							</ProtectedRoute>
 						}
 					/>
 					<Route
@@ -65,7 +64,7 @@ export default function App() {
 					<Route
 						path="/user-reservations"
 						element={
-							<ProtectedRoute allowedRoles={['Admin', 'Mitarbeiter']}>
+							<ProtectedRoute allowedRoles={['Mitarbeiter']}>
 								<UserReservations />
 							</ProtectedRoute>
 						}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom'; // Link importieren
 import { getRechnungByReservierungsId, getReservations } from '../api/api';
+import { useTranslation } from 'react-i18next';
 
 // Hilfsfunktion zum Formatieren des Datums
 const formatDate = (dateString) => {
@@ -10,6 +11,7 @@ const formatDate = (dateString) => {
 };
 
 export default function Reservations() {
+	const { t } = useTranslation();
 	const [futureReservations, setFutureReservations] = useState([]);
 	const [pastReservations, setPastReservations] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -45,8 +47,7 @@ export default function Reservations() {
 				setPastReservations(past);
 			})
 			.catch(err => {
-				console.error("Fehler beim Laden der Reservierungen:", err);
-				setError("Reservierungen konnten nicht geladen werden.");
+				setError(t('reservations.errorLoadingReservations'));
 				setFutureReservations([]);
 				setPastReservations([]);
 			})
@@ -56,7 +57,7 @@ export default function Reservations() {
 	}, []);
 
 	if (loading) {
-		return <div className="p-6 text-center">Lade Reservierungen...</div>;
+		return <div className="p-6 text-center">{t('reservations.loadingReservations')}</div>;
 	}
 
 	if (error) {
@@ -66,32 +67,32 @@ export default function Reservations() {
 	return (
 		<div className="p-6 space-y-8">
 			<div>
-				<h2 className="text-2xl font-bold mb-4 text-blue-700">Zukünftige Reservierungen</h2>
+				<h2 className="text-2xl font-bold mb-4 text-blue-700">{t('reservations.futureReservations')}</h2>
 				{futureReservations.length > 0 ? (
 					<ul className="space-y-4">
 						{futureReservations.map(r => (
 							<li key={r.ReservierungID} className="border p-4 rounded-lg shadow bg-white flex justify-between items-center">
 								<div>
-									<p className="font-semibold">Reservierungs-ID: {r.ReservierungID}</p>
-									<p>Fahrzeug-ID: {r.FahrzeugID} (Tarif-ID: {r.TarifID})</p>
-									<p>Zeitraum: {formatDate(r.StartDatum)} – {formatDate(r.EndDatum)}</p>
+									<p className="font-semibold">{t('reservations.reservationId')}: {r.ReservierungID}</p>
+									<p>{t('reservations.vehicleId')}: {r.FahrzeugID} ({t('reservations.tariffId')}: {r.TarifID})</p>
+									<p>{t('reservations.period')}: {formatDate(r.StartDatum)} – {formatDate(r.EndDatum)}</p>
 								</div>
 								<Link
 									to={`/rechnung?reservation=${r.ReservierungID}`}
 									className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
 								>
-									Rechnung einsehen
+									{t('reservations.viewInvoice')}
 								</Link>
 							</li>
 						))}
 					</ul>
 				) : (
 					<div>
-						<p className="text-gray-600 mb-2">Keine zukünftigen Reservierungen vorhanden.</p>
+						<p className="text-gray-600 mb-2">{t('reservations.noFutureReservations')}</p>
 						<p className="text-gray-600">
-							Möchten Sie verfügbare Fahrzeuge ansehen?
+							{t('reservations.wantToSeeVehicles')}
 							<Link to="/search" className="text-blue-600 hover:text-blue-800 underline ml-1">
-								Zur Fahrzeugübersicht
+								{t('reservations.toVehicleOverview')}
 							</Link>
 						</p>
 					</div>
@@ -99,7 +100,7 @@ export default function Reservations() {
 			</div>
 
 			<div>
-				<h2 className="text-2xl font-bold mb-4 text-blue-700">Vergangene Reservierungen</h2>
+				<h2 className="text-2xl font-bold mb-4 text-blue-700">{t('reservations.pastReservations')}</h2>
 				{pastReservations.length > 0 ? (
 					<ul className="space-y-4">
 						{pastReservations.map(r => {
@@ -107,22 +108,22 @@ export default function Reservations() {
 							return (
 								<li key={r.ReservierungID} className="border p-4 rounded-lg shadow bg-gray-50 flex justify-between items-center">
 									<div>
-										<p className="font-semibold">Reservierungs-ID: {r.ReservierungID}</p>
-										<p>Fahrzeug-ID: {r.FahrzeugID} (Tarif-ID: {r.TarifID})</p>
-										<p>Zeitraum: {formatDate(r.StartDatum)} – {formatDate(r.EndDatum)}</p>
+										<p className="font-semibold">{t('reservations.reservationId')}: {r.ReservierungID}</p>
+										<p>{t('reservations.vehicleId')}: {r.FahrzeugID} ({t('reservations.tariffId')}: {r.TarifID})</p>
+										<p>{t('reservations.period')}: {formatDate(r.StartDatum)} – {formatDate(r.EndDatum)}</p>
 									</div>
 									<Link
 										to={`/rechnung?reservation=${r.ReservierungID}`}
 										className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
 									>
-										Rechnung einsehen
+										{t('reservations.viewInvoice')}
 									</Link>
 								</li>
 							)
 						})}
 					</ul>
 				) : (
-					<p className="text-gray-600">Keine vergangenen Reservierungen vorhanden.</p>
+					<p className="text-gray-600">{t('reservations.noPastReservations')}</p>
 				)}
 			</div>
 		</div>
