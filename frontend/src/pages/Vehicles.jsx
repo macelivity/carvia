@@ -16,6 +16,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Grid from '@mui/material/Grid';
 import InputAdornment from '@mui/material/InputAdornment';
+import CarMap from '../components/CarMap';
 
 // OptionalFilterModal außerhalb der Vehicles-Komponente definieren
 const OptionalFilterModal = ({
@@ -479,70 +480,18 @@ export default function Vehicles() {
 
 			{user.role !== 'guest' && (
 				<div className="w-full md:w-2/5 lg:w-1/3 h-64 md:h-full sticky top-0">
-					<MapContainer center={pickupLocationCoords ? [pickupLocationCoords.lat, pickupLocationCoords.lon] : [53.0793, 8.8017]} zoom={10} scrollWheelZoom={true} style={{ height: "100%", width: "100%" }}>
-						<TileLayer
-							attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-							url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-						/>
-						<ChangeView markers={validMarkers} zoomToWorld={searchNowAvailable && vehiclesToDisplay.length > 0 && (!currentActiveFilters.radius || parseFloat(currentActiveFilters.radius) <= 0) && !pickupLocationCoords} />
-						
-						{/* Marker for pickup location */}
-						{
-							pickupLocationCoords &&
-							<Marker	
-								position={[pickupLocationCoords.lat, pickupLocationCoords.lon]}
-								icon={L.icon({
-									iconUrl: '/icons/pickup-marker.svg', // Ensure you have this icon
-									iconSize: [64, 64],
-									iconAnchor: [32, 48]
-								})}
-							>
-								<Popup>{t('vehicles.pickupLocation')}: {currentActiveFilters.abholort_stadt}, {currentActiveFilters.abholort_plz}</Popup>
-							</Marker>
-						}
-
-						{/* Circle for radius */}
-						{
-							pickupLocationCoords && currentActiveFilters.radius && parseFloat(currentActiveFilters.radius) > 0 &&
-							<Circle
-								center={[pickupLocationCoords.lat, pickupLocationCoords.lon]}
-								radius={parseFloat(currentActiveFilters.radius) * 1000} // Radius in meters
-								pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.1 }}
-							/>
-						}
-
-                        {validMarkers.map(car => {
-                            let popupLocationText = `${car.latitude.toFixed(4)} ${car.longitude.toFixed(4)}`;
-
-							return (
-								<Marker key={car.FahrzeugID} position={[car.latitude, car.longitude]} icon={L.icon({
-									iconUrl: '/icons/car-marker.svg',
-									iconSize: [48, 48],
-									iconAnchor: [24, 36]
-								})}>
-									<Popup>
-										<b>{car.Hersteller} {car.ModellName}</b> <br />
-										({car.Kennzeichen}) <br />
-										{t('vehicles.location')}: {popupLocationText} <br />
-										<Link
-											to={`/booking/${car.FahrzeugID}`}
-											state={{
-												start_datum: searchNowAvailable ? 'Jetzt' : currentActiveFilters.start_datum,
-												end_datum: currentActiveFilters.end_datum,
-												abholort_plz: searchNowAvailable ? '' : currentActiveFilters.abholort_plz, // Added user check
-												abholort_stadt: searchNowAvailable ? '' : currentActiveFilters.abholort_stadt, // Added user check
-												rueckgabeort_plz: currentActiveFilters.rueckgabeort_plz, // Added user check
-												rueckgabeort_stadt: currentActiveFilters.rueckgabeort_stadt, // Added user check
-												fahrzeugId: car.FahrzeugID
-											}}
-										>
-											{t('vehicles.detailsAndBook')}
-										</Link>
-									</Popup>
-								</Marker>
-							);
-						})}
-					</MapContainer>
+					<CarMap
+						vehicles={validMarkers}
+						pickupLocation={pickupLocationCoords}
+						locationRadius={currentActiveFilters.radius}
+						realtime={searchNowAvailable}
+						start_datum={currentActiveFilters.start_datum}
+						end_datum={currentActiveFilters.end_datum}
+						abholort_plz={currentActiveFilters.abholort_plz}
+						abholort_stadt={currentActiveFilters.abholort_stadt}
+						rueckgabeort_plz={currentActiveFilters.rueckgabeort_plz}
+						rueckgabeort_stadt={currentActiveFilters.rueckgabeort_stadt}
+					/>
 				</div>
 			)}
 		</div>

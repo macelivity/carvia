@@ -11,7 +11,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { de } from 'date-fns/locale';
-import { getModellById, getTarife, getVehicleById, reservieren } from '../api/api';
+import { createReservation, getModellById, getTarife, getVehicleById } from '../api/api';
 
 // Helper function to format Date object to 'YYYY-MM-DDTHH:mm' string for API
 function formatToISOStringForAPI(date) {
@@ -166,7 +166,7 @@ export default function Booking() {
 		};
 
 		try {
-			const response = await reservieren(reservationData);
+			const response = await createReservation(reservationData);
 			if (response.status !== 201) {
 				setBookingError(t('booking.bookingError'));
 				throw new Error('Reservierung fehlgeschlagen: ' + response.statusText);
@@ -215,7 +215,7 @@ export default function Booking() {
 					{t('booking.backToVehicles')}
 				</Button>
 				<Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-					{t('booking.title', { model: model.ModellName })}
+					{t('booking.title') + model.ModellName}
 				</Typography>
 
 				{error && !loadingVehicle && (

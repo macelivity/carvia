@@ -1,16 +1,15 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import API, { getProfile } from '../api/api'; // API importieren
-import { useNavigate } from 'react-router-dom';
+import API, { getProfile } from '../api/api';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
-// Rollen-Mapping basierend auf der Datenbank (RolleID) und Sitemap-Begriffen
+// Rollen-Mapping basierend auf der Datenbank
 const mapRolleIdToRole = (rolleId) => {
     switch (rolleId) {
-        case 1: return 'Mitglied'; // Annahme: RolleID 1 = User/Mitglied
-        case 2: return 'Admin';    // Annahme: RolleID 2 = Admin
-        case 3: return 'Mitarbeiter';// Annahme: RolleID 3 = Manager/Mitarbeiter
+        case 1: return 'Mitglied';
+        case 2: return 'Admin';
+        case 3: return 'Mitarbeiter';
         default: return 'guest';
     }
 };

@@ -51,7 +51,12 @@
     "wantToSeeVehicles": "¿Le gustaría ver los vehículos disponibles?",
     "toVehicleOverview": "A la vista general de vehículos",
     "loadingReservations": "Cargando reservas...",
-    "errorLoadingReservations": "No se pudieron cargar las reservas."
+    "errorLoadingReservations": "No se pudieron cargar las reservas.",
+    "cancel": "Cancelar",
+    "cancelling": "Cancelando...",
+    "confirmCancel": "¿Realmente desea cancelar esta reserva?",
+    "cancelSuccess": "Reserva cancelada con éxito.",
+    "cancelError": "Error al cancelar la reserva."
   },
   "homepage": {
     "title": "Bienvenido a CarVia",
@@ -62,7 +67,16 @@
     "loginButton": "Iniciar sesión",
     "registerButton": "Registrarse",
     "reservationsButton": "Reservas",
-    "vehicleManagementButton": "Gestionar vehículos"
+    "vehicleManagementButton": "Gestionar vehículos",
+    "makeNewReservation": "Nueva Reserva",
+    "searchDescription": "Busca y reserva el vehículo perfecto para tus necesidades.",
+    "startSearch": "Iniciar búsqueda",
+    "seeReservations": "Ver Reservas",
+    "reservationsDescription": "Consulta y gestiona tus reservas actuales y pasadas.",
+    "viewReservations": "Ver mis reservas",
+    "adminTools": "Herramientas de Admin",
+    "exploreVehicles": "Explorar nuestra flota",
+    "exploreDescription": "Navega por todos los vehículos disponibles sin hacer una reserva."
   },
   "login": {
     "title": "Iniciar sesión",
@@ -144,7 +158,7 @@
     "errorLoading": "Error al cargar vehículos."
   },
   "booking": {
-    "title": "Reservar vehículo",
+    "title": "Reservar vehículo: ",
     "vehicleDetails": "Detalles del vehículo",
     "bookingDetails": "Detalles de la reserva",
     "selectTariff": "Seleccionar tarifa",

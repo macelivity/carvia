@@ -51,7 +51,12 @@
     "wantToSeeVehicles": "Would you like to view available vehicles?",
     "toVehicleOverview": "To Vehicle Overview",
     "loadingReservations": "Loading reservations...",
-    "errorLoadingReservations": "Could not load reservations."
+    "errorLoadingReservations": "Could not load reservations.",
+    "cancel": "Cancel",
+    "cancelling": "Cancelling...",
+    "confirmCancel": "Do you really want to cancel this reservation?",
+    "cancelSuccess": "Reservation successfully cancelled.",
+    "cancelError": "Error cancelling the reservation."
   },
   "homepage": {
     "title": "Welcome to CarVia",
@@ -62,7 +67,16 @@
     "loginButton": "Login",
     "registerButton": "Register",
     "reservationsButton": "Reservations",
-    "vehicleManagementButton": "Manage Vehicles"
+    "vehicleManagementButton": "Manage Vehicles",
+    "makeNewReservation": "Make New Reservation",
+    "searchDescription": "Search and book the perfect vehicle for your needs.",
+    "startSearch": "Start Vehicle Search",
+    "seeReservations": "See Reservations",
+    "reservationsDescription": "View and manage your current and past bookings.",
+    "viewReservations": "View My Reservations",
+    "adminTools": "Admin Tools",
+    "exploreVehicles": "Explore Our Fleet",
+    "exploreDescription": "Browse all available vehicles without making a reservation."
   },
   "login": {
     "title": "Login",
@@ -147,7 +161,7 @@
     "pickupLocation": "Pickup Location"
   },
   "booking": {
-    "title": "Book Vehicle: {model}",
+    "title": "Book Vehicle: ",
     "backToVehicles": "← Back to Vehicle Overview",
     "vehicleSpecs": "Vehicle Specifications",
     "tariffDetails": "Tariff Details (Selected)",

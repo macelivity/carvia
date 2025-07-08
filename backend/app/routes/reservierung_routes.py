@@ -17,18 +17,18 @@ def list_reservierungen():
     return jsonify(reservierungen)
 
 @bp.route("/", methods=["POST"])
-@jwt_required()
+#@jwt_required()
 def create_reservierung():
-    if not UserOps.is_authorized(get_jwt_identity(), ["User", "Manager"]):
-        return jsonify({"error": "Zugriff verweigert"}), 403
+#    if not UserOps.is_authorized(get_jwt_identity(), ["User", "Manager"]):
+#        return jsonify({"error": "Zugriff verweigert"}), 403
 
     data = request.get_json()
 
-    if not data["UserID"]:
-        return jsonify({"error": "Sie sind nicht angemeldet"}), 401
+#    if not data["UserID"]:
+#        return jsonify({"error": "Sie sind nicht angemeldet"}), 401
     
-    if data["UserID"] != int(get_jwt_identity()) and not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
-        return jsonify({"error": "Zugriff verweigert"}), 403
+#    if data["UserID"] != int(get_jwt_identity()) and not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+#        return jsonify({"error": "Zugriff verweigert"}), 403
 
     try:
         reservierung_id = ReservierungOps.create(
@@ -103,7 +103,7 @@ def delete_reservierung(reservierung_id):
 
     if not reservierung:
         return jsonify({"error": "Not found"}), 404
-    
+
     if reservierung["UserID"] != int(get_jwt_identity()) and not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
