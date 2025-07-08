@@ -1,149 +1,677 @@
-import { useState } from 'react';
-import { register } from '../api/api'; // Annahme: register-Funktion in api.js ist korrekt
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import {
+  Container, Paper, Typography, Button, TextField, Stepper, Step, StepLabel, Box, LinearProgress, Alert, Fade, Collapse
+} from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { register } from '../api/api';
+
+const steps = [
+  'register.steps.account',
+  'register.steps.personal',
+  'register.steps.address',
+  'register.steps.billing',
+  'register.steps.verification'
+];
+
+const uploadFields = [
+  { name: 'idFront', labelKey: 'register.uploads.idFront', endpoint: '/api/user/identitycheck' },
+  { name: 'idBack', labelKey: 'register.uploads.idBack', endpoint: '/api/user/identitycheck' },
+  { name: 'licenseFront', labelKey: 'register.uploads.licenseFront', endpoint: '/api/user/licensecheck' },
+  { name: 'licenseBack', labelKey: 'register.uploads.licenseBack', endpoint: '/api/user/licensecheck' }
+];
 
 export default function Register() {
-    const { t } = useTranslation();
-    const [form, setForm] = useState({
-        email: '',
-        username: '',
-        password: '',
-        vorname: '',
-        nachname: '',
-        geburtsdatum: '', // Format YYYY-MM-DD für type="date"
-        iban: '',
-        bic: '',
-        plz: '',
-        ort: '',
-        strasse: '',
-        hausnummer: '',
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [activeStep, setActiveStep] = useState(0);
+  const [form, setForm] = useState({
+    email: '', username: '', password: '', passwordConfirm: '',
+    vorname: '', nachname: '', geburtsdatum: '',
+    plz: '', ort: '', strasse: '', hausnummer: '',
+    iban: '', bic: '',
+    idFront: null, idBack: null, licenseFront: null, licenseBack: null
+  });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({
+    idFront: 0, idBack: 0, licenseFront: 0, licenseBack: 0
+  });
+  const [uploadSuccess, setUploadSuccess] = useState({
+    idFront: false, idBack: false, licenseFront: false, licenseBack: false
+  });
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (files) {
+      handleFileUpload(name, files[0]);
+    } else {
+      setForm(f => ({ ...f, [name]: value }));
+      setError('');
+    }
+  };
+
+  // File upload handler
+  const handleFileUpload = (field, file) => {
+    setForm(f => ({ ...f, [field]: file }));
+    setUploadProgress(p => ({ ...p, [field]: 0 }));
+    setUploadSuccess(s => ({ ...s, [field]: true })); // Mark as ready as soon as file is selected
+    // Only upload after registration (user_id known)
+  };
+
+  const handleNext = async () => {
+    setError('');
+    // Validate required fields for each step
+    if (activeStep === 0) {
+      if (!form.email || !form.username || !form.password || !form.passwordConfirm) {
+        setError(t('register.validation.fillAllFields')); return;
+      }
+      if (form.password.length < 6) {
+        setError(t('register.validation.passwordLength')); return;
+      }
+      if (form.password !== form.passwordConfirm) {
+        setError(t('register.validation.passwordMismatch')); return;
+      }
+    }
+    if (activeStep === 1) {
+      if (!form.vorname || !form.nachname || !form.geburtsdatum) {
+        setError(t('register.validation.fillPersonalInfo')); return;
+      }
+    }
+    if (activeStep === 2) {
+      if (!form.plz || !form.ort || !form.strasse || !form.hausnummer) {
+        setError(t('register.validation.fillAddressInfo')); return;
+      }
+    }
+    if (activeStep === 3) {
+      if (!form.iban || !form.bic) {
+        setError(t('register.validation.fillBankingInfo')); return;
+      }
+    }
+    if (activeStep === 4) {
+      for (const field of uploadFields) {
+        if (!uploadSuccess[field.name]) {
+          setError(t('register.validation.uploadAllDocuments')); return;
+        }
+      }
+    }
+    if (activeStep < 4) setActiveStep(s => s + 1);
+    else await handleRegister();
+  };
+
+  const handleBack = () => setActiveStep(s => Math.max(0, s - 1));
+  const handleCancel = () => navigate('/');
+
+  const handleRegister = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      // 1. Register user
+      const res = await register({
+        email: form.email,
+        username: form.username,
+        password: form.password,
+        vorname: form.vorname,
+        nachname: form.nachname,
+        geburtsdatum: form.geburtsdatum,
+        iban: form.iban,
+        bic: form.bic,
+        plz: form.plz,
+        ort: form.ort,
+        strasse: form.strasse,
+        hausnummer: form.hausnummer,
         fuehrerschein: ''
-    });
-    const [message, setMessage] = useState('');
-    const [error, setError] = useState('');
-    const navigate = useNavigate();
-
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-        setMessage('');
-        setError('');
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        setMessage('');
-
-        // Einfache Frontend-Validierung für erforderliche Felder
-        const requiredFields = ['email', 'username', 'password', 'vorname', 'nachname', 'geburtsdatum', 'iban', 'bic', 'plz', 'ort', 'strasse', 'hausnummer', 'fuehrerschein']; // 'fuehrerschein' hinzugefügt
-        for (const field of requiredFields) {
-            if (!form[field]) {
-                setError(t('register.fieldRequired', { field }));
-                return;
-            }
+      });
+      if (!res || !res.data || (res.status !== 200 && res.status !== 201)) {
+        // Handle specific error responses from backend
+        if (res && res.data && res.data.msg) {
+          if (res.data.msg.includes('Username already exists')) {
+            throw new Error('This username is already taken. Please choose a different one.');
+          } else if (res.data.msg.includes('Password must be at least 6 characters long')) {
+            throw new Error('Password must be at least 6 characters long.');
+          } else if (res.data.msg.includes('Missing required field')) {
+            throw new Error('Please fill in all required fields.');
+          } else {
+            throw new Error(res.data.msg);
+          }
+        } else {
+          throw new Error('Registration failed. Please try again.');
         }
-        if (form.password.length < 6) {
-            setError(t('register.passwordTooShort'));
-            return;
+      }
+      // 2. Get user_id from response
+      const user_id = res.data.user_id || res.data.id || res.data.UserID;
+      if (!user_id) throw new Error('User ID missing after registration');
+      // 3. Now upload the files with user_id
+      for (const field of uploadFields) {
+        if (form[field.name]) {
+          await new Promise((resolve, reject) => {
+            const endpoint = field.endpoint;
+            const formData = new FormData();
+            formData.append('file', form[field.name]);
+            formData.append('user_id', user_id);
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', endpoint, true);
+            xhr.upload.onprogress = (event) => {
+              if (event.lengthComputable) {
+                setUploadProgress(p => ({ ...p, [field.name]: Math.round((event.loaded / event.total) * 100) }));
+              }
+            };
+            xhr.onload = () => {
+              if (xhr.status === 200) {
+                setUploadSuccess(s => ({ ...s, [field.name]: true }));
+                setUploadProgress(p => ({ ...p, [field.name]: 100 }));
+                resolve();
+              } else {
+                setError('Upload failed. Please try again.');
+                setUploadProgress(p => ({ ...p, [field.name]: 0 }));
+                reject();
+              }
+            };
+            xhr.onerror = () => {
+              setError('Upload failed. Please check your connection and try again.');
+              setUploadProgress(p => ({ ...p, [field.name]: 0 }));
+              reject();
+            };
+            xhr.send(formData);
+          });
+        } else {
+          setError('Please upload all required images.');
+          return;
         }
+      }
+      // 4. Run the credit check endpoint
+      const creditCheckResponse = await fetch('/api/user/credidworthycheck', {
+        method: 'POST',
+        body: JSON.stringify({ user_id, name: form.vorname + ' ' + form.nachname, bic: form.bic, iban: form.iban }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!creditCheckResponse.ok) {
+        throw new Error('Credit check failed. Please verify your banking information.');
+      }
+      
+      setSuccess(true);
+    } catch (e) {
+      // Handle different types of errors
+      if (e.message.includes('Username already exists') || e.message.includes('username is already taken')) {
+        setError('This username is already taken. Please choose a different one.');
+        setActiveStep(0); // Go back to account step to change username
+      } else if (e.message.includes('Password must be at least 6 characters')) {
+        setError('Password must be at least 6 characters long.');
+        setActiveStep(0); // Go back to account step to change password
+      } else if (e.message.includes('upload') || e.message.includes('Upload')) {
+        setError(e.message);
+        setActiveStep(4); // Stay on verification step for uploads
+      } else if (e.message.includes('Credit check')) {
+        setError(e.message);
+        setActiveStep(3); // Go back to billing step for banking info
+      } else {
+        setError(e.message || 'Registration failed. Please check your information and try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        try {
-            await register(form); // Sendet das gesamte Formularobjekt
-            setMessage(t('register.registerSuccess'));
-            setTimeout(() => {
-                navigate('/login');
-            }, 3000); // Weiterleitung nach 3 Sekunden
-        } catch (err) {
-            if (err.response && err.response.data && err.response.data.msg) {
-                setError(err.response.data.msg);
-            } else {
-                setError(t('register.registerError'));
-            }
-            console.error("Registrierungsfehler:", err);
-        }
-    };
+  const renderStep = () => {
+    switch (activeStep) {
+      case 0:
+        return (
+          <Fade in>
+            <Box>
+              <TextField 
+                label={t('register.fields.email')} 
+                name="email" 
+                value={form.email} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal"
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    background: 'white'
+                  }
+                }}
+              />
+              <TextField 
+                label={t('register.fields.username')} 
+                name="username" 
+                value={form.username} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal"
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    background: 'white'
+                  }
+                }}
+              />
+              <TextField 
+                label={t('register.fields.password')} 
+                name="password" 
+                type="password" 
+                value={form.password} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal"
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    background: 'white'
+                  }
+                }}
+              />
+              <TextField 
+                label={t('register.fields.confirmPassword')} 
+                name="passwordConfirm" 
+                type="password" 
+                value={form.passwordConfirm} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal"
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    background: 'white'
+                  }
+                }}
+              />
+            </Box>
+          </Fade>
+        );
+      case 1:
+        return (
+          <Fade in>
+            <Box>
+              <TextField 
+                label={t('register.fields.firstName')} 
+                name="vorname" 
+                value={form.vorname} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal"
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    background: 'white'
+                  }
+                }}
+              />
+              <TextField 
+                label={t('register.fields.lastName')} 
+                name="nachname" 
+                value={form.nachname} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal"
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    background: 'white'
+                  }
+                }}
+              />
+              <TextField 
+                label={t('register.fields.birthdate')} 
+                name="geburtsdatum" 
+                type="date" 
+                value={form.geburtsdatum} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal" 
+                InputLabelProps={{ shrink: true }}
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    background: 'white'
+                  }
+                }}
+              />
+            </Box>
+          </Fade>
+        );
+      case 2:
+        return (
+          <Fade in>
+            <Box>
+              <TextField 
+                label={t('register.fields.zipCode')} 
+                name="plz" 
+                value={form.plz} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal"
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    background: 'white'
+                  }
+                }}
+              />
+              <TextField 
+                label={t('register.fields.city')} 
+                name="ort" 
+                value={form.ort} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal"
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    background: 'white'
+                  }
+                }}
+              />
+              <TextField 
+                label={t('register.fields.street')} 
+                name="strasse" 
+                value={form.strasse} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal"
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    background: 'white'
+                  }
+                }}
+              />
+              <TextField 
+                label={t('register.fields.houseNumber')} 
+                name="hausnummer" 
+                value={form.hausnummer} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal"
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    background: 'white'
+                  }
+                }}
+              />
+            </Box>
+          </Fade>
+        );
+      case 3:
+        return (
+          <Fade in>
+            <Box>
+              <TextField 
+                label={t('register.fields.iban')} 
+                name="iban" 
+                value={form.iban} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal"
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    background: 'white'
+                  }
+                }}
+              />
+              <TextField 
+                label={t('register.fields.bic')} 
+                name="bic" 
+                value={form.bic} 
+                onChange={handleChange} 
+                fullWidth 
+                margin="normal"
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    background: 'white'
+                  }
+                }}
+              />
+            </Box>
+          </Fade>
+        );
+      case 4:
+        return (
+          <Fade in>
+            <Box>
+              <Typography variant="subtitle1" sx={{ mb: 3, fontWeight: 600, color: 'primary.main' }}>
+                {t('register.uploads.title')}
+              </Typography>
+              {uploadFields.map(field => (
+                <Box key={field.name} sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+                  <Button
+                    variant={uploadSuccess[field.name] ? 'contained' : 'outlined'}
+                    color={uploadSuccess[field.name] ? 'success' : 'primary'}
+                    component="label"
+                    fullWidth
+                    sx={{ 
+                      mr: 2, 
+                      transition: 'all 0.3s',
+                      borderRadius: 2,
+                      py: 1.5,
+                      fontWeight: 600,
+                      ...(uploadSuccess[field.name] && {
+                        background: 'linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)'
+                      })
+                    }}
+                  >
+                    {t(field.labelKey)}
+                    <input type="file" name={field.name} accept="image/*" hidden onChange={handleChange} />
+                  </Button>
+                  <Box sx={{ width: 60, ml: 1 }}>
+                    <Collapse in={uploadProgress[field.name] > 0 && !uploadSuccess[field.name]}>
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={uploadProgress[field.name]}
+                        sx={{
+                          borderRadius: 2,
+                          '& .MuiLinearProgress-bar': {
+                            background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)'
+                          }
+                        }}
+                      />
+                    </Collapse>
+                    <Fade in={uploadSuccess[field.name]}>
+                      <CheckCircleIcon color="success" />
+                    </Fade>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Fade>
+        );
+      default:
+        return null;
+    }
+  };
 
+  if (success) {
     return (
-        <div className="max-w-lg mx-auto mt-10 mb-10 p-6 bg-white rounded-lg shadow-xl">
-            <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">{t('register.title')}</h2>
-            {message && <p className="text-sm text-center p-3 mb-4 bg-green-100 text-green-700 rounded">{message}</p>}
-            {error && <p className="text-sm text-center p-3 mb-4 bg-red-100 text-red-700 rounded">{error}</p>}
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">{t('register.email')}</label>
-                    <input id="email" name="email" type="email" placeholder={t('register.emailPlaceholder')} value={form.email} onChange={handleChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                </div>
-                <div>
-                    <label htmlFor="username" className="block text-sm font-medium text-gray-700">{t('register.username')}</label>
-                    <input id="username" name="username" placeholder={t('register.usernamePlaceholder')} value={form.username} onChange={handleChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                </div>
-                <div>
-                    <label htmlFor="password"className="block text-sm font-medium text-gray-700">{t('register.password')}</label>
-                    <input id="password" name="password" type="password" placeholder={t('register.passwordPlaceholder')} value={form.password} onChange={handleChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label htmlFor="vorname" className="block text-sm font-medium text-gray-700">{t('register.firstName')}</label>
-                        <input id="vorname" name="vorname" placeholder={t('register.firstNamePlaceholder')} value={form.vorname} onChange={handleChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                    </div>
-                    <div>
-                        <label htmlFor="nachname" className="block text-sm font-medium text-gray-700">{t('register.lastName')}</label>
-                        <input id="nachname" name="nachname" placeholder={t('register.lastNamePlaceholder')} value={form.nachname} onChange={handleChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                    </div>
-                </div>
+      <Box sx={{ 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        py: 4
+      }}>
+        <Container maxWidth="sm">
+          <Paper sx={{
+            borderRadius: 4,
+            boxShadow: 6,
+            overflow: 'hidden',
+            background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)'
+          }}>
+            {/* Success Header */}
+            <Box sx={{
+              background: 'linear-gradient(90deg, #2e7d32 0%, #4caf50 100%)',
+              color: 'white',
+              p: 4,
+              textAlign: 'center'
+            }}>
+              <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
+                {t('register.complete') || 'Registration Complete'}
+              </Typography>
+              <Typography variant="body1" sx={{ opacity: 0.9 }}>
+                {t('register.reviewMessage') || 'Your application is being reviewed'}
+              </Typography>
+            </Box>
 
-                <div>
-                    <label htmlFor="geburtsdatum" className="block text-sm font-medium text-gray-700">{t('register.birthDate')}</label>
-                    <input id="geburtsdatum" name="geburtsdatum" type="date" value={form.geburtsdatum} onChange={handleChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                </div>
-                <div>
-                    <label htmlFor="fuehrerschein" className="block text-sm font-medium text-gray-700">{t('register.driverLicense')}</label>
-                    <input id="fuehrerschein" name="fuehrerschein" placeholder={t('register.driverLicensePlaceholder')} value={form.fuehrerschein} onChange={handleChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                </div>
-
-                <h3 className="text-lg font-semibold pt-4 text-gray-700">{t('register.addressData')}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label htmlFor="strasse" className="block text-sm font-medium text-gray-700">{t('register.street')}</label>
-                        <input id="strasse" name="strasse" placeholder={t('register.streetPlaceholder')} value={form.strasse} onChange={handleChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                    </div>
-                    <div>
-                        <label htmlFor="hausnummer" className="block text-sm font-medium text-gray-700">{t('register.houseNumber')}</label>
-                        <input id="hausnummer" name="hausnummer" placeholder={t('register.houseNumberPlaceholder')} value={form.hausnummer} onChange={handleChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label htmlFor="plz" className="block text-sm font-medium text-gray-700">{t('register.postalCode')}</label>
-                        <input id="plz" name="plz" placeholder={t('register.postalCodePlaceholder')} value={form.plz} onChange={handleChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                    </div>
-                    <div>
-                        <label htmlFor="ort" className="block text-sm font-medium text-gray-700">{t('register.city')}</label>
-                        <input id="ort" name="ort" placeholder={t('register.cityPlaceholder')} value={form.ort} onChange={handleChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                    </div>
-                </div>
-
-                <h3 className="text-lg font-semibold pt-4 text-gray-700">{t('register.bankData')}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label htmlFor="iban" className="block text-sm font-medium text-gray-700">{t('register.iban')}</label>
-                        <input id="iban" name="iban" placeholder={t('register.ibanPlaceholder')} value={form.iban} onChange={handleChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                    </div>
-                    <div>
-                        <label htmlFor="bic" className="block text-sm font-medium text-gray-700">{t('register.bic')}</label>
-                        <input id="bic" name="bic" placeholder={t('register.bicPlaceholder')} value={form.bic} onChange={handleChange} className="mt-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required />
-                    </div>
-                </div>
-                
-                <button 
-                    type="submit" 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            <Box sx={{ p: 4 }}>
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="h6" sx={{ mb: 3, color: 'text.primary' }}>
+                  {t('register.success.title')}
+                </Typography>
+                <Button 
+                  variant="contained" 
+                  onClick={() => navigate('/login')}
+                  sx={{
+                    py: 1.5,
+                    px: 4,
+                    fontWeight: 700,
+                    borderRadius: 3,
+                    background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+                    boxShadow: 3,
+                    '&:hover': {
+                      boxShadow: 6,
+                      transform: 'translateY(-2px)'
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
                 >
-                    {t('register.registerButton')}
-                </button>
-            </form>
-        </div>
+                  {t('register.buttons.goToLogin')}
+                </Button>
+              </Box>
+            </Box>
+          </Paper>
+        </Container>
+      </Box>
     );
+  }
+
+  return (
+    <Box sx={{ 
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      py: 4
+    }}>
+      <Container maxWidth="sm">
+        <Paper sx={{
+          borderRadius: 4,
+          boxShadow: 6,
+          overflow: 'hidden',
+          background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)'
+        }}>
+          {/* Header */}
+          <Box sx={{
+            background: 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)',
+            color: 'white',
+            p: 4,
+            textAlign: 'center'
+          }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
+              {t('register.title') || 'Register'}
+            </Typography>
+            <Typography variant="body1" sx={{ opacity: 0.9 }}>
+              {t('register.subtitle') || 'Create your account to get started'}
+            </Typography>
+          </Box>
+
+          <Box sx={{ p: 4 }}>
+            <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3 }}>
+              {steps.map(labelKey => <Step key={labelKey}><StepLabel>{t(labelKey)}</StepLabel></Step>)}
+            </Stepper>
+            <LinearProgress 
+              variant="determinate" 
+              value={((activeStep + 1) / steps.length) * 100} 
+              sx={{ 
+                mb: 3, 
+                borderRadius: 2,
+                height: 8,
+                backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                '& .MuiLinearProgress-bar': {
+                  background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+                  borderRadius: 2
+                }
+              }} 
+            />
+            {error && (
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                {error}
+              </Alert>
+            )}
+            {renderStep()}
+          </Box>
+          
+          <Box sx={{ p: 3, pt: 0, display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+            <Button 
+              onClick={handleCancel} 
+              color="error" 
+              disabled={loading}
+              sx={{ borderRadius: 2 }}
+            >
+              {t('register.buttons.cancel')}
+            </Button>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              {activeStep > 0 && (
+                <Button 
+                  onClick={handleBack} 
+                  disabled={loading}
+                  sx={{ borderRadius: 2 }}
+                >
+                  {t('register.buttons.back')}
+                </Button>
+              )}
+              <Button 
+                onClick={handleNext} 
+                variant="contained" 
+                disabled={loading}
+                sx={{
+                  py: 1.5,
+                  px: 3,
+                  fontWeight: 700,
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+                  boxShadow: 3,
+                  '&:hover': {
+                    boxShadow: 6,
+                    transform: 'translateY(-2px)'
+                  },
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {activeStep === steps.length - 1 ? t('register.buttons.register') : t('register.buttons.next')}
+              </Button>
+            </Box>
+          </Box>
+          
+          {loading && (
+            <LinearProgress 
+              sx={{ 
+                width: '100%',
+                '& .MuiLinearProgress-bar': {
+                  background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)'
+                }
+              }} 
+            />
+          )}
+        </Paper>
+      </Container>
+    </Box>
+  );
 }

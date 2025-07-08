@@ -39,6 +39,7 @@ def list_filtered_fahrzeuge():
         getriebeart = request.args.get("getriebeart")
         sitze_str = request.args.get("sitze")
         stundenpreis_str = request.args.get("stundenpreis")
+        modell = request.args.get("modell")
 
         # test endpoint TODO remove later
         if hersteller == "test":
@@ -54,6 +55,7 @@ def list_filtered_fahrzeuge():
             start_datum=start_datum, 
             end_datum=end_datum,
             hersteller=hersteller,
+            modell=modell,
             fahrzeugtyp=fahrzeugtyp,
             getriebeart=getriebeart,
             sitze=sitze,
@@ -71,7 +73,7 @@ def list_filtered_fahrzeuge():
 @bp.route("/", methods=["POST"])
 @jwt_required()
 def create_fahrzeug():
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     data = request.get_json()
@@ -94,7 +96,7 @@ def get_fahrzeug(fahrzeug_id):
 @bp.route("/<int:fahrzeug_id>", methods=["PUT"])
 @jwt_required()
 def update_fahrzeug(fahrzeug_id):
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     data = request.get_json()
@@ -116,7 +118,7 @@ def update_fahrzeug(fahrzeug_id):
 @bp.route("/<int:fahrzeug_id>", methods=["DELETE"])
 @jwt_required()
 def delete_fahrzeug(fahrzeug_id):
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     if not FahrzeugOps.get_by_id(fahrzeug_id):
@@ -131,25 +133,15 @@ def get_fahrzeug_location(fahrzeug_id):
     Gibt die aktuelle oder erwartete Position eines Fahrzeugs zurück.
     Akzeptiert einen optionalen Query-Parameter 'time' (ISO-Format, z.B. YYYY-MM-DDTHH:MM:SS).
     Zugriffsregeln:
-    - Manager: Immer Zugriff.
-    - User: Nur Zugriff, wenn das Fahrzeug zum angefragten Zeitpunkt (oder aktuell) nicht gebucht ist.
+    - Mitarbeiter: Immer Zugriff.
+    - Alle anderen: Nur Zugriff, wenn das Fahrzeug zum angefragten Zeitpunkt (oder aktuell) nicht gebucht ist.
     """
 
     jwt_identity = get_jwt_identity()
 
-    if not jwt_identity:
-        return jsonify({"error": "Zugriff verweigert"}), 403
-
     user_id = int(jwt_identity)
     role_entry = RolleOps.get_by_user_id(user_id)
-
-    if not role_entry:
-        return jsonify({"error": "Zugriff verweigert: Benutzerrolle nicht gefunden."}), 401
-
     user_role = role_entry['Bedeutung']
-
-    if user_role not in ["User", "Manager"]:
-        return jsonify({"error": "Zugriff verweigert: Ungültige Rolle."}), 403
 
     fahrzeug = FahrzeugOps.get_by_id(fahrzeug_id)
     if not fahrzeug:
@@ -166,7 +158,7 @@ def get_fahrzeug_location(fahrzeug_id):
             return jsonify({"error": "Ungültiges Zeitformat für 'time'. Bitte ISO-Format verwenden (z.B. YYYY-MM-DDTHH:MM:SS)."}), 400
 
     # Autorisierungslogik: User dürfen nur zugreifen, wenn Fahrzeug nicht gebucht ist zum query_time_iso_str
-    if user_role == "User":
+    if user_role == "Mitglied":
         if FahrzeugOps.is_booked_at_time(fahrzeug_id, query_time_iso_str):
             return jsonify({"error": f"Zugriff auf Fahrzeugposition verweigert, da das Fahrzeug zum Zeitpunkt {query_time_iso_str} gebucht ist."}), 403
 
@@ -175,4 +167,5 @@ def get_fahrzeug_location(fahrzeug_id):
     location_data = FahrzeugOps.get_target_destination(fahrzeug_id, query_time_iso_str if date_param_str else datetime.now().isoformat())
     if not location_data:
         return jsonify({"error": f"Keine erwarteten Positionsdaten für Fahrzeug {fahrzeug_id} zum Zeitpunkt {query_time_iso_str} gefunden."}), 404
+    
     return jsonify(location_data), 200

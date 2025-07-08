@@ -23,7 +23,7 @@ def register():
     angenommen = data.get("angenommen", False)
     
     jwt_identity = get_jwt_identity()
-    if not jwt_identity or not UserOps.is_authorized(int(jwt_identity), ["Manager", "Admin"]):
+    if not jwt_identity or not UserOps.is_authorized(int(jwt_identity), ["Mitarbeiter", "Admin"]):
         angenommen = False
     
     # Check if username already exists
@@ -64,6 +64,9 @@ def login():
     
     username = data.get("username")
     password = data.get("password")
+
+    print(username)
+    print(password)
     
     if not username or not password:
         return jsonify({"msg": "Missing username or password"}), 400
@@ -105,7 +108,7 @@ def login():
 @jwt_required()
 def get_all_users():
     """Gibt eine Liste aller Nutzer zurück"""
-    if not UserOps.is_authorized(int(get_jwt_identity()), ["Manager", "Admin"]):
+    if not UserOps.is_authorized(int(get_jwt_identity()), ["Mitarbeiter", "Admin"]):
         return jsonify({"msg": "Unauthorized"}), 403
 
     try:
@@ -126,7 +129,7 @@ def get_all_users():
 def get_all_not_approved_users():
     """Gibt eine Liste aller nicht akzeptierten Nutzer zurück"""
 
-    if not UserOps.is_authorized(int(get_jwt_identity()), ["Manager"]):
+    if not UserOps.is_authorized(int(get_jwt_identity()), ["Mitarbeiter"]):
         return jsonify({"msg": "Unauthorized"}), 403
         
     try:
@@ -147,7 +150,7 @@ def get_all_not_approved_users():
 @jwt_required()
 def approve_user(user_id):
     """Genehmigt einen Nutzer"""
-    if not UserOps.is_authorized(int(get_jwt_identity()), ["Manager"]):
+    if not UserOps.is_authorized(int(get_jwt_identity()), ["Mitarbeiter"]):
         return jsonify({"msg": "Unauthorized"}), 403
 
     try:

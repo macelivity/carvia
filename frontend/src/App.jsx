@@ -17,8 +17,10 @@ import NotFound from './pages/NotFound';
 import Account from './pages/Account';
 import UserReservations from './pages/UserReservations'; // Importiere die neue Seite
 import Rechnung from './pages/Rechnung';
+import Accept from './pages/Accept';
 import { Box } from '@mui/material';
 import './i18n'; // Initialize i18n
+import VehicleResults from './pages/Vehicle_results'; // Importiere die VehicleResults-Seite
 
 
 export default function App() {
@@ -41,11 +43,13 @@ export default function App() {
 							<Route
 								path="/reservations"
 								element={
-									<ProtectedRoute allowedRoles={['Mitglied', 'Admin', 'Mitarbeiter']}>
+									<ProtectedRoute allowedRoles={['Mitglied']}>
 										<Reservations />
 									</ProtectedRoute>
 								}
 							/>
+
+							{"//Vehicle Overview"}
 							<Route
 								path="/vehicles"
 								element={
@@ -55,7 +59,15 @@ export default function App() {
 							<Route
 								path="/booking/:vehicle_id"
 								element={
-									<ProtectedRoute allowedRoles={['Mitglied', 'Admin', 'Mitarbeiter']}>
+									<ProtectedRoute allowedRoles={['Mitglied']}>
+										<Booking />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/booking"
+								element={
+									<ProtectedRoute allowedRoles={['Mitglied']}>
 										<Booking />
 									</ProtectedRoute>
 								}
@@ -76,10 +88,32 @@ export default function App() {
 									</ProtectedRoute>
 								}
 							/>
-							<Route path="/search" element={<VehicleSearch />} />
+							{"// Mitarbeiter can accept pending Applications"}
+							<Route
+								path="/accept"
+								element={
+									<ProtectedRoute allowedRoles={['Mitarbeiter', 'Admin']}>
+										<Accept />
+									</ProtectedRoute>
+								}
+							/>
+
+							<Route
+								path="/search"
+								element={
+									<ProtectedRoute allowedRoles={['Mitglied']}>
+										<VehicleSearch />
+									</ProtectedRoute>
+								}
+							/>
+
 							<Route path="/rechnung" element={<Rechnung />} />
 							<Route path="/impressum" element={<Impressum />} />
 							<Route path="/datenschutz" element={<Datenschutz />} />
+							<Route
+								path="/vehicle-results"
+								element={<VehicleResults />}
+							/>
 							<Route path="*" element={<NotFound />} />
 						</Routes>
 					</Box>

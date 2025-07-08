@@ -4,7 +4,16 @@ import {
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import axios from 'axios';
+import { 
+  searchUsers, 
+  getUserReservationsByUserId, 
+  updateReservation, 
+  deleteReservation, 
+  getFilteredVehiclesForReservation, 
+  createReservation, 
+  getTarife,
+  calculateReservationPrice
+} from '../api/api';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
@@ -91,7 +100,17 @@ export default function UserReservations() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [reservations, setReservations] = useState([]);
   const [editDialog, setEditDialog] = useState({ open: false, values: {} });
-  const [createDialog, setCreateDialog] = useState({ open: false, page: 0, values: { FahrzeugID: '', TarifID: '', StartDatum: null, EndDatum: null, Abholort: '', AbholPlz: '', Rueckgabeort: '', RueckgabePlz: '', UserID: '', Vorname: '', Nachname: '' }, filteredVehicles: [], vehicleLoading: false, vehicleError: null });
+  const [createDialog, setCreateDialog] = useState({ 
+    open: false, 
+    page: 0, 
+    values: { FahrzeugID: '', TarifID: '', StartDatum: null, EndDatum: null, Abholort: '', AbholPlz: '', Rueckgabeort: '', RueckgabePlz: '', UserID: '', Vorname: '', Nachname: '' }, 
+    filteredVehicles: [], 
+    vehicleLoading: false, 
+    vehicleError: null,
+    priceCalculation: null,
+    priceLoading: false,
+    priceError: null
+  });
   const [loading, setLoading] = useState(false);
   const [userSearchError, setUserSearchError] = useState(null); // Fehler für User-Suche
   const [reservationError, setReservationError] = useState(null); // Fehler für Reservierungen
@@ -102,7 +121,9 @@ export default function UserReservations() {
   // Lade Tarife, wenn Dialog geöffnet wird
   useEffect(() => {
     if (createDialog.open) {
-      axios.get('/api/tarif').then(res => setTariffs(res.data)).catch(() => setTariffs([]));
+      getTarife()
+        .then(res => setTariffs(res.data))
+        .catch(() => setTariffs([]));
     }
   }, [createDialog.open]);
 
@@ -111,11 +132,11 @@ export default function UserReservations() {
     setUsers([]); setSelectedUser(null); setReservations([]); setEditDialog({ open: false, values: {} }); setLoading(true);
     setUserSearchError(null); setReservationError(null);
     try {
-      const res = await axios.get(`/api/user/search?vorname=${search.vorname}&nachname=${search.nachname}`);
+      const res = await searchUsers(search.vorname, search.nachname);
       setUsers(res.data);
       if (res.data.length === 0) setUserSearchError(t('userReservations.noUserFound'));
     } catch (e) {
-      setUserSearchError(e.message || t('userReservations.searchError'));
+      setUserSearchError(e.response?.data?.error || e.message || t('userReservations.searchError'));
     } finally { setLoading(false); }
   };
 
@@ -123,11 +144,11 @@ export default function UserReservations() {
   const handleSelectUser = async (user) => {
     setSelectedUser(user); setReservations([]); setReservationError(null);
     try {
-      const res = await axios.get(`/api/user/${user.UserID}/reservations`);
+      const res = await getUserReservationsByUserId(user.UserID);
       setReservations(res.data);
       if (res.data.length === 0) setReservationError(t('userReservations.noReservationsFound'));
     } catch (e) {
-      setReservationError(e.message || t('userReservations.reservationError'));
+      setReservationError(e.response?.data?.error || e.message || t('userReservations.reservationError'));
     }
   };
 
@@ -135,9 +156,13 @@ export default function UserReservations() {
   const handleEditOpen = (reservation) => setEditDialog({ open: true, values: { ...reservation } });
   const handleEditChange = (e) => setEditDialog(prev => ({ ...prev, values: { ...prev.values, [e.target.name]: e.target.value } }));
   const handleEditSave = async () => {
-    await axios.put(`/api/reservierung/${editDialog.values.ReservierungID}`, editDialog.values);
-    setEditDialog({ open: false, values: {} });
-    handleSelectUser(selectedUser);
+    try {
+      await updateReservation(editDialog.values.ReservierungID, editDialog.values);
+      setEditDialog({ open: false, values: {} });
+      handleSelectUser(selectedUser);
+    } catch (e) {
+      setReservationError(e.response?.data?.error || e.message || t('userReservations.updateError'));
+    }
   };
 
   // Create Dialog öffnen
@@ -146,7 +171,8 @@ export default function UserReservations() {
     values: {
       FahrzeugID: '', TarifID: '', StartDatum: null, EndDatum: null, Abholort: '', AbholPlz: '', Rueckgabeort: '', RueckgabePlz: '', UserID: selectedUser?.UserID || '', Vorname: selectedUser?.Vorname || '', Nachname: selectedUser?.Nachname || ''
     },
-    filteredVehicles: [], vehicleLoading: false, vehicleError: null
+    filteredVehicles: [], vehicleLoading: false, vehicleError: null,
+    priceCalculation: null, priceLoading: false, priceError: null
   });
   const handleCreateChange = (e) => setCreateDialog(prev => ({ ...prev, values: { ...prev.values, [e.target.name]: e.target.value } }));
   const handleCreateDateChange = (name, value) => setCreateDialog(prev => ({ ...prev, values: { ...prev.values, [name]: value } }));
@@ -168,13 +194,30 @@ export default function UserReservations() {
       if (v.Rueckgabeort) params.append('rueckgabeort', v.Rueckgabeort);
       if (v.RueckgabePlz) params.append('rueckgabeplz', v.RueckgabePlz);
       if (v.TarifID) params.append('tarifid', v.TarifID);
-      const res = await axios.get(`/api/fahrzeug/filter?${params.toString()}`);
+      const res = await getFilteredVehiclesForReservation(params);
       setCreateDialog(prev => ({ ...prev, filteredVehicles: res.data, vehicleLoading: false, vehicleError: null, page: 2 }));
     } catch (e) {
-      setCreateDialog(prev => ({ ...prev, vehicleLoading: false, vehicleError: e.message || t('userReservations.errorVehicleSearch') }));
+      setCreateDialog(prev => ({ ...prev, vehicleLoading: false, vehicleError: e.response?.data?.error || e.message || t('userReservations.errorVehicleSearch') }));
     }
   };
-  const handleVehicleSelect = (fahrzeug) => setCreateDialog(prev => ({ ...prev, values: { ...prev.values, FahrzeugID: fahrzeug.FahrzeugID }, page: 3 }));
+  const handleVehicleSelect = async (fahrzeug) => {
+    setCreateDialog(prev => ({ ...prev, values: { ...prev.values, FahrzeugID: fahrzeug.FahrzeugID }, page: 3, priceLoading: true, priceError: null, priceCalculation: null }));
+    
+    // Calculate price when moving to confirmation step
+    try {
+      const v = createDialog.values;
+      const priceData = {
+        FahrzeugID: fahrzeug.FahrzeugID,
+        TarifID: v.TarifID,
+        StartDatum: v.StartDatum ? new Date(v.StartDatum).toISOString() : null,
+        EndDatum: v.EndDatum ? new Date(v.EndDatum).toISOString() : null
+      };
+      const res = await calculateReservationPrice(priceData);
+      setCreateDialog(prev => ({ ...prev, priceCalculation: res.data, priceLoading: false }));
+    } catch (e) {
+      setCreateDialog(prev => ({ ...prev, priceLoading: false, priceError: e.response?.data?.error || e.message || t('userReservations.priceCalculationError') }));
+    }
+  };
 
   // Reservierung speichern
   const handleCreateSave = async () => {
@@ -196,8 +239,13 @@ export default function UserReservations() {
         Getriebeart: v.getriebeart,
         Sitze: v.sitze
       };
-      await axios.post('/api/reservierung/', payload);
-      setCreateDialog({ open: false, page: 0, values: { FahrzeugID: '', TarifID: '', StartDatum: null, EndDatum: null, Abholort: '', AbholPlz: '', Rueckgabeort: '', RueckgabePlz: '', UserID: '', Vorname: '', Nachname: '' }, filteredVehicles: [], vehicleLoading: false, vehicleError: null });
+      await createReservation(payload);
+      setCreateDialog({ 
+        open: false, page: 0, 
+        values: { FahrzeugID: '', TarifID: '', StartDatum: null, EndDatum: null, Abholort: '', AbholPlz: '', Rueckgabeort: '', RueckgabePlz: '', UserID: '', Vorname: '', Nachname: '' }, 
+        filteredVehicles: [], vehicleLoading: false, vehicleError: null,
+        priceCalculation: null, priceLoading: false, priceError: null
+      });
       handleSelectUser(selectedUser);
     } catch (e) {
       setCreateError(e.response?.data?.error || e.message || t('userReservations.errorCreating'));
@@ -210,12 +258,12 @@ export default function UserReservations() {
   const handleDeleteConfirm = async () => {
     if (!deleteDialog.reservation) return;
     try {
-      await axios.delete(`/api/reservierung/${deleteDialog.reservation.ReservierungID}`);
+      await deleteReservation(deleteDialog.reservation.ReservierungID);
       setDeleteDialog({ open: false, reservation: null });
       handleSelectUser(selectedUser);
     } catch (e) {
       setDeleteDialog({ open: false, reservation: null });
-      setReservationError(e.message || t('userReservations.deleteError'));
+      setReservationError(e.response?.data?.error || e.message || t('userReservations.deleteError'));
     }
   };
   const handleDeleteCancel = () => setDeleteDialog({ open: false, reservation: null });
@@ -332,7 +380,12 @@ export default function UserReservations() {
         t={t}
       />
       {/* --- Create Reservation Dialog --- */}
-      <Dialog open={createDialog.open} onClose={() => setCreateDialog({ open: false, page: 0, values: { FahrzeugID: '', TarifID: '', StartDatum: null, EndDatum: null, Abholort: '', AbholPlz: '', Rueckgabeort: '', RueckgabePlz: '', UserID: '', Vorname: '', Nachname: '' }, filteredVehicles: [], vehicleLoading: false, vehicleError: null })}
+      <Dialog open={createDialog.open} onClose={() => setCreateDialog({ 
+        open: false, page: 0, 
+        values: { FahrzeugID: '', TarifID: '', StartDatum: null, EndDatum: null, Abholort: '', AbholPlz: '', Rueckgabeort: '', RueckgabePlz: '', UserID: '', Vorname: '', Nachname: '' }, 
+        filteredVehicles: [], vehicleLoading: false, vehicleError: null,
+        priceCalculation: null, priceLoading: false, priceError: null
+      })}
         PaperProps={{ sx: { width: { xs: '95vw', sm: 500 }, maxWidth: '95vw', borderRadius: 3, p: 0 } }}>
         <DialogTitle sx={{ p: 0, background: 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)', color: 'white', minHeight: 64, display: 'flex', alignItems: 'center', pl: 3, fontWeight: 600, fontSize: 22, letterSpacing: 0.5 }}>
           {t('userReservations.newReservationFor')} {selectedUser?.Vorname} {selectedUser?.Nachname}
@@ -468,9 +521,52 @@ export default function UserReservations() {
                 <Typography sx={{ mb: 1 }}><b>{t('userReservations.start')}:</b> {createDialog.values.StartDatum ? new Date(createDialog.values.StartDatum).toLocaleString() : ''}</Typography>
                 <Typography sx={{ mb: 1 }}><b>{t('userReservations.end')}:</b> {createDialog.values.EndDatum ? new Date(createDialog.values.EndDatum).toLocaleString() : ''}</Typography>
               </Box>
+              
+              {/* Price Calculation */}
+              <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 2, border: '1px solid', borderColor: 'grey.300' }}>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                  {t('userReservations.priceDetails')}
+                </Typography>
+                
+                {createDialog.priceLoading && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <CircularProgress size={20} />
+                    <Typography>{t('userReservations.calculatingPrice')}</Typography>
+                  </Box>
+                )}
+                
+                {createDialog.priceError && (
+                  <Alert severity="error" sx={{ mb: 2 }}>{createDialog.priceError}</Alert>
+                )}
+                
+                {createDialog.priceCalculation && (
+                  <Box>
+                    <Typography sx={{ mb: 1 }}>
+                      <b>{t('userReservations.duration')}:</b> {createDialog.priceCalculation.duration_hours} {t('userReservations.hours')}
+                    </Typography>
+                    <Typography sx={{ mb: 1 }}>
+                      <b>{t('userReservations.hourlyRate')}:</b> {createDialog.priceCalculation.hourly_rate}€/{t('userReservations.hour')}
+                    </Typography>
+                    <Typography sx={{ mb: 1 }}>
+                      <b>{t('userReservations.tariffMultiplier')}:</b> {createDialog.priceCalculation.tariff_multiplier}x
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main', pt: 1, borderTop: '1px solid', borderColor: 'grey.300' }}>
+                      <b>{t('userReservations.totalPrice')}:</b> {createDialog.priceCalculation.price}€
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+              
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <Button variant="outlined" onClick={handleCreateBack}>{t('userReservations.back')}</Button>
-                <Button variant="contained" onClick={handleCreateSave} sx={{ minWidth: 180 }}>{t('userReservations.createReservation')}</Button>
+                <Button 
+                  variant="contained" 
+                  onClick={handleCreateSave} 
+                  sx={{ minWidth: 180 }}
+                  disabled={createDialog.priceLoading || createDialog.priceError}
+                >
+                  {t('userReservations.createReservation')}
+                </Button>
               </Box>
             </>
           )}

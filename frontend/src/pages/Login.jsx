@@ -1,17 +1,26 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { login as loginAPI } from '../api/api';
 import { useTranslation } from 'react-i18next';
+import {
+    Container, Typography, TextField, Button, Box, Paper, 
+    Alert, Avatar, InputAdornment, IconButton
+} from '@mui/material';
+import LoginIcon from '@mui/icons-material/Login';
+import PersonIcon from '@mui/icons-material/Person';
+import LockIcon from '@mui/icons-material/Lock';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
 export default function Login() {
     const { t } = useTranslation();
     const { user, login: contextLogin } = useAuth();
-    // Loggen des User-Objekts bei jedem Rendern von Login.jsx
-    console.log('[Login.jsx] Component rendered. User from context:', user); 
     const navigate = useNavigate();
     const [form, setForm] = useState({ username: '', password: '' });
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -27,6 +36,11 @@ export default function Login() {
         }
         try {
             const response = await loginAPI(form);
+            // Check if user is not accepted
+            if (response.data && response.data.Angenommen === 0) {
+                setError('Registration in progress, try again later');
+                return;
+            }
             contextLogin(response.data);
         } catch (err) {
             console.error("[Login.jsx] Login API error:", err);
@@ -42,46 +56,176 @@ export default function Login() {
         if (user && user.role !== 'guest') {
             navigate('/'); 
         }
-    }, [user, navigate]); // Abhängigkeit vom user-Objekt aus dem AuthContext
+    }, [user, navigate]);
 
     return (
-        <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow">
-            <h2 className="text-xl font-bold mb-4 text-center">{t('login.title')}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label htmlFor="username" className="block text-sm font-medium text-gray-700">{t('login.username')}</label>
-                    <input 
-                        id="username"
-                        name="username" 
-                        type="text"
-                        placeholder={t('login.usernamePlaceholder')} 
-                        value={form.username}
-                        onChange={handleChange} 
-                        className="mt-1 w-full p-2 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-                        required
-                    />
-                </div>
-                <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">{t('login.password')}</label>
-                    <input 
-                        id="password"
-                        name="password" 
-                        type="password" 
-                        placeholder={t('login.passwordPlaceholder')} 
-                        value={form.password}
-                        onChange={handleChange} 
-                        className="mt-1 w-full p-2 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-                        required
-                    />
-                </div>
-                {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                <button 
-                    type="submit" 
-                    className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                >
-                    {t('login.loginButton')}
-                </button>
-            </form>
-        </div>
+        <Box sx={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            py: 4
+        }}>
+            <Container maxWidth="sm">
+                <Paper sx={{
+                    borderRadius: 4,
+                    boxShadow: 6,
+                    overflow: 'hidden',
+                    background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)'
+                }}>
+                    {/* Header */}
+                    <Box sx={{
+                        background: 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)',
+                        color: 'white',
+                        p: 4,
+                        textAlign: 'center'
+                    }}>
+                        <Avatar sx={{
+                            width: 80,
+                            height: 80,
+                            mx: 'auto',
+                            mb: 2,
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            backdropFilter: 'blur(10px)'
+                        }}>
+                            <LoginIcon sx={{ fontSize: 40 }} />
+                        </Avatar>
+                        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
+                            {t('login.title')}
+                        </Typography>
+                        <Typography variant="body1" sx={{ opacity: 0.9 }}>
+                            {t('login.subtitle')}
+                        </Typography>
+                    </Box>
+
+                    {/* Form */}
+                    <Box sx={{ p: 4 }}>
+                        <Box component="form" onSubmit={handleSubmit}>
+                            <TextField
+                                fullWidth
+                                margin="normal"
+                                label={t('login.username')}
+                                name="username"
+                                value={form.username}
+                                onChange={handleChange}
+                                variant="outlined"
+                                required
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <PersonIcon color="action" />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{ 
+                                    mb: 2,
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 2
+                                    }
+                                }}
+                            />
+                            
+                            <TextField
+                                fullWidth
+                                margin="normal"
+                                label={t('login.password')}
+                                name="password"
+                                type={showPassword ? 'text' : 'password'}
+                                value={form.password}
+                                onChange={handleChange}
+                                variant="outlined"
+                                required
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <LockIcon color="action" />
+                                        </InputAdornment>
+                                    ),
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                edge="end"
+                                            >
+                                                {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{ 
+                                    mb: 3,
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 2
+                                    }
+                                }}
+                            />
+
+                            {error && (
+                                <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                                    {error}
+                                </Alert>
+                            )}
+
+                            <Button
+                                type="submit"
+                                fullWidth
+                                variant="contained"
+                                size="large"
+                                startIcon={<LoginIcon />}
+                                sx={{
+                                    py: 1.5,
+                                    mb: 3,
+                                    fontWeight: 700,
+                                    borderRadius: 3,
+                                    background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+                                    boxShadow: 3,
+                                    '&:hover': {
+                                        boxShadow: 6,
+                                        transform: 'translateY(-2px)'
+                                    },
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                {t('login.loginButton')}
+                            </Button>
+
+                            {/* Register Link */}
+                            <Box sx={{ 
+                                textAlign: 'center',
+                                p: 3,
+                                background: 'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%)',
+                                borderRadius: 3,
+                                border: '1px solid rgba(156, 39, 176, 0.2)'
+                            }}>
+                                <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                                    {t('login.noAccount')}
+                                </Typography>
+                                <Button
+                                    component={Link}
+                                    to="/register"
+                                    variant="contained"
+                                    startIcon={<PersonAddIcon />}
+                                    sx={{
+                                        py: 1.5,
+                                        px: 3,
+                                        fontWeight: 700,
+                                        borderRadius: 3,
+                                        background: 'linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%)',
+                                        boxShadow: 3,
+                                        '&:hover': {
+                                            boxShadow: 6,
+                                            transform: 'translateY(-2px)'
+                                        },
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    {t('login.registerNow')}
+                                </Button>
+                            </Box>
+                        </Box>
+                    </Box>
+                </Paper>
+            </Container>
+        </Box>
     );
 }

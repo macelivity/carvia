@@ -19,6 +19,7 @@ export default function Homepage() {
 
     return (
         <Box sx={{ 
+            minHeight: '100vh', // Ensure gradient covers full viewport height
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             py: 4
         }}>
@@ -152,8 +153,8 @@ export default function Homepage() {
                                         <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', mb: 0.5 }}>
                                             {t('homepage.welcomeBack')} {user.username}!
                                         </Typography>
-                                        <Chip 
-                                            label={user.role} 
+                                        <Chip
+                                            label={t(`roles.${user.role.toLowerCase()}`)}
                                             color="primary" 
                                             variant="outlined"
                                             size="small"
@@ -164,19 +165,21 @@ export default function Homepage() {
                         </Card>
 
                         {/* Main Action Cards */}
-                        <Grid container spacing={4} sx={{ mb: 4 }}>
+                        <Box sx={{ display: 'flex', gap: 2, mb: 4, flexDirection: { xs: 'column', md: 'row' } }}>
                             {/* Make New Reservation Card */}
-                            <Grid item xs={12} md={6}>
+                            <Box sx={{ flex: 1 }}>
                                 <Card sx={{ 
                                     height: '100%',
                                     borderRadius: 4, 
                                     boxShadow: 4,
                                     background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
-                                    cursor: 'pointer',
+                                    cursor: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'not-allowed' : 'pointer',
+                                    opacity: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 0.5 : 1,
+                                    filter: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'grayscale(0.5)' : 'none',
                                     transition: 'all 0.3s ease',
                                     '&:hover': {
                                         boxShadow: 8,
-                                        transform: 'translateY(-4px)'
+                                        transform: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'none' : 'translateY(-4px)'
                                     }
                                 }}>
                                     <CardContent sx={{ p: 4, textAlign: 'center' }}>
@@ -202,32 +205,42 @@ export default function Homepage() {
                                             size="large"
                                             fullWidth
                                             startIcon={<SearchIcon />}
+                                            disabled={user.role === 'Mitarbeiter' || user.role === 'Admin'}
                                             sx={{
                                                 py: 2,
                                                 fontWeight: 700,
                                                 borderRadius: 3,
                                                 background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-                                                boxShadow: 3
+                                                boxShadow: 3,
+                                                opacity: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 0.7 : 1,
+                                                cursor: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'not-allowed' : 'pointer',
                                             }}
                                         >
-                                            {t('homepage.startSearch')}
+                                            {t('homepage.createReservationButton', 'Create Reservation')}
                                         </Button>
+                                        {(user.role === 'Mitarbeiter' || user.role === 'Admin') && (
+                                            <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
+                                                {t('homepage.reservationDisabled', 'Admins and staff cannot make reservations for themselves.')}
+                                            </Typography>
+                                        )}
                                     </CardContent>
                                 </Card>
-                            </Grid>
+                            </Box>
 
                             {/* See Reservations Card */}
-                            <Grid item xs={12} md={6}>
+                            <Box sx={{ flex: 1 }}>
                                 <Card sx={{ 
                                     height: '100%',
                                     borderRadius: 4, 
                                     boxShadow: 4,
                                     background: 'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%)',
-                                    cursor: 'pointer',
+                                    cursor: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'not-allowed' : 'pointer',
+                                    opacity: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 0.5 : 1,
+                                    filter: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'grayscale(0.5)' : 'none',
                                     transition: 'all 0.3s ease',
                                     '&:hover': {
                                         boxShadow: 8,
-                                        transform: 'translateY(-4px)'
+                                        transform: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'none' : 'translateY(-4px)'
                                     }
                                 }}>
                                     <CardContent sx={{ p: 4, textAlign: 'center' }}>
@@ -253,20 +266,28 @@ export default function Homepage() {
                                             size="large"
                                             fullWidth
                                             startIcon={<CalendarTodayIcon />}
+                                            disabled={user.role === 'Mitarbeiter' || user.role === 'Admin'}
                                             sx={{
                                                 py: 2,
                                                 fontWeight: 700,
                                                 borderRadius: 3,
                                                 background: 'linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%)',
-                                                boxShadow: 3
+                                                boxShadow: 3,
+                                                opacity: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 0.7 : 1,
+                                                cursor: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'not-allowed' : 'pointer',
                                             }}
                                         >
                                             {t('homepage.viewReservations')}
                                         </Button>
+                                        {(user.role === 'Mitarbeiter' || user.role === 'Admin') && (
+                                            <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
+                                                {t('homepage.reservationDisabled', 'Admins and staff cannot view personal reservations.')}
+                                            </Typography>
+                                        )}
                                     </CardContent>
                                 </Card>
-                            </Grid>
-                        </Grid>
+                            </Box>
+                        </Box>
 
                         {/* Admin/Staff Card */}
                         {(user.role === 'Mitarbeiter' || user.role === 'Admin') && (
@@ -286,23 +307,56 @@ export default function Homepage() {
                                     }}>
                                         <AdminPanelSettingsIcon sx={{ fontSize: 30 }} />
                                     </Avatar>
-                                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#f57c00', mb: 2 }}>
+                                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#f57c00', mb: 3 }}>
                                         {t('homepage.adminTools')}
                                     </Typography>
-                                    <Button
-                                        component={Link}
-                                        to="/vehicle-management"
-                                        variant="contained"
-                                        startIcon={<AdminPanelSettingsIcon />}
-                                        sx={{
-                                            fontWeight: 700,
-                                            borderRadius: 3,
-                                            background: 'linear-gradient(135deg, #f57c00 0%, #ff9800 100%)',
-                                            boxShadow: 3
-                                        }}
-                                    >
-                                        {t('homepage.vehicleManagementButton')}
-                                    </Button>
+                                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+                                        <Button
+                                            component={Link}
+                                            to="/vehicle-management"
+                                            variant="contained"
+                                            startIcon={<AdminPanelSettingsIcon />}
+                                            sx={{
+                                                fontWeight: 700,
+                                                borderRadius: 3,
+                                                background: 'linear-gradient(135deg, #f57c00 0%, #ff9800 100%)',
+                                                boxShadow: 3,
+                                                minWidth: '180px'
+                                            }}
+                                        >
+                                            {t('homepage.vehicleManagementButton')}
+                                        </Button>
+                                        <Button
+                                            component={Link}
+                                            to="/user-reservations"
+                                            variant="contained"
+                                            startIcon={<PersonIcon />}
+                                            sx={{
+                                                fontWeight: 700,
+                                                borderRadius: 3,
+                                                background: 'linear-gradient(135deg, #f57c00 0%, #ff9800 100%)',
+                                                boxShadow: 3,
+                                                minWidth: '180px'
+                                            }}
+                                        >
+                                            {t('navbar.userReservations')}
+                                        </Button>
+                                        <Button
+                                            component={Link}
+                                            to="/accept"
+                                            variant="contained"
+                                            startIcon={<PersonAddIcon />}
+                                            sx={{
+                                                fontWeight: 700,
+                                                borderRadius: 3,
+                                                background: 'linear-gradient(135deg, #f57c00 0%, #ff9800 100%)',
+                                                boxShadow: 3,
+                                                minWidth: '180px'
+                                            }}
+                                        >
+                                            {t('homepage.manageApplicationsButton', 'Manage Applications')}
+                                        </Button>
+                                    </Box>
                                 </CardContent>
                             </Card>
                         )}

@@ -8,7 +8,7 @@ bp = Blueprint("rolle", __name__)
 @bp.route("/", methods=["GET"])
 @jwt_required()
 def list_rollen():
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager", "Admin", "Vehicle"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter", "Admin", "Vehicle"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     rollen = RolleOps.get_all()
@@ -27,7 +27,7 @@ def create_rolle():
 @bp.route("/<int:rolle_id>", methods=["GET"])
 @jwt_required()
 def get_rolle(rolle_id):
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager", "Admin", "Vehicle"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter", "Admin", "Vehicle"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     rolle = RolleOps.get_by_id(rolle_id)

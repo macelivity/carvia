@@ -1,7 +1,15 @@
-// filepath: [Account.jsx](http://_vscodecontentref_/1)
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useTranslation } from 'react-i18next';
+import {
+  Container, Typography, Card, CardContent, Button, TextField, Box, Grid,
+  Alert, Dialog, DialogTitle, DialogContent, DialogActions, Avatar, 
+  Table, TableBody, TableCell, TableRow, CircularProgress, Paper
+} from '@mui/material';
+import PersonIcon from '@mui/icons-material/Person';
+import EditIcon from '@mui/icons-material/Edit';
+import LockIcon from '@mui/icons-material/Lock';
+import SaveIcon from '@mui/icons-material/Save';
 
 export default function Account() {
   const { t } = useTranslation();
@@ -135,191 +143,440 @@ export default function Account() {
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-bold mb-4">{t('account.title')}</h2>
-      {loading && <p>{t('account.loadingProfile')}</p>}
-      {error && <p className="text-red-600">{error}</p>}
-      {successMsg && <p className="text-green-600">{successMsg}</p>}
-      {!loading && !error && profile && (
-        <>
-          {!edit ? (
-            <div>
-              <table className="min-w-[350px] border border-gray-300 bg-white shadow rounded">
-                <tbody>
-                  <tr><td className="font-semibold p-2 border">{t('auth.username')}:</td><td className="p-2 border">{profile.Username}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('auth.firstName')}:</td><td className="p-2 border">{profile.Vorname}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('auth.lastName')}:</td><td className="p-2 border">{profile.Nachname}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('auth.birthDate')}:</td><td className="p-2 border">{profile.Geburtsdatum}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('account.joinDate')}:</td><td className="p-2 border">{profile.BeitrittsDatum}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('account.city')}:</td><td className="p-2 border">{profile.Ort}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('account.postalCode')}:</td><td className="p-2 border">{profile.PLZ}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('account.street')}:</td><td className="p-2 border">{profile.Strasse}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('account.houseNumber')}:</td><td className="p-2 border">{profile.HausNummer}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('account.driverLicense')}:</td><td className="p-2 border">{profile.Führerschein}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('account.iban')}:</td><td className="p-2 border">{profile.IBAN}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('account.bic')}:</td><td className="p-2 border">{profile.BIC}</td></tr>
-                </tbody>
-              </table>
-              <div className="mt-4 flex gap-2">
-                <button
-                  type="button"
-                  className="bg-blue-600 text-white px-4 py-2 rounded"
-                  onClick={() => setEdit(true)}
-                >
-                  {t('account.editProfile')}
-                </button>
-                <button
-                  type="button"
-                  className="bg-yellow-600 text-white px-4 py-2 rounded"
-                  onClick={() => setShowPwForm(!showPwForm)}
-                >
-                  {t('account.changePassword')}
-                </button>
-              </div>
-              {showPwForm && (
-                <form onSubmit={handlePwSave} className="mt-4 max-w-md">
-                  <div className="mb-2">
-                    <label className="block font-semibold">{t('account.currentPassword')}</label>
-                    <input
-                      type="password"
-                      name="current_password"
-                      value={pwForm.current_password}
-                      onChange={handlePwChange}
-                      className="border px-2 py-1 rounded w-full"
-                    />
-                  </div>
-                  <div className="mb-2">
-                    <label className="block font-semibold">{t('account.newPassword')}</label>
-                    <input
-                      type="password"
-                      name="new_password"
-                      value={pwForm.new_password}
-                      onChange={handlePwChange}
-                      className="border px-2 py-1 rounded w-full"
-                    />
-                  </div>
-                  <div className="mb-2">
-                    <label className="block font-semibold">{t('account.repeatNewPassword')}</label>
-                    <input
-                      type="password"
-                      name="new_password_repeat"
-                      value={pwForm.new_password_repeat}
-                      onChange={handlePwChange}
-                      className="border px-2 py-1 rounded w-full"
-                    />
-                  </div>
-                  {pwError && <p className="text-red-600 mb-2">{pwError}</p>}
-                  {pwMsg && <p className="text-green-600 mb-2">{pwMsg}</p>}
-                  <button
-                    type="submit"
-                    className="bg-green-600 text-white px-4 py-2 rounded"
-                  >
-                    {t('account.savePassword')}
-                  </button>
-                  <button
-                    type="button"
-                    className="bg-gray-400 text-white px-4 py-2 rounded ml-2"
-                    onClick={() => {
-                      setShowPwForm(false);
-                      setPwForm({
-                        current_password: "",
-                        new_password: "",
-                        new_password_repeat: ""
-                      });
-                      setPwError("");
-                      setPwMsg("");
-                    }}
-                  >
-                    {t('common.cancel')}
-                  </button>
-                </form>
+    <Box sx={{ 
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      minHeight: '100vh',
+      py: 4
+    }}>
+      <Container maxWidth="lg">
+        {/* Hero Section */}
+        <Box sx={{
+          background: 'linear-gradient(120deg, #e3f2fd 0%, #f5faff 100%)',
+          borderRadius: 4,
+          boxShadow: 3,
+          p: { xs: 2, sm: 4 },
+          mb: 4,
+          textAlign: 'center'
+        }}>
+          <Typography variant="h3" sx={{ 
+            fontWeight: 800, 
+            color: 'primary.main', 
+            mb: 1, 
+            letterSpacing: 1 
+          }}>
+            {t('account.title')}
+          </Typography>
+          <Typography variant="subtitle1" sx={{ 
+            color: 'text.secondary', 
+            maxWidth: 600, 
+            mx: 'auto' 
+          }}>
+            {t('account.subtitle')}
+          </Typography>
+        </Box>
+
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+            <CircularProgress size={60} />
+          </Box>
+        )}
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>
+            {error}
+          </Alert>
+        )}
+
+        {successMsg && (
+          <Alert severity="success" sx={{ mb: 3, borderRadius: 3 }}>
+            {successMsg}
+          </Alert>
+        )}
+
+        {pwMsg && (
+          <Alert severity="success" sx={{ mb: 3, borderRadius: 3 }}>
+            {pwMsg}
+          </Alert>
+        )}
+
+        {!loading && !error && profile && (
+          <Grid container spacing={4}>
+            {/* Profile Card */}
+            <Grid item xs={12} md={4}>
+              <Card sx={{ 
+                borderRadius: 4, 
+                boxShadow: 4,
+                background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)',
+                height: 'fit-content'
+              }}>
+                <CardContent sx={{ p: 4, textAlign: 'center' }}>
+                  <Avatar sx={{ 
+                    width: 100, 
+                    height: 100, 
+                    mx: 'auto', 
+                    mb: 3,
+                    background: 'linear-gradient(135deg, #1976d2 60%, #42a5f5 100%)',
+                    fontSize: 40,
+                    fontWeight: 700
+                  }}>
+                    {profile.Vorname?.[0]}{profile.Nachname?.[0]}
+                  </Avatar>
+                  <Typography variant="h5" sx={{ 
+                    fontWeight: 700, 
+                    color: 'primary.main', 
+                    mb: 1 
+                  }}>
+                    {profile.Vorname} {profile.Nachname}
+                  </Typography>
+                  <Typography variant="body2" sx={{ 
+                    color: 'text.secondary', 
+                    mb: 3 
+                  }}>
+                    @{profile.Username}
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Button
+                      variant="contained"
+                      startIcon={<EditIcon />}
+                      onClick={() => setEdit(true)}
+                      disabled={edit}
+                      sx={{
+                        py: 1.5,
+                        fontWeight: 700,
+                        borderRadius: 3,
+                        background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+                        boxShadow: 3
+                      }}
+                    >
+                      {t('account.editProfile')}
+                    </Button>
+                    <Button
+                      variant="contained"
+                      startIcon={<LockIcon />}
+                      onClick={() => setShowPwForm(true)}
+                      sx={{
+                        py: 1.5,
+                        fontWeight: 700,
+                        borderRadius: 3,
+                        background: 'linear-gradient(135deg, #f57c00 0%, #ff9800 100%)',
+                        boxShadow: 3
+                      }}
+                    >
+                      {t('account.changePassword')}
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Profile Data */}
+            <Grid item xs={12} md={8}>
+              <Paper sx={{ 
+                borderRadius: 4, 
+                boxShadow: 4,
+                background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)',
+                overflow: 'hidden'
+              }}>
+                <Box sx={{
+                  background: 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)',
+                  color: 'white',
+                  p: 3
+                }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                    {t('account.profileInformation')}
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ p: 3 }}>
+                  {!edit ? (
+                    <Table>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, borderBottom: '1px solid #e0e0e0' }}>
+                            {t('auth.username')}:
+                          </TableCell>
+                          <TableCell sx={{ borderBottom: '1px solid #e0e0e0' }}>
+                            {profile.Username}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, borderBottom: '1px solid #e0e0e0' }}>
+                            {t('auth.firstName')}:
+                          </TableCell>
+                          <TableCell sx={{ borderBottom: '1px solid #e0e0e0' }}>
+                            {profile.Vorname}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, borderBottom: '1px solid #e0e0e0' }}>
+                            {t('auth.lastName')}:
+                          </TableCell>
+                          <TableCell sx={{ borderBottom: '1px solid #e0e0e0' }}>
+                            {profile.Nachname}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, borderBottom: '1px solid #e0e0e0' }}>
+                            {t('auth.birthDate')}:
+                          </TableCell>
+                          <TableCell sx={{ borderBottom: '1px solid #e0e0e0' }}>
+                            {profile.Geburtsdatum}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, borderBottom: '1px solid #e0e0e0' }}>
+                            {t('account.joinDate')}:
+                          </TableCell>
+                          <TableCell sx={{ borderBottom: '1px solid #e0e0e0' }}>
+                            {profile.BeitrittsDatum}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, borderBottom: '1px solid #e0e0e0' }}>
+                            {t('account.city')}:
+                          </TableCell>
+                          <TableCell sx={{ borderBottom: '1px solid #e0e0e0' }}>
+                            {profile.Ort}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, borderBottom: '1px solid #e0e0e0' }}>
+                            {t('account.postalCode')}:
+                          </TableCell>
+                          <TableCell sx={{ borderBottom: '1px solid #e0e0e0' }}>
+                            {profile.PLZ}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, borderBottom: '1px solid #e0e0e0' }}>
+                            {t('account.street')}:
+                          </TableCell>
+                          <TableCell sx={{ borderBottom: '1px solid #e0e0e0' }}>
+                            {profile.Strasse}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, borderBottom: '1px solid #e0e0e0' }}>
+                            {t('account.houseNumber')}:
+                          </TableCell>
+                          <TableCell sx={{ borderBottom: '1px solid #e0e0e0' }}>
+                            {profile.HausNummer}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, borderBottom: '1px solid #e0e0e0' }}>
+                            {t('account.driverLicense')}:
+                          </TableCell>
+                          <TableCell sx={{ borderBottom: '1px solid #e0e0e0' }}>
+                            {profile.Führerschein}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, borderBottom: '1px solid #e0e0e0' }}>
+                            {t('account.iban')}:
+                          </TableCell>
+                          <TableCell sx={{ borderBottom: '1px solid #e0e0e0' }}>
+                            {profile.IBAN}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600 }}>
+                            {t('account.bic')}:
+                          </TableCell>
+                          <TableCell>
+                            {profile.BIC}
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <Box component="form" onSubmit={handleSave}>
+                      <Grid container spacing={3}>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            fullWidth
+                            label={t('account.city')}
+                            name="Ort"
+                            value={form.Ort}
+                            onChange={handleChange}
+                            variant="outlined"
+                            sx={{ borderRadius: 2 }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            fullWidth
+                            label={t('account.postalCode')}
+                            name="PLZ"
+                            value={form.PLZ}
+                            onChange={handleChange}
+                            variant="outlined"
+                            sx={{ borderRadius: 2 }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            fullWidth
+                            label={t('account.street')}
+                            name="Strasse"
+                            value={form.Strasse}
+                            onChange={handleChange}
+                            variant="outlined"
+                            sx={{ borderRadius: 2 }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            fullWidth
+                            label={t('account.houseNumber')}
+                            name="HausNummer"
+                            value={form.HausNummer}
+                            onChange={handleChange}
+                            variant="outlined"
+                            sx={{ borderRadius: 2 }}
+                          />
+                        </Grid>
+                      </Grid>
+                      <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+                        <Button
+                          type="submit"
+                          variant="contained"
+                          startIcon={<SaveIcon />}
+                          sx={{
+                            py: 1.5,
+                            px: 3,
+                            fontWeight: 700,
+                            borderRadius: 3,
+                            background: 'linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)',
+                            boxShadow: 3
+                          }}
+                        >
+                          {t('account.saveProfile')}
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            setEdit(false);
+                            setForm({
+                              Strasse: profile.Strasse || "",
+                              HausNummer: profile.HausNummer || "",
+                              Ort: profile.Ort || "",
+                              PLZ: profile.PLZ || ""
+                            });
+                          }}
+                          sx={{
+                            py: 1.5,
+                            px: 3,
+                            fontWeight: 700,
+                            borderRadius: 3,
+                            borderWidth: 2,
+                            '&:hover': {
+                              borderWidth: 2
+                            }
+                          }}
+                        >
+                          {t('common.cancel')}
+                        </Button>
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              </Paper>
+            </Grid>
+          </Grid>
+        )}
+
+        {/* Password Change Dialog */}
+        <Dialog 
+          open={showPwForm} 
+          onClose={() => setShowPwForm(false)}
+          PaperProps={{ 
+            sx: { 
+              borderRadius: 3,
+              minWidth: { xs: '90vw', sm: 400 }
+            } 
+          }}
+        >
+          <DialogTitle sx={{
+            background: 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)',
+            color: 'white',
+            fontWeight: 600,
+            fontSize: 20
+          }}>
+            {t('account.changePassword')}
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
+            <Box component="form" onSubmit={handlePwSave}>
+              <TextField
+                fullWidth
+                margin="normal"
+                label={t('account.currentPassword')}
+                name="current_password"
+                type="password"
+                value={pwForm.current_password}
+                onChange={handlePwChange}
+                variant="outlined"
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                margin="normal"
+                label={t('account.newPassword')}
+                name="new_password"
+                type="password"
+                value={pwForm.new_password}
+                onChange={handlePwChange}
+                variant="outlined"
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                margin="normal"
+                label={t('account.repeatNewPassword')}
+                name="new_password_repeat"
+                type="password"
+                value={pwForm.new_password_repeat}
+                onChange={handlePwChange}
+                variant="outlined"
+                sx={{ mb: 2 }}
+              />
+              {pwError && (
+                <Alert severity="error" sx={{ mt: 2, borderRadius: 2 }}>
+                  {pwError}
+                </Alert>
               )}
-            </div>
-          ) : (
-            <form onSubmit={handleSave}>
-              <table className="min-w-[350px] border border-gray-300 bg-white shadow rounded">
-                <tbody>
-                  <tr><td className="font-semibold p-2 border">{t('auth.username')}:</td><td className="p-2 border">{profile.Username}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('auth.firstName')}:</td><td className="p-2 border">{profile.Vorname}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('auth.lastName')}:</td><td className="p-2 border">{profile.Nachname}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('auth.birthDate')}:</td><td className="p-2 border">{profile.Geburtsdatum}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('account.joinDate')}:</td><td className="p-2 border">{profile.BeitrittsDatum}</td></tr>
-                  <tr>
-                    <td className="font-semibold p-2 border">{t('account.city')}:</td>
-                    <td className="p-2 border">
-                      <input
-                        name="Ort"
-                        value={form.Ort}
-                        onChange={handleChange}
-                        className="border px-2 py-1 rounded w-full"
-                      />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-semibold p-2 border">{t('account.postalCode')}:</td>
-                    <td className="p-2 border">
-                      <input
-                        name="PLZ"
-                        value={form.PLZ}
-                        onChange={handleChange}
-                        className="border px-2 py-1 rounded w-full"
-                      />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-semibold p-2 border">{t('account.street')}:</td>
-                    <td className="p-2 border">
-                      <input
-                        name="Strasse"
-                        value={form.Strasse}
-                        onChange={handleChange}
-                        className="border px-2 py-1 rounded w-full"
-                      />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="font-semibold p-2 border">{t('account.houseNumber')}:</td>
-                    <td className="p-2 border">
-                      <input
-                        name="HausNummer"
-                        value={form.HausNummer}
-                        onChange={handleChange}
-                        className="border px-2 py-1 rounded w-full"
-                      />
-                    </td>
-                  </tr>
-                  <tr><td className="font-semibold p-2 border">{t('account.driverLicense')}:</td><td className="p-2 border">{profile.Führerschein}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('account.iban')}:</td><td className="p-2 border">{profile.IBAN}</td></tr>
-                  <tr><td className="font-semibold p-2 border">{t('account.bic')}:</td><td className="p-2 border">{profile.BIC}</td></tr>
-                </tbody>
-              </table>
-              <div className="mt-4">
-                <button
-                  type="submit"
-                  className="bg-green-600 text-white px-4 py-2 rounded mr-2"
-                >
-                  {t('account.saveProfile')}
-                </button>
-                <button
-                  type="button"
-                  className="bg-gray-400 text-white px-4 py-2 rounded"
-                  onClick={() => {
-                    setEdit(false);
-                    setForm({
-                      Strasse: profile.Strasse || "",
-                      HausNummer: profile.HausNummer || "",
-                      Ort: profile.Ort || "",
-                      PLZ: profile.PLZ || ""
-                    });
-                  }}
-                >
-                  {t('common.cancel')}
-                </button>
-              </div>
-            </form>
-          )}
-        </>
-      )}
-    </div>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 3 }}>
+            <Button 
+              onClick={() => {
+                setShowPwForm(false);
+                setPwForm({
+                  current_password: "",
+                  new_password: "",
+                  new_password_repeat: ""
+                });
+                setPwError("");
+                setPwMsg("");
+              }}
+              sx={{ borderRadius: 2 }}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button 
+              onClick={handlePwSave}
+              variant="contained"
+              sx={{
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)',
+                fontWeight: 700
+              }}
+            >
+              {t('account.savePassword')}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
+    </Box>
   );
 }

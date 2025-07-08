@@ -1,18 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import TextField from '@mui/material/TextField';
-import Checkbox from '@mui/material/Checkbox';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import Grid from '@mui/material/Grid';
-import Box from '@mui/material/Box';
+import {
+    Container, Typography, TextField, Button, Box, Paper, 
+    Grid, Avatar, Alert
+} from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { de } from 'date-fns/locale'; // German locale for date-fns
+import { de } from 'date-fns/locale';
 
 // Helper function to format Date object to 'YYYY-MM-DDTHH:mm' string
 function formatToDateTimeLocalString(date) {
@@ -29,8 +27,8 @@ export default function VehicleSearch() {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const initialSearchFilters = {
-        start_datum: null, // Use null for DateTimePicker
-        end_datum: null,   // Use null for DateTimePicker
+        start_datum: null,
+        end_datum: null,
         abholort_plz: '',
         abholort_stadt: '',
         rueckgabeort_plz: '',
@@ -38,7 +36,6 @@ export default function VehicleSearch() {
     };
     const [searchFilters, setSearchFilters] = useState(initialSearchFilters);
     const [pageError, setPageError] = useState('');
-    const [useCurrentTime, setUseCurrentTime] = useState(false);
 
     const handleInputChange = (e) => {
         setSearchFilters({
@@ -58,173 +55,262 @@ export default function VehicleSearch() {
         setPageError('');
     };
 
-    const handleUseCurrentTimeChange = (e) => {
-        setUseCurrentTime(e.target.checked);
-        if (e.target.checked) {
-            setSearchFilters(prev => ({ ...prev, start_datum: null })); // Clear start_datum when "Jetzt starten"
-        }
-        setPageError('');
-    };
-
     const handleSearchSubmit = (e) => {
         e.preventDefault();
         setPageError('');
 
-        const startDateToValidate = useCurrentTime ? new Date() : searchFilters.start_datum;
-        const endDateToValidate = searchFilters.end_datum;
-
-        if ((!useCurrentTime && !startDateToValidate) || !endDateToValidate ||
+        if (!searchFilters.start_datum || !searchFilters.end_datum ||
             !searchFilters.abholort_plz || !searchFilters.abholort_stadt ||
             !searchFilters.rueckgabeort_plz || !searchFilters.rueckgabeort_stadt) {
             setPageError(t('vehicleSearch.fillAllFields'));
             return;
         }
 
-        if (startDateToValidate && endDateToValidate && new Date(startDateToValidate) >= new Date(endDateToValidate)) {
+        if (searchFilters.start_datum && searchFilters.end_datum && new Date(searchFilters.start_datum) >= new Date(searchFilters.end_datum)) {
             setPageError(t('vehicleSearch.invalidDateRange'));
             return;
         }
 
         const searchFilterForNavigation = {
-            ...searchFilters, // Includes PLZ, Stadt etc.
-            start_datum: useCurrentTime ? formatToDateTimeLocalString(new Date()) : formatToDateTimeLocalString(searchFilters.start_datum),
+            ...searchFilters,
+            start_datum: formatToDateTimeLocalString(searchFilters.start_datum),
             end_datum: formatToDateTimeLocalString(searchFilters.end_datum),
         };
 
-        navigate('/vehicles', {
+        // Navigate to results page with search filter
+        navigate('/vehicle-results', {
             state: {
                 searchFilter: searchFilterForNavigation,
-                searchNowAvailable: useCurrentTime
+                searchNowAvailable: false
             }
         });
     };
 
     const handleResetSearchForm = () => {
         setSearchFilters(initialSearchFilters);
-        setUseCurrentTime(false);
         setPageError('');
     };
 
     return (
-        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={de}>
-            <Box sx={{ p: 3, maxWidth: 'md', mx: 'auto' }}>
-                <Paper elevation={3} sx={{ p: { xs: 2, sm: 3, md: 4 }, mb: 4 }}>
-                    <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ fontWeight: 'bold', color: 'text.primary', pb: 2, mb: 4, borderBottom: 1 }}>
-                        {t('vehicleSearch.title')}
-                    </Typography>
-
-                    <form onSubmit={handleSearchSubmit}>
-                        <Grid container spacing={2}>
-                            <Grid item size={12}>
-                                <DateTimePicker
-                                    label={t('vehicleSearch.startDateTime')}
-                                    value={searchFilters.start_datum}
-                                    onChange={handleStartDateChange}
-                                    ampm={false} // Use 24-hour format
-                                    slotProps={{
-                                        actionBar: { actions: ["cancel", "today", "accept"] },
-                                        textField: { fullWidth: true }
-                                    }}
-                                />
-                            </Grid>
-                            <Grid item size={6}>
-                                <TextField
-                                    type="text"
-                                    name="abholort_plz"
-                                    id="abholort_plz"
-                                    label={t('vehicleSearch.pickupPostalCode')}
-                                    value={searchFilters.abholort_plz}
-                                    onChange={handleInputChange}
-                                    placeholder={t('vehicleSearch.pickupPostalCodePlaceholder')}
-                                    fullWidth
-                                    variant="outlined"
-                                    margin="normal"
-                                />
-                            </Grid>
-                            <Grid item size={6}>
-                                <TextField
-                                    type="text"
-                                    name="abholort_stadt"
-                                    id="abholort_stadt"
-                                    label={t('vehicleSearch.pickupCity')}
-                                    value={searchFilters.abholort_stadt}
-                                    onChange={handleInputChange}
-                                    placeholder={t('vehicleSearch.pickupCityPlaceholder')}
-                                    fullWidth
-                                    variant="outlined"
-                                    margin="normal"
-                                />
-                            </Grid>
-                            <Grid item size={12}>
-                                <DateTimePicker
-                                    label={t('vehicleSearch.endDateTime')}
-                                    value={searchFilters.end_datum}
-                                    onChange={handleEndDateChange}
-                                    ampm={false} // Use 24-hour format
-                                    slotProps={{
-                                        actionBar: { actions: ["cancel", "today", "accept"] },
-                                        textField: { fullWidth: true }
-                                    }}
-                                />
-                            </Grid>
-                            <Grid item size={6}>
-                                <TextField
-                                    type="text"
-                                    name="rueckgabeort_plz"
-                                    id="rueckgabeort_plz"
-                                    label={t('vehicleSearch.returnPostalCode')}
-                                    value={searchFilters.rueckgabeort_plz}
-                                    onChange={handleInputChange}
-                                    placeholder={t('vehicleSearch.returnPostalCodePlaceholder')}
-                                    fullWidth
-                                    variant="outlined"
-                                    margin="normal"
-                                />
-                            </Grid>
-                            <Grid item size={6}>
-                                <TextField
-                                    type="text"
-                                    name="rueckgabeort_stadt"
-                                    id="rueckgabeort_stadt"
-                                    label={t('vehicleSearch.returnCity')}
-                                    value={searchFilters.rueckgabeort_stadt}
-                                    onChange={handleInputChange}
-                                    placeholder={t('vehicleSearch.returnCityPlaceholder')}
-                                    fullWidth
-                                    variant="outlined"
-                                    margin="normal"
-                                />
-                            </Grid>
-                        </Grid>
-                        {pageError && (
-                            <Typography color="error" sx={{ mt: 2 }}>
-                                {pageError}
+        <Box sx={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            minHeight: '100vh',
+            py: 4
+        }}>
+            <Container maxWidth="md">
+                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={de}>
+                    <Paper sx={{
+                        borderRadius: 4,
+                        boxShadow: 6,
+                        overflow: 'hidden',
+                        background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)'
+                    }}>
+                        {/* Header */}
+                        <Box sx={{
+                            background: 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)',
+                            color: 'white',
+                            p: 4,
+                            textAlign: 'center'
+                        }}>
+                            <Avatar sx={{
+                                width: 80,
+                                height: 80,
+                                mx: 'auto',
+                                mb: 2,
+                                background: 'rgba(255, 255, 255, 0.2)',
+                                backdropFilter: 'blur(10px)'
+                            }}>
+                                <SearchIcon sx={{ fontSize: 40 }} />
+                            </Avatar>
+                            <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
+                                {t('vehicleSearch.createReservationTitle', 'Create Reservation')}
                             </Typography>
-                        )}
-                        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mt: 3, pt: 2 }}>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="success"
-                                size="large"
-                                sx={{ flexGrow: { sm: 1 } }}
-                            >
-                                {t('vehicleSearch.searchVehicles')}
-                            </Button>
-                            <Button
-                                type="button"
-                                onClick={handleResetSearchForm}
-                                variant="outlined"
-                                color="secondary"
-                                size="large"
-                                sx={{ flexGrow: { sm: 1 } }}
-                            >
-                                {t('vehicleSearch.resetSearch')}
-                            </Button>
+                            <Typography variant="body1" sx={{ opacity: 0.9 }}>
+                                {t('vehicleSearch.subtitle')}
+                            </Typography>
                         </Box>
-                    </form>
-                </Paper>
-            </Box>
-        </LocalizationProvider>
+
+                        {/* Form */}
+                        <Box sx={{ p: 4 }}>
+                            <Box component="form" onSubmit={handleSearchSubmit}>
+                                {/* Date & Time Section */}
+                                <Typography variant="h6" sx={{ 
+                                    fontWeight: 700, 
+                                    color: 'primary.main', 
+                                    mb: 3,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1
+                                }}>
+                                    <SearchIcon />
+                                    {t('vehicleSearch.dateAndTime')}
+                                </Typography>
+
+                                <Grid container spacing={3} sx={{ mb: 4 }}>
+                                    <Grid item xs={12}>
+                                        <DateTimePicker
+                                            label={t('vehicleSearch.startDateTime')}
+                                            value={searchFilters.start_datum}
+                                            onChange={handleStartDateChange}
+                                            ampm={false}
+                                            slotProps={{
+                                                actionBar: { actions: ["cancel", "today", "accept"] },
+                                                textField: { 
+                                                    fullWidth: true,
+                                                    sx: { '& .MuiOutlinedInput-root': { borderRadius: 2 } }
+                                                }
+                                            }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <DateTimePicker
+                                            label={t('vehicleSearch.endDateTime')}
+                                            value={searchFilters.end_datum}
+                                            onChange={handleEndDateChange}
+                                            ampm={false}
+                                            slotProps={{
+                                                actionBar: { actions: ["cancel", "today", "accept"] },
+                                                textField: { 
+                                                    fullWidth: true,
+                                                    sx: { '& .MuiOutlinedInput-root': { borderRadius: 2 } }
+                                                }
+                                            }}
+                                        />
+                                    </Grid>
+                                </Grid>
+
+                                {/* Pickup Location */}
+                                <Typography variant="h6" sx={{ 
+                                    fontWeight: 700, 
+                                    color: 'primary.main', 
+                                    mb: 3 
+                                }}>
+                                    {t('vehicleSearch.pickupLocation')}
+                                </Typography>
+
+                                <Grid container spacing={3} sx={{ mb: 4 }}>
+                                    <Grid item xs={12} sm={4}>
+                                        <TextField
+                                            fullWidth
+                                            label={t('vehicleSearch.pickupPostalCode')}
+                                            name="abholort_plz"
+                                            value={searchFilters.abholort_plz}
+                                            onChange={handleInputChange}
+                                            variant="outlined"
+                                            required
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={8}>
+                                        <TextField
+                                            fullWidth
+                                            label={t('vehicleSearch.pickupCity')}
+                                            name="abholort_stadt"
+                                            value={searchFilters.abholort_stadt}
+                                            onChange={handleInputChange}
+                                            variant="outlined"
+                                            required
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                        />
+                                    </Grid>
+                                </Grid>
+
+                                {/* Return Location */}
+                                <Typography variant="h6" sx={{ 
+                                    fontWeight: 700, 
+                                    color: 'primary.main', 
+                                    mb: 3 
+                                }}>
+                                    {t('vehicleSearch.returnLocation')}
+                                </Typography>
+
+                                <Grid container spacing={3} sx={{ mb: 4 }}>
+                                    <Grid item xs={12} sm={4}>
+                                        <TextField
+                                            fullWidth
+                                            label={t('vehicleSearch.returnPostalCode')}
+                                            name="rueckgabeort_plz"
+                                            value={searchFilters.rueckgabeort_plz}
+                                            onChange={handleInputChange}
+                                            variant="outlined"
+                                            required
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={8}>
+                                        <TextField
+                                            fullWidth
+                                            label={t('vehicleSearch.returnCity')}
+                                            name="rueckgabeort_stadt"
+                                            value={searchFilters.rueckgabeort_stadt}
+                                            onChange={handleInputChange}
+                                            variant="outlined"
+                                            required
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                        />
+                                    </Grid>
+                                </Grid>
+
+                                {pageError && (
+                                    <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                                        {pageError}
+                                    </Alert>
+                                )}
+
+                                {/* Action Buttons */}
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={6}>
+                                        <Button
+                                            type="submit"
+                                            fullWidth
+                                            variant="contained"
+                                            size="large"
+                                            startIcon={<SearchIcon />}
+                                            sx={{
+                                                py: 1.5,
+                                                fontWeight: 700,
+                                                borderRadius: 3,
+                                                background: 'linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)',
+                                                boxShadow: 3,
+                                                '&:hover': {
+                                                    boxShadow: 6,
+                                                    transform: 'translateY(-2px)'
+                                                },
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                        >
+                                            {t('vehicleSearch.searchVehicles')}
+                                        </Button>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <Button
+                                            type="button"
+                                            fullWidth
+                                            variant="outlined"
+                                            size="large"
+                                            startIcon={<RefreshIcon />}
+                                            onClick={handleResetSearchForm}
+                                            sx={{
+                                                py: 1.5,
+                                                fontWeight: 700,
+                                                borderRadius: 3,
+                                                borderWidth: 2,
+                                                '&:hover': {
+                                                    borderWidth: 2,
+                                                    transform: 'translateY(-2px)'
+                                                },
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                        >
+                                            {t('vehicleSearch.resetSearch')}
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                        </Box>
+                    </Paper>
+                </LocalizationProvider>
+            </Container>
+        </Box>
     );
 }

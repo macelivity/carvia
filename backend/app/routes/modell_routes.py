@@ -13,7 +13,7 @@ def list_modells():
 @bp.route("/", methods=["POST"])
 @jwt_required()
 def create_modell():
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     data = request.get_json()
@@ -32,7 +32,7 @@ def get_modell(modell_id):
 @bp.route("/<int:modell_id>", methods=["PUT"])
 @jwt_required()
 def update_modell(modell_id):
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     data = request.get_json()
@@ -46,7 +46,7 @@ def update_modell(modell_id):
 @bp.route("/<int:modell_id>", methods=["DELETE"])
 @jwt_required()
 def delete_modell(modell_id):
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     if not ModellOps.get_by_id(modell_id):
