@@ -1,22 +1,22 @@
 import axios from 'axios';
 
 const API = axios.create({
-	baseURL: '/api', // Proxy in vite.config.js leitet dies an http://localhost:5000 weiter
-	withCredentials: true,
+	baseURL: '/api',
+	withCredentials: true
 });
 
 // Interceptor, um den Token zu jedem Request hinzuzufügen, falls vorhanden
 API.interceptors.request.use((config) => {
-	const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken');
 	if (token) {
-		config.headers.Authorization = `Bearer ${token}`;
+        config.headers['Authorization'] = `Bearer ${token}`;
 	}
-	return config;
+    return config;
 });
 
-export const login = (data) => API.post('/auth/login', data); // Pfad an Backend angepasst
-export const register = (data) => API.post('/auth/register', data); // Pfad an Backend angepasst
-export const getProfile = () => API.get('/auth/profile'); // Neuer Endpunkt für Profilabruf
+export const login = (data) => API.post('/auth/login', data);
+export const register = (data) => API.post('/auth/register', data);
+export const getProfile = () => API.get('/auth/profile');
 
 // Die Backend-Logout-Route existiert aktuell nicht in auth_routes.py.
 // JWT-Logout ist primär clientseitig (Token entfernen).

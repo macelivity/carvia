@@ -171,7 +171,7 @@ export default function Booking() {
 		};
 
 		try {
-			const response = await reservieren(reservationData);
+			const response = await createReservation(reservationData);
 			if (response.status !== 201) {
 				setBookingError(t('booking.bookingError'));
 				throw new Error('Reservierung fehlgeschlagen: ' + response.statusText);

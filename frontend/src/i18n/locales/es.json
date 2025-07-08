@@ -59,7 +59,12 @@
     "wantToSeeVehicles": "¿Le gustaría ver los vehículos disponibles?",
     "toVehicleOverview": "A la vista general de vehículos",
     "loadingReservations": "Cargando reservas...",
-    "errorLoadingReservations": "No se pudieron cargar las reservas."
+    "errorLoadingReservations": "No se pudieron cargar las reservas.",
+    "cancel": "Cancelar",
+    "cancelling": "Cancelando...",
+    "confirmCancel": "¿Realmente desea cancelar esta reserva?",
+    "cancelSuccess": "Reserva cancelada con éxito.",
+    "cancelError": "Error al cancelar la reserva."
   },
   "homepage": {
     "title": "Bienvenido a CarVia",
