@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getRechnungByReservierungsId, getUserReservations, getProfile } from '../api/api';
+import { getRechnungByReservierungsId, getUserReservations, getProfile, deleteReservation } from '../api/api';
 import { useTranslation } from 'react-i18next';
 import {
     Container, Typography, Card, CardContent, Button, Box, Grid,
-    CircularProgress, Alert, Avatar, Chip, Divider
+    CircularProgress, Alert, Avatar, Chip, Divider, Dialog, DialogTitle, 
+    DialogContent, DialogActions
 } from '@mui/material';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import SearchIcon from '@mui/icons-material/Search';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 // Helper function to format date
 const formatDate = (dateString) => {
@@ -18,7 +20,7 @@ const formatDate = (dateString) => {
     return `${date.toLocaleDateString('de-DE')} ${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
 };
 
-function ReservationCard({ reservation, onViewInvoice, t, isFuture = false }) {
+function ReservationCard({ reservation, onViewInvoice, onDelete, t, isFuture = false }) {
     return (
         <Card sx={{
             borderRadius: 3,
@@ -68,25 +70,49 @@ function ReservationCard({ reservation, onViewInvoice, t, isFuture = false }) {
                     </Typography>
                 </Box>
 
-                <Button
-                    component={Link}
-                    to={`/rechnung?reservation=${reservation.ReservierungID}`}
-                    variant="contained"
-                    startIcon={<ReceiptIcon />}
-                    fullWidth
-                    sx={{
-                        mt: 2,
-                        py: 1.5,
-                        fontWeight: 700,
-                        borderRadius: 2,
-                        background: isFuture 
-                            ? 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)'
-                            : 'linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%)',
-                        boxShadow: 2
-                    }}
-                >
-                    {t('reservations.viewInvoice')}
-                </Button>
+                <Box sx={{ display: 'flex', gap: 1, flexDirection: isFuture ? 'column' : 'row' }}>
+                    <Button
+                        component={Link}
+                        to={`/rechnung?reservation=${reservation.ReservierungID}`}
+                        variant="contained"
+                        startIcon={<ReceiptIcon />}
+                        fullWidth
+                        sx={{
+                            py: 1.5,
+                            fontWeight: 700,
+                            borderRadius: 2,
+                            background: isFuture 
+                                ? 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)'
+                                : 'linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%)',
+                            boxShadow: 2
+                        }}
+                    >
+                        {t('reservations.viewInvoice')}
+                    </Button>
+                    
+                    {isFuture && onDelete && (
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            startIcon={<DeleteIcon />}
+                            fullWidth
+                            onClick={() => onDelete(reservation)}
+                            sx={{
+                                py: 1.5,
+                                fontWeight: 700,
+                                borderRadius: 2,
+                                borderWidth: 2,
+                                '&:hover': {
+                                    borderWidth: 2,
+                                    backgroundColor: 'error.main',
+                                    color: 'white'
+                                }
+                            }}
+                        >
+                            {t('reservations.deleteReservation')}
+                        </Button>
+                    )}
+                </Box>
             </CardContent>
         </Card>
     );
@@ -98,6 +124,8 @@ export default function Reservations() {
     const [pastReservations, setPastReservations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [deleteDialog, setDeleteDialog] = useState({ open: false, reservation: null });
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
     useEffect(() => {
         const fetchUserReservations = async () => {
@@ -148,6 +176,36 @@ export default function Reservations() {
         
         fetchUserReservations();
     }, [t]);
+
+    // Handle delete reservation
+    const handleDeleteReservation = (reservation) => {
+        setDeleteDialog({ open: true, reservation });
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteDialog.reservation) return;
+        
+        setDeleteLoading(true);
+        try {
+            await deleteReservation(deleteDialog.reservation.ReservierungID);
+            
+            // Remove the deleted reservation from the state
+            setFutureReservations(prev => 
+                prev.filter(r => r.ReservierungID !== deleteDialog.reservation.ReservierungID)
+            );
+            
+            setDeleteDialog({ open: false, reservation: null });
+        } catch (err) {
+            console.error('Error deleting reservation:', err);
+            setError(t('reservations.deleteError'));
+        } finally {
+            setDeleteLoading(false);
+        }
+    };
+
+    const handleDeleteCancel = () => {
+        setDeleteDialog({ open: false, reservation: null });
+    };
 
     if (loading) {
         return (
@@ -241,6 +299,7 @@ export default function Reservations() {
                                             reservation={r} 
                                             t={t} 
                                             isFuture={true}
+                                            onDelete={handleDeleteReservation}
                                         />
                                     ))}
                                 </Box>
@@ -325,6 +384,34 @@ export default function Reservations() {
                         </Box>
                     </Grid>
                 </Grid>
+
+                {/* Delete Confirmation Dialog */}
+                <Dialog
+                    open={deleteDialog.open}
+                    onClose={handleDeleteCancel}
+                    aria-labelledby="delete-confirmation-dialog"
+                >
+                    <DialogTitle id="delete-confirmation-dialog">
+                        {t('reservations.confirmDeleteTitle')}
+                    </DialogTitle>
+                    <DialogContent>
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            {t('reservations.confirmDeleteMessage')}
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleDeleteCancel} color="primary">
+                            {t('common.cancel')}
+                        </Button>
+                        <Button 
+                            onClick={handleDeleteConfirm} 
+                            color="error" 
+                            disabled={deleteLoading}
+                        >
+                            {deleteLoading ? <CircularProgress size={24} /> : t('common.delete')}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Container>
         </Box>
     );
