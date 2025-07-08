@@ -1,8 +1,10 @@
 {
-    "ENV_TYPE" : "Dev",
-    "DATABASE_URI": "sqlite:///movies.db",
-    "POSTGRES_URI": "postgresql://user:password@localhost/dbname",
-    "LOG_LEVEL": "DEBUG",
-    "SECRET_KEY": "your-secret-key",
-    "JWT_SECRET_KEY": "your-super-secret-jwt-key-change-this-in-production"
+  "ENV_TYPE": "Dev",
+  "DATABASE_URI": "sqlite:///movies.db",
+  "POSTGRES_URI": "postgresql://user:password@localhost/dbname",
+  "LOG_LEVEL": "DEBUG",
+  "SECRET_KEY": "your-secret-key",
+  "JWT_SECRET_KEY": "your-super-secret-jwt-key-change-this-in-production",
+  "TEST_DB_PATH": "backend/test_database.db",
+  "DB_PATH" : "backend/database.db"
 }

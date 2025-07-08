@@ -5,7 +5,6 @@ import json
 from flask import g
 
 # Use absolute path to ensure database is always in the backend directory
-DB_FILENAME = os.path.join(os.path.dirname(__file__), "..", "database.db")
 
 # Load configuration from config.json
 with open(os.path.join(os.path.dirname(__file__), "../../config.json")) as config_file:
@@ -15,8 +14,12 @@ def get_db():
     """Liefert eine DB-Verbindung und speichert sie in Flask's g-Objekt"""
     if "db" not in g:
         env_type = config.get("ENV_TYPE", "Dev")
-        if env_type in ["Dev", "Test"]:
-            g.db = sqlite3.connect(DB_FILENAME)
+        if env_type == "Test":
+            test_db_path = config.get("TEST_DB_PATH")
+            g.db = sqlite3.connect(test_db_path)
+            g.db.row_factory = sqlite3.Row
+        elif env_type == "Dev":
+            g.db = sqlite3.connect(config.get("DB_PATH"))
             g.db.row_factory = sqlite3.Row  # Für dict-ähnlichen Zugriff
         elif env_type == "Prod":
             postgres_uri = config.get("POSTGRES_URI")
@@ -130,7 +133,10 @@ def init_db():
             PLZ TEXT NOT NULL,
             Ort TEXT NOT NULL,
             Strasse TEXT NOT NULL,
-            Angenommen {boolean_type} NOT NULL DEFAULT 0
+            Angenommen {boolean_type} NOT NULL DEFAULT 0,
+            identitycheck_valid {boolean_type} NOT NULL DEFAULT 0,
+            licensecheck_valid {boolean_type} NOT NULL DEFAULT 0,
+            credidworthycheck_valid {boolean_type} NOT NULL DEFAULT 0
         );
         """)
 
@@ -176,16 +182,16 @@ def init_db():
         """)
         
         # Insert default roles if they don't exist
-        db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (1, 'User')")
+        db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (1, 'Mitglied')")
         db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (2, 'Admin')")
-        db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (3, 'Manager')")
+        db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (3, 'Mitarbeiter')")
         db.execute("INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (4, 'Vehicle')")
         db.execute("""INSERT OR IGNORE INTO Nutzer
                         (Username, PasswordHash, RolleID, Vorname, Nachname, Email,
                         Geburtsdatum, BeitrittsDatum, Führerschein, IBAN, BIC, 
                         HausNummer, PLZ, Ort, Strasse, Angenommen)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                        ('Admin', '$2b$12$lFA/3Gzzy.WOV0Rm8AZF6.5KyJJyLgii5Rrd2nA7ftKgzcY.W2mBe', 2, 'Admin', 'User', 'admin@example.com',
+                        ('Admin', '$2b$12$lFA/3Gzzy.WOV0Rm8AZF6.5KyJJyLgii5Rrd2nA7ftKgzcY.W2mBe', 2, 'Admin', 'Admin', 'admin@example.com',
                         '1990-01-01', '1990-01-01', None, None, None,
                         '', '', '', '', True))
         db.commit()

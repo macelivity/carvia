@@ -8,7 +8,7 @@ bp = Blueprint("schaden", __name__, url_prefix="/schaden")
 @bp.route("/", methods=["GET"])
 @jwt_required()
 def list_schadens():
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     schadens = SchadenOps.get_all()
@@ -17,7 +17,7 @@ def list_schadens():
 @bp.route("/", methods=["POST"])
 @jwt_required()
 def create_schaden():
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager", "Vehicle"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter", "Vehicle"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     data = request.get_json()
@@ -27,7 +27,7 @@ def create_schaden():
 @bp.route("/<int:schaden_id>", methods=["GET"])
 @jwt_required()
 def get_schaden(schaden_id):
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager", "Vehicle"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter", "Vehicle"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
     
     schaden = SchadenOps.get_by_id(schaden_id)
@@ -38,7 +38,7 @@ def get_schaden(schaden_id):
 @bp.route("/<int:schaden_id>", methods=["PUT"])
 @jwt_required()
 def update_schaden(schaden_id):
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager", "Vehicle"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter", "Vehicle"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     data = request.get_json()
@@ -50,7 +50,7 @@ def update_schaden(schaden_id):
 @bp.route("/<int:schaden_id>", methods=["DELETE"])
 @jwt_required()
 def delete_schaden(schaden_id):
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager", "Vehicle"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter", "Vehicle"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     if not SchadenOps.get_by_id(schaden_id):

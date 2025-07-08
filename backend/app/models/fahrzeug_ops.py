@@ -84,7 +84,7 @@ class FahrzeugOps:
         return result is not None
 
     @staticmethod
-    def get_filtered(start_datum, end_datum, hersteller=None, fahrzeugtyp=None, getriebeart=None, sitze=None, stundenpreis=None):
+    def get_filtered(start_datum, end_datum, hersteller=None, fahrzeugtyp=None, getriebeart=None, sitze=None, stundenpreis=None, modell=None):
         query = "SELECT * FROM Fahrzeug JOIN Modell ON Fahrzeug.ModellID = Modell.ModellID"
 
         if any([hersteller, fahrzeugtyp, getriebeart, sitze, stundenpreis]):

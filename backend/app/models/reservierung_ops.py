@@ -55,7 +55,7 @@ class ReservierungOps:
         """Holt eine Reservierung nach ID"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Reservierung WHERE ReservierungID = ?", (id,)).fetchone()
-        return result
+        return dict(result) if result else None
             
     @staticmethod
     def get_by_user_id(user_id):

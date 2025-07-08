@@ -8,7 +8,7 @@ bp = Blueprint("geodatum", __name__, url_prefix="/geodatum")
 @bp.route("/", methods=["GET"])
 @jwt_required()
 def list_geodatums():
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     geodatums = GeodatumOps.get_all()
@@ -27,7 +27,7 @@ def create_geodatum():
 @bp.route("/<int:geodatum_id>", methods=["GET"])
 @jwt_required()
 def get_geodatum(geodatum_id):
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     geodatum = GeodatumOps.get_by_id(geodatum_id)
@@ -38,7 +38,7 @@ def get_geodatum(geodatum_id):
 @bp.route("/<int:geodatum_id>", methods=["PUT"])
 @jwt_required()
 def update_geodatum(geodatum_id):
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager", "Vehicle"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter", "Vehicle"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     data = request.get_json()
@@ -50,7 +50,7 @@ def update_geodatum(geodatum_id):
 @bp.route("/<int:geodatum_id>", methods=["DELETE"])
 @jwt_required()
 def delete_geodatum(geodatum_id):
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager", "Vehicle"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter", "Vehicle"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     if not GeodatumOps.get_by_id(geodatum_id):

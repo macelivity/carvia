@@ -1,159 +1,331 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getReservationsOfUser, cancelReservation } from '../api/api';
+import { getRechnungByReservierungsId, getUserReservations, getProfile } from '../api/api';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../context/AuthContext';
+import {
+    Container, Typography, Card, CardContent, Button, Box, Grid,
+    CircularProgress, Alert, Avatar, Chip, Divider
+} from '@mui/material';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import SearchIcon from '@mui/icons-material/Search';
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 
-// Hilfsfunktion zum Formatieren des Datums
+// Helper function to format date
 const formatDate = (dateString) => {
-	if (!dateString) return 'N/A';
-	const date = new Date(dateString);
-	return `${date.toLocaleDateString('de-DE')} ${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return `${date.toLocaleDateString('de-DE')} ${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
 };
 
+function ReservationCard({ reservation, onViewInvoice, t, isFuture = false }) {
+    return (
+        <Card sx={{
+            borderRadius: 3,
+            boxShadow: 3,
+            background: isFuture 
+                ? 'linear-gradient(120deg, #e3f2fd 0%, #f5faff 100%)' 
+                : 'linear-gradient(120deg, #f3e5f5 0%, #fce4ec 100%)',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+                boxShadow: 6,
+                transform: 'translateY(-2px)'
+            }
+        }}>
+            <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
+                            {t('reservations.reservationId')}: {reservation.ReservierungID}
+                        </Typography>
+                        <Chip 
+                            label={isFuture ? t('reservations.upcoming') : t('reservations.completed')}
+                            color={isFuture ? 'success' : 'default'}
+                            size="small"
+                            sx={{ fontWeight: 600 }}
+                        />
+                    </Box>
+                    <Avatar sx={{
+                        background: isFuture 
+                            ? 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)'
+                            : 'linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%)',
+                        width: 48,
+                        height: 48
+                    }}>
+                        <DirectionsCarIcon />
+                    </Avatar>
+                </Box>
+                
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+                        <strong>{t('reservations.vehicleId')}:</strong> {reservation.FahrzeugID}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+                        <strong>{t('reservations.tariffId')}:</strong> {reservation.TarifID}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        <strong>{t('reservations.period')}:</strong> {formatDate(reservation.StartDatum)} – {formatDate(reservation.EndDatum)}
+                    </Typography>
+                </Box>
+
+                <Button
+                    component={Link}
+                    to={`/rechnung?reservation=${reservation.ReservierungID}`}
+                    variant="contained"
+                    startIcon={<ReceiptIcon />}
+                    fullWidth
+                    sx={{
+                        mt: 2,
+                        py: 1.5,
+                        fontWeight: 700,
+                        borderRadius: 2,
+                        background: isFuture 
+                            ? 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)'
+                            : 'linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%)',
+                        boxShadow: 2
+                    }}
+                >
+                    {t('reservations.viewInvoice')}
+                </Button>
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function Reservations() {
-	const { t } = useTranslation();
-	const { user } = useAuth();
-	const [futureReservations, setFutureReservations] = useState([]);
-	const [pastReservations, setPastReservations] = useState([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
-    const [cancellingId, setCancellingId] = useState(null);
+    const { t } = useTranslation();
+    const [futureReservations, setFutureReservations] = useState([]);
+    const [pastReservations, setPastReservations] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-	useEffect(() => {
-		setLoading(true);
-		setError(null);
-		getReservationsOfUser(user.userID)
-			.then(res => {
-				const allReservations = res.data;
-				const now = new Date();
+    useEffect(() => {
+        const fetchUserReservations = async () => {
+            setLoading(true);
+            setError(null);
+            
+            try {
+                // First get the current user's profile to get their user ID
+                const profileRes = await getProfile();
+                const userId = profileRes.data.user.UserID || profileRes.data.user.user_id;
+                
+                if (!userId) {
+                    throw new Error('User ID not found');
+                }
+                
+                // Then fetch the user's specific reservations
+                const reservationsRes = await getUserReservations(userId);
+                const allReservations = reservationsRes.data;
+                const now = new Date();
 
-				const future = [];
-				const past = [];
+                const future = [];
+                const past = [];
 
-				allReservations.forEach(async r => {
-					const endDate = new Date(r.EndDatum);
-					if (endDate > now) {
-						future.push({ ...r, rechnung: null });
-					} else {
-						past.push({ ...r, rechnung: null });
-					}
-				});
+                allReservations.forEach(r => {
+                    const endDate = new Date(r.EndDatum);
+                    if (endDate > now) {
+                        future.push({ ...r, rechnung: null });
+                    } else {
+                        past.push({ ...r, rechnung: null });
+                    }
+                });
 
-				// Zukünftige Reservierungen: früheste zuerst (nach StartDatum)
-				future.sort((a, b) => new Date(a.StartDatum) - new Date(b.StartDatum));
+                // Sort by StartDatum
+                future.sort((a, b) => new Date(a.StartDatum) - new Date(b.StartDatum));
+                past.sort((a, b) => new Date(b.StartDatum) - new Date(a.StartDatum));
 
-				// Vergangene Reservierungen: späteste zuerst (nach StartDatum)
-				past.sort((a, b) => new Date(b.StartDatum) - new Date(a.StartDatum));
+                setFutureReservations(future);
+                setPastReservations(past);
+            } catch (err) {
+                console.error('Error fetching user reservations:', err);
+                setError(t('reservations.errorLoadingReservations'));
+                setFutureReservations([]);
+                setPastReservations([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        fetchUserReservations();
+    }, [t]);
 
-				setFutureReservations(future);
-				setPastReservations(past);
-			})
-			.catch(err => {
-				setError(t('reservations.errorLoadingReservations'));
-				setFutureReservations([]);
-				setPastReservations([]);
-			})
-			.finally(() => {
-				setLoading(false);
-			});
-	}, []);
+    if (loading) {
+        return (
+            <Box sx={{ 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}>
+                <CircularProgress size={60} sx={{ color: 'white' }} />
+            </Box>
+        );
+    }
 
-	const handleCancelReservation = async (reservierungId) => {
-		if (!window.confirm(t('reservations.confirmCancel'))) {
-			return;
-		}
+    return (
+        <Box sx={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            minHeight: '100vh',
+            py: 4
+        }}>
+            <Container maxWidth="lg">
+                {/* Hero Section */}
+                <Box sx={{
+                    background: 'linear-gradient(120deg, #e3f2fd 0%, #f5faff 100%)',
+                    borderRadius: 4,
+                    boxShadow: 3,
+                    p: { xs: 2, sm: 4 },
+                    mb: 4,
+                    textAlign: 'center'
+                }}>
+                    <Avatar sx={{
+                        width: 80,
+                        height: 80,
+                        mx: 'auto',
+                        mb: 2,
+                        background: 'linear-gradient(135deg, #1976d2 60%, #42a5f5 100%)'
+                    }}>
+                        <CalendarTodayIcon sx={{ fontSize: 40 }} />
+                    </Avatar>
+                    <Typography variant="h3" sx={{ 
+                        fontWeight: 800, 
+                        color: 'primary.main', 
+                        mb: 1, 
+                        letterSpacing: 1 
+                    }}>
+                        {t('reservations.title')}
+                    </Typography>
+                    <Typography variant="subtitle1" sx={{ 
+                        color: 'text.secondary', 
+                        maxWidth: 600, 
+                        mx: 'auto' 
+                    }}>
+                        {t('reservations.subtitle')}
+                    </Typography>
+                </Box>
 
-		setCancellingId(reservierungId);
-		try {
-			await cancelReservation(reservierungId);
-			// Reservierung aus der Liste entfernen
-			setFutureReservations(prev => prev.filter(r => r.ReservierungID !== reservierungId));
-			alert(t('reservations.cancelSuccess'));
-		} catch (error) {
-			console.error('Fehler beim Stornieren:', error);
-			alert(t('reservations.cancelError'));
-		} finally {
-			setCancellingId(null);
-		}
-	};
+                {error && (
+                    <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>
+                        {error}
+                    </Alert>
+                )}
 
-	if (loading) {
-		return <div className="p-6 text-center">{t('reservations.loadingReservations')}</div>;
-	}
+                <Grid container spacing={4}>
+                    {/* Future Reservations */}
+                    <Grid item xs={12} lg={6}>
+                        <Box sx={{
+                            background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)',
+                            borderRadius: 4,
+                            boxShadow: 3,
+                            p: 3,
+                            height: 'fit-content'
+                        }}>
+                            <Typography variant="h5" sx={{ 
+                                fontWeight: 700, 
+                                color: 'primary.main', 
+                                mb: 3,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1
+                            }}>
+                                <CalendarTodayIcon />
+                                {t('reservations.futureReservations')}
+                            </Typography>
+                            
+                            {futureReservations.length > 0 ? (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    {futureReservations.map(r => (
+                                        <ReservationCard 
+                                            key={r.ReservierungID} 
+                                            reservation={r} 
+                                            t={t} 
+                                            isFuture={true}
+                                        />
+                                    ))}
+                                </Box>
+                            ) : (
+                                <Box sx={{ 
+                                    textAlign: 'center', 
+                                    py: 6,
+                                    background: 'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%)',
+                                    borderRadius: 3
+                                }}>
+                                    <Typography variant="h6" sx={{ color: 'text.secondary', mb: 2 }}>
+                                        {t('reservations.noFutureReservations')}
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+                                        {t('reservations.wantToSeeVehicles')}
+                                    </Typography>
+                                    <Button
+                                        component={Link}
+                                        to="/search"
+                                        variant="contained"
+                                        startIcon={<SearchIcon />}
+                                        sx={{
+                                            py: 1.5,
+                                            px: 3,
+                                            fontWeight: 700,
+                                            borderRadius: 3,
+                                            background: 'linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%)',
+                                            boxShadow: 3
+                                        }}
+                                    >
+                                        {t('reservations.toVehicleOverview')}
+                                    </Button>
+                                </Box>
+                            )}
+                        </Box>
+                    </Grid>
 
-	if (error) {
-		return <div className="p-6 text-center text-red-500">{error}</div>;
-	}
-
-	return (
-		<div className="p-6 space-y-8">
-			<div>
-				<h2 className="text-2xl font-bold mb-4 text-blue-700">{t('reservations.futureReservations')}</h2>
-				{futureReservations.length > 0 ? (
-					<ul className="space-y-4">
-						{futureReservations.map(r => (
-							<li key={r.ReservierungID} className="border p-4 rounded-lg shadow bg-white flex justify-between items-center">
-								<div>
-									<p className="font-semibold">{t('reservations.reservationId')}: {r.ReservierungID}</p>
-									<p>{t('reservations.vehicleId')}: {r.FahrzeugID} ({t('reservations.tariffId')}: {r.TarifID})</p>
-									<p>{t('reservations.period')}: {formatDate(r.StartDatum)} – {formatDate(r.EndDatum)}</p>
-								</div>
-								<div className="flex gap-2">
-									<Link
-										to={`/rechnung?reservation=${r.ReservierungID}`}
-										className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-									>
-										{t('reservations.viewInvoice')}
-									</Link>
-									<button
-										onClick={() => handleCancelReservation(r.ReservierungID)}
-										disabled={cancellingId === r.ReservierungID}
-										className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-									>
-										{cancellingId === r.ReservierungID ? t('reservations.cancelling') : t('reservations.cancel')}
-									</button>
-								</div>
-							</li>
-						))}
-					</ul>
-				) : (
-					<div>
-						<p className="text-gray-600 mb-2">{t('reservations.noFutureReservations')}</p>
-						<p className="text-gray-600">
-							{t('reservations.wantToSeeVehicles')}
-							<Link to="/search" className="text-blue-600 hover:text-blue-800 underline ml-1">
-								{t('reservations.toVehicleOverview')}
-							</Link>
-						</p>
-					</div>
-				)}
-			</div>
-
-			<div>
-				<h2 className="text-2xl font-bold mb-4 text-blue-700">{t('reservations.pastReservations')}</h2>
-				{pastReservations.length > 0 ? (
-					<ul className="space-y-4">
-						{pastReservations.map(r => (
-							<li key={r.ReservierungID} className="border p-4 rounded-lg shadow bg-gray-50 flex justify-between items-center">
-								<div>
-									<p className="font-semibold">{t('reservations.reservationId')}: {r.ReservierungID}</p>
-									<p>{t('reservations.vehicleId')}: {r.FahrzeugID} ({t('reservations.tariffId')}: {r.TarifID})</p>
-									<p>{t('reservations.period')}: {formatDate(r.StartDatum)} – {formatDate(r.EndDatum)}</p>
-								</div>
-								<Link
-									to={`/rechnung?reservation=${r.ReservierungID}`}
-									className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-								>
-									{t('reservations.viewInvoice')}
-								</Link>
-							</li>
-						))}
-					</ul>
-				) : (
-					<p className="text-gray-600">{t('reservations.noPastReservations')}</p>
-				)}
-			</div>
-		</div>
-	);
+                    {/* Past Reservations */}
+                    <Grid item xs={12} lg={6}>
+                        <Box sx={{
+                            background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)',
+                            borderRadius: 4,
+                            boxShadow: 3,
+                            p: 3,
+                            height: 'fit-content'
+                        }}>
+                            <Typography variant="h5" sx={{ 
+                                fontWeight: 700, 
+                                color: '#7b1fa2', 
+                                mb: 3,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1
+                            }}>
+                                <ReceiptIcon />
+                                {t('reservations.pastReservations')}
+                            </Typography>
+                            
+                            {pastReservations.length > 0 ? (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    {pastReservations.map(r => (
+                                        <ReservationCard 
+                                            key={r.ReservierungID} 
+                                            reservation={r} 
+                                            t={t} 
+                                            isFuture={false}
+                                        />
+                                    ))}
+                                </Box>
+                            ) : (
+                                <Box sx={{ 
+                                    textAlign: 'center', 
+                                    py: 6,
+                                    background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+                                    borderRadius: 3
+                                }}>
+                                    <Typography variant="h6" sx={{ color: 'text.secondary' }}>
+                                        {t('reservations.noPastReservations')}
+                                    </Typography>
+                                </Box>
+                            )}
+                        </Box>
+                    </Grid>
+                </Grid>
+            </Container>
+        </Box>
+    );
 }

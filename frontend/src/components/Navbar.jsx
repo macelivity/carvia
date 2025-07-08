@@ -84,56 +84,6 @@ export default function Navbar() {
 
 				{/* Navigation Links and User Menu */}
 				<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-					{/* Main Navigation */}
-					<Button
-						component={Link}
-						to="/search"
-						startIcon={<SearchIcon />}
-						sx={{ 
-							color: 'white',
-							fontWeight: 600,
-							'&:hover': {
-								background: 'rgba(255,255,255,0.1)'
-							}
-						}}
-					>
-						{t('navbar.vehicles')}
-					</Button>
-
-					{/* Staff/Admin Links */}
-					{user.role === "Mitarbeiter" && (
-						<>
-							<Button
-								component={Link}
-								to="/vehicle-management"
-								startIcon={<AdminPanelSettingsIcon />}
-								sx={{ 
-									color: 'white',
-									fontWeight: 600,
-									'&:hover': {
-										background: 'rgba(255,255,255,0.1)'
-									}
-								}}
-							>
-								{t('navbar.vehicleManagement')}
-							</Button>
-							<Button
-								component={Link}
-								to="/user-reservations"
-								startIcon={<SupervisorAccountIcon />}
-								sx={{ 
-									color: 'white',
-									fontWeight: 600,
-									'&:hover': {
-										background: 'rgba(255,255,255,0.1)'
-									}
-								}}
-							>
-								{t('navbar.userReservations')}
-							</Button>
-						</>
-					)}
-
 					{/* Language Selector */}
 					<LanguageSelector />
 
@@ -143,7 +93,7 @@ export default function Navbar() {
 							{/* User Avatar and Menu */}
 							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
 								<Chip 
-									label={user.role} 
+									label={t(`roles.${user.role.toLowerCase()}`)} 
 									size="small"
 									sx={{
 										background: 'rgba(255,255,255,0.2)',

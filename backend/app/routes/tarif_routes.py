@@ -3,9 +3,10 @@ from app.models.tarif_ops import TarifOps
 from app.models.user_ops import UserOps
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-bp = Blueprint("tarif", __name__)
+bp = Blueprint("tarif", __name__, url_prefix="/tarif")
 
 @bp.route("/", methods=["GET"])
+@jwt_required()
 def list_tarife():
     tarife = TarifOps.get_all()
     return jsonify(tarife)
@@ -13,7 +14,7 @@ def list_tarife():
 @bp.route("/", methods=["POST"])
 @jwt_required()
 def create_tarif():
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     data = request.get_json()
@@ -21,6 +22,7 @@ def create_tarif():
     return jsonify({"msg": f"Tarif with ID {tarif_id} added", "id": tarif_id}), 201
 
 @bp.route("/<int:tarif_id>", methods=["GET"])
+@jwt_required()
 def get_tarif(tarif_id):
     tarif = TarifOps.get_by_id(tarif_id)
     if not tarif:
@@ -30,7 +32,7 @@ def get_tarif(tarif_id):
 @bp.route("/<int:tarif_id>", methods=["PUT"])
 @jwt_required()
 def update_tarif(tarif_id):
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     data = request.get_json()
@@ -42,7 +44,7 @@ def update_tarif(tarif_id):
 @bp.route("/<int:tarif_id>", methods=["DELETE"])
 @jwt_required()
 def delete_tarif(tarif_id):
-    if not UserOps.is_authorized(get_jwt_identity(), ["Manager"]):
+    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     if not TarifOps.get_by_id(tarif_id):

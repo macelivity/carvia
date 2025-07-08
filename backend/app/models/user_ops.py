@@ -135,3 +135,43 @@ class UserOps:
             return False
         role_entry = RolleOps.get_by_user_id(int(jwt_identity))
         return role_entry and role_entry['Bedeutung'] in accepted_roles
+
+    @staticmethod
+    def identitycheck(user_id, id_data, name):
+        db = get_db()
+        with db:
+            db.execute("UPDATE Nutzer SET identitycheck_valid = 1 WHERE UserID = ?", (user_id,))
+            db.commit()
+        return True
+
+    @staticmethod
+    def licensecheck(user_id, license_data):
+        db = get_db()
+        with db:
+            db.execute("UPDATE Nutzer SET licensecheck_valid = 1 WHERE UserID = ?", (user_id,))
+            db.commit()
+        return True
+
+    @staticmethod
+    def credidworthycheck(user_id, name, bic, iban):
+        db = get_db()
+        with db:
+            db.execute("UPDATE Nutzer SET credidworthycheck_valid = 1 WHERE UserID = ?", (user_id,))
+            db.commit()
+        return True
+
+    @staticmethod
+    def get_pending_applications():
+        db = get_db()
+        result = db.execute("SELECT * FROM Nutzer WHERE Angenommen = 0").fetchall()
+        return [dict(row) for row in result]
+
+    @staticmethod
+    def set_application_status(user_id, accepted):
+        db = get_db()
+        with db:
+            if accepted:
+                db.execute("UPDATE Nutzer SET Angenommen = 1 WHERE UserID = ?", (user_id,))
+            else:
+                db.execute("DELETE FROM Nutzer WHERE UserID = ?", (user_id,))
+            db.commit()
