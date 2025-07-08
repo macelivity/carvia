@@ -21,7 +21,7 @@ def list_reservierungen():
     return jsonify(reservierungen)
 
 @bp.route("/", methods=["POST"])
-#@jwt_required()
+@jwt_required()
 def create_reservierung():
 
     # check that user only reserves for himself

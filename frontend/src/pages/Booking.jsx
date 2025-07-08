@@ -13,7 +13,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { de } from 'date-fns/locale';
-import { getReservationData, calculateReservationPrice, reservieren } from '../api/api';
+import { getReservationData, calculateReservationPrice, createReservation } from '../api/api';
 
 // Helper function to format Date object to 'YYYY-MM-DDTHH:mm' string for API
 function formatToISOStringForAPI(date) {
