@@ -19,7 +19,7 @@ from .routes.user_routes import bp as user_bp
 
 def create_app():
     app = Flask(__name__)
-    CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE"]}})
+    CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "*"}})
 
     # Load configuration
     config_path = os.path.join(os.path.dirname(__file__), "../../config.json")

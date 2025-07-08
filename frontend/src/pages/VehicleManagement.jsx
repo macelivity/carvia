@@ -391,38 +391,7 @@ export default function VehicleManagement() {
             </Box>
             {/* Rechte Seite: Karte */}
             <Box sx={{ flex: 1, minWidth: 320, height: '100vh', position: 'sticky', top: 0 }}>
-                <MapContainer
-                    center={[53.0793, 8.8017]}
-                    zoom={8}
-                    scrollWheelZoom
-                    style={{ height: '100%', width: '100%' }}
-                >
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    {vehicles.map(v => {
-                        const loc = locations[v.FahrzeugID];
-                        if (!loc) return null;
-                        return (
-                            <Marker
-                                key={v.FahrzeugID}
-                                position={[loc.lat, loc.lon]}
-                                icon={L.icon({
-                                    iconUrl: '/icons/car-marker.svg',
-                                    iconSize: [48, 48],
-                                    iconAnchor: [24, 36]
-                                })}
-                            >
-                                <Popup>
-                                    <b>{v.ModellName}</b><br />
-                                    {v.Kennzeichen}<br />
-                                    {v.Hersteller}
-                                </Popup>
-                            </Marker>
-                        );
-                    })}
-                </MapContainer>
+                <CarMap vehicles={vehicles} />
             </Box>
             {/* Dialog für neues Fahrzeug */}
             <Dialog open={addOpen} onClose={handleAddClose} maxWidth="md" fullWidth>
