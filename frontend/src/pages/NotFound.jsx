@@ -7,6 +7,10 @@ import {
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import HomeIcon from '@mui/icons-material/Home';
 
+/**
+ * NotFound Komponente - 404-Fehlerseite
+ * Wird angezeigt, wenn eine nicht existierende Route aufgerufen wird
+ */
 const NotFound = () => {
     const { t } = useTranslation();
     
@@ -26,7 +30,7 @@ const NotFound = () => {
                     background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)',
                     textAlign: 'center'
                 }}>
-                    {/* Header */}
+                    {/* Header-Bereich */}
                     <Box sx={{
                         background: 'linear-gradient(90deg, #f44336 0%, #e57373 100%)',
                         color: 'white',
@@ -59,7 +63,7 @@ const NotFound = () => {
                         </Typography>
                     </Box>
 
-                    {/* Content */}
+                    {/* Inhalt-Bereich */}
                     <Box sx={{ p: 6 }}>
                         <Typography variant="body1" sx={{ 
                             color: 'text.secondary', 

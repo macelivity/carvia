@@ -3,21 +3,21 @@ from app.db import get_db
 class RolleOps:
     @staticmethod
     def get_all():
-        """Holt alle Rollen aus der Datenbank"""
+        """Alle Rollen aus der Datenbank abrufen"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Rolle").fetchall()
         return [dict(row) for row in result]
 
     @staticmethod
     def get_by_id(rolle_id):
-        """Holt eine Rolle nach ID"""
+        """Rolle anhand der ID abrufen"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Rolle WHERE RolleID = ?", (rolle_id,)).fetchone()
         return dict(result) if result else None
-        
+    
     @staticmethod
     def get_by_user_id(user_id):
-        """Holt die Rolle eines Nutzers anhand der UserID"""
+        """Rolle eines Nutzers anhand der UserID abrufen"""
         with get_db() as conn:
             result = conn.execute("""
                 SELECT Rolle.*
@@ -29,7 +29,7 @@ class RolleOps:
 
     @staticmethod
     def create(bedeutung):
-        """Erstellt eine neue Rolle"""
+        """Neue Rolle anlegen"""
         with get_db() as conn:
             cursor = conn.execute("""
                 INSERT INTO Rolle (Bedeutung)
@@ -41,7 +41,7 @@ class RolleOps:
 
     @staticmethod
     def update(rolle_id, bedeutung):
-        """Aktualisiert eine Rolle"""
+        """Rolle aktualisieren"""
         with get_db() as conn:
             conn.execute("""
                 UPDATE Rolle
@@ -52,7 +52,7 @@ class RolleOps:
 
     @staticmethod
     def delete(rolle_id):
-        """Löscht eine Rolle"""
+        """Rolle anhand der ID löschen"""
         with get_db() as conn:
             conn.execute("DELETE FROM Rolle WHERE RolleID = ?", (rolle_id,))
             conn.commit()

@@ -3,21 +3,21 @@ from app.db import get_db
 class SchadenOps:
     @staticmethod
     def get_all():
-        """Holt alle Schäden aus der Datenbank"""
+        """Alle Schäden aus der Datenbank abrufen"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Schaden").fetchall()
         return [dict(row) for row in result]
 
     @staticmethod
     def get_by_id(schaden_id):
-        """Holt einen Schaden nach ID"""
+        """Schaden anhand der ID abrufen"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Schaden WHERE SchadenID = ?", (schaden_id,)).fetchone()
         return dict(result) if result else None
     
     @staticmethod
     def create(fahrzeug_id, beschreibung):
-        """Erstellt einen neuen Schaden"""
+        """Neuen Schaden anlegen"""
         with get_db() as conn:
             cursor = conn.execute("""
                 INSERT INTO Schaden (FahrzeugID, Beschreibung)
@@ -29,7 +29,7 @@ class SchadenOps:
 
     @staticmethod
     def update(schaden_id, fahrzeug_id, beschreibung):
-        """Aktualisiert einen Schaden"""
+        """Schaden aktualisieren"""
         with get_db() as conn:
             conn.execute("""
                 UPDATE Schaden
@@ -40,7 +40,7 @@ class SchadenOps:
 
     @staticmethod
     def delete(schaden_id):
-        """Löscht einen Schaden"""
+        """Schaden anhand der ID löschen"""
         with get_db() as conn:
             conn.execute("DELETE FROM Schaden WHERE SchadenID = ?", (schaden_id,))
             conn.commit()

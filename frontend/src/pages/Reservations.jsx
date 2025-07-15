@@ -1,3 +1,8 @@
+/**
+ * Reservierungsseite - Zeigt alle Benutzerreservierungen an
+ * Unterscheidet zwischen zukünftigen und vergangenen Reservierungen
+ * Ermöglicht das Anzeigen von Rechnungen und Stornieren zukünftiger Reservierungen
+ */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getRechnungByReservierungsId, getUserReservations, getProfile, deleteReservation } from '../api/api';
@@ -13,13 +18,21 @@ import SearchIcon from '@mui/icons-material/Search';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-// Helper function to format date
+/**
+ * Hilfsfunktion: Datum formatieren
+ * @param {string} dateString - ISO-Datum als String
+ * @returns {string} - Formatiertes deutsches Datum mit Uhrzeit
+ */
 const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return `${date.toLocaleDateString('de-DE')} ${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
 };
 
+/**
+ * Komponente: Reservierungskarte
+ * Zeigt Details einer einzelnen Reservierung mit Aktionsbuttons an
+ */
 function ReservationCard({ reservation, onViewInvoice, onDelete, t, isFuture = false }) {
     return (
         <Card sx={{
@@ -29,6 +42,7 @@ function ReservationCard({ reservation, onViewInvoice, onDelete, t, isFuture = f
                 ? 'linear-gradient(120deg, #e3f2fd 0%, #f5faff 100%)' 
                 : 'linear-gradient(120deg, #f3e5f5 0%, #fce4ec 100%)',
             transition: 'all 0.3s ease',
+            mb: 4, // Add margin bottom for spacing between cards
             '&:hover': {
                 boxShadow: 6,
                 transform: 'translateY(-2px)'
@@ -118,30 +132,42 @@ function ReservationCard({ reservation, onViewInvoice, onDelete, t, isFuture = f
     );
 }
 
+/**
+ * Hauptkomponente: Reservierungsübersicht
+ * Lädt und zeigt alle Benutzerreservierungen in separaten Kategorien an
+ */
 export default function Reservations() {
     const { t } = useTranslation();
+    
+    // Zustandsvariablen für Reservierungsdaten
     const [futureReservations, setFutureReservations] = useState([]);
     const [pastReservations, setPastReservations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    // Zustandsvariablen für Löschbestätigungsdialog
     const [deleteDialog, setDeleteDialog] = useState({ open: false, reservation: null });
     const [deleteLoading, setDeleteLoading] = useState(false);
 
+    /**
+     * Effect: Lädt alle Benutzerreservierungen beim Komponenten-Mount
+     * Trennt sie in zukünftige und vergangene Reservierungen
+     */
     useEffect(() => {
         const fetchUserReservations = async () => {
             setLoading(true);
             setError(null);
             
             try {
-                // First get the current user's profile to get their user ID
+                // Erst Benutzerprofil abrufen um Benutzer-ID zu erhalten
                 const profileRes = await getProfile();
                 const userId = profileRes.data.user.UserID || profileRes.data.user.user_id;
                 
                 if (!userId) {
-                    throw new Error('User ID not found');
+                    throw new Error('Benutzer-ID nicht gefunden');
                 }
                 
-                // Then fetch the user's specific reservations
+                // Dann spezifische Benutzerreservierungen abrufen
                 const reservationsRes = await getUserReservations(userId);
                 const allReservations = reservationsRes.data;
                 const now = new Date();
@@ -149,6 +175,7 @@ export default function Reservations() {
                 const future = [];
                 const past = [];
 
+                // Reservierungen basierend auf Enddatum kategorisieren
                 allReservations.forEach(r => {
                     const endDate = new Date(r.EndDatum);
                     if (endDate > now) {
@@ -158,14 +185,13 @@ export default function Reservations() {
                     }
                 });
 
-                // Sort by StartDatum
+                // Nach Startdatum sortieren
                 future.sort((a, b) => new Date(a.StartDatum) - new Date(b.StartDatum));
                 past.sort((a, b) => new Date(b.StartDatum) - new Date(a.StartDatum));
 
                 setFutureReservations(future);
                 setPastReservations(past);
             } catch (err) {
-                console.error('Error fetching user reservations:', err);
                 setError(t('reservations.errorLoadingReservations'));
                 setFutureReservations([]);
                 setPastReservations([]);
@@ -177,11 +203,16 @@ export default function Reservations() {
         fetchUserReservations();
     }, [t]);
 
-    // Handle delete reservation
+    /**
+     * Handler: Öffnet Löschbestätigungsdialog für eine Reservierung
+     */
     const handleDeleteReservation = (reservation) => {
         setDeleteDialog({ open: true, reservation });
     };
 
+    /**
+     * Handler: Bestätigt und führt Reservierungslöschung durch
+     */
     const handleDeleteConfirm = async () => {
         if (!deleteDialog.reservation) return;
         
@@ -196,7 +227,6 @@ export default function Reservations() {
             
             setDeleteDialog({ open: false, reservation: null });
         } catch (err) {
-            console.error('Error deleting reservation:', err);
             setError(t('reservations.deleteError'));
         } finally {
             setDeleteLoading(false);
@@ -234,7 +264,7 @@ export default function Reservations() {
                     borderRadius: 4,
                     boxShadow: 3,
                     p: { xs: 2, sm: 4 },
-                    mb: 4,
+                    mb: 6,
                     textAlign: 'center'
                 }}>
                     <Avatar sx={{
@@ -269,7 +299,7 @@ export default function Reservations() {
                     </Alert>
                 )}
 
-                <Grid container spacing={4}>
+                <Grid container spacing={6} sx={{ mt: 4 }}>
                     {/* Future Reservations */}
                     <Grid item xs={12} lg={6}>
                         <Box sx={{
@@ -277,7 +307,8 @@ export default function Reservations() {
                             borderRadius: 4,
                             boxShadow: 3,
                             p: 3,
-                            height: 'fit-content'
+                            height: 'fit-content',
+                            mt: 4 // Add margin-top to create spacing from the header card
                         }}>
                             <Typography variant="h5" sx={{ 
                                 fontWeight: 700, 
@@ -292,7 +323,7 @@ export default function Reservations() {
                             </Typography>
                             
                             {futureReservations.length > 0 ? (
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                                     {futureReservations.map(r => (
                                         <ReservationCard 
                                             key={r.ReservierungID} 
@@ -344,7 +375,8 @@ export default function Reservations() {
                             borderRadius: 4,
                             boxShadow: 3,
                             p: 3,
-                            height: 'fit-content'
+                            height: 'fit-content',
+                            mt: 4 // Add margin-top to create spacing from the header card
                         }}>
                             <Typography variant="h5" sx={{ 
                                 fontWeight: 700, 
@@ -359,7 +391,7 @@ export default function Reservations() {
                             </Typography>
                             
                             {pastReservations.length > 0 ? (
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                                     {pastReservations.map(r => (
                                         <ReservationCard 
                                             key={r.ReservierungID} 

@@ -11,11 +11,19 @@ import EditIcon from '@mui/icons-material/Edit';
 import LockIcon from '@mui/icons-material/Lock';
 import SaveIcon from '@mui/icons-material/Save';
 
+/**
+ * Account Komponente - Benutzerprofil-Verwaltung
+ * Ermöglicht Benutzern die Anzeige und Bearbeitung ihrer Profildaten sowie Passwort-Änderung
+ */
 export default function Account() {
   const { t } = useTranslation();
+  
+  // Profil-Status
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  
+  // Bearbeitungs-Status für Adressdaten
   const [edit, setEdit] = useState(false);
   const [form, setForm] = useState({
     Strasse: "",
@@ -25,7 +33,7 @@ export default function Account() {
   });
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Passwort ändern
+  // Passwort-Änderung
   const [showPwForm, setShowPwForm] = useState(false);
   const [pwForm, setPwForm] = useState({
     current_password: "",
@@ -35,6 +43,9 @@ export default function Account() {
   const [pwMsg, setPwMsg] = useState("");
   const [pwError, setPwError] = useState("");
 
+  /**
+   * Lädt das Benutzerprofil beim Komponenten-Mount
+   */
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     axios.get("/api/auth/profile", {
@@ -58,10 +69,18 @@ export default function Account() {
       });
   }, []);
 
+  /**
+   * Behandelt Änderungen in den Adress-Formularfeldern
+   * @param {Object} e - Event-Objekt
+   */
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  /**
+   * Speichert die geänderten Adressdaten
+   * @param {Object} e - Event-Objekt
+   */
   const handleSave = async (e) => {
     e.preventDefault();
     setError("");
@@ -207,7 +226,8 @@ export default function Account() {
                 borderRadius: 4, 
                 boxShadow: 4,
                 background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)',
-                height: 'fit-content'
+                height: 'fit-content',
+                mt: 2 // Oberen Abstand für bessere Optik
               }}>
                 <CardContent sx={{ p: 4, textAlign: 'center' }}>
                   <Avatar sx={{ 
@@ -275,7 +295,8 @@ export default function Account() {
                 borderRadius: 4, 
                 boxShadow: 4,
                 background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                mt: 2 // Oberen Abstand für bessere Optik
               }}>
                 <Box sx={{
                   background: 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)',

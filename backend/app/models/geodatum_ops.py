@@ -3,20 +3,21 @@ from app.db import get_db
 class GeodatumOps:
     @staticmethod
     def get_all():
-        """Holt alle GeoDaten aus der Datenbank"""
+        """Alle GeoDaten aus der Datenbank abrufen"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM GeoDatum").fetchall()
         return [dict(row) for row in result]
 
     @staticmethod
     def get_by_id(geodatum_id):
-        """Holt ein GeoDatum nach ID"""
+        """GeoDatum anhand der ID abrufen"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM GeoDatum WHERE GeoDatumID = ?", (geodatum_id,)).fetchone()
         return dict(result) if result else None
     
     @staticmethod
     def get_location_of_vehicle(fahrzeug_id):
+        """Letzten Standort eines Fahrzeugs abrufen"""
         with get_db() as conn:
             result = conn.execute("""
                 SELECT * FROM GeoDatum
@@ -30,7 +31,7 @@ class GeodatumOps:
 
     @staticmethod
     def get_by_vehicle_id(fahrzeug_id):
-        """Holt GeoDaten für ein bestimmtes Fahrzeug"""
+        """Alle GeoDaten für ein bestimmtes Fahrzeug abrufen"""
         with get_db() as conn:
             result = conn.execute("""
                 SELECT * FROM GeoDatum
@@ -40,7 +41,7 @@ class GeodatumOps:
 
     @staticmethod
     def create(vehicle_id, longitude, latitude, zeit):
-        """Erstellt ein neues GeoDatum"""
+        """Neues GeoDatum für ein Fahrzeug anlegen"""
         with get_db() as conn:
             cursor = conn.execute("""
                 INSERT INTO GeoDatum (FahrzeugID, Longitude, Latitude, Zeit)
@@ -49,9 +50,10 @@ class GeodatumOps:
             geodatum_id = cursor.lastrowid
             conn.commit()
             return geodatum_id
+
     @staticmethod
     def update(geodatum_id, vehicle_id, longitude, latitude, zeit):
-        """Aktualisiert ein GeoDatum"""
+        """Bestehendes GeoDatum aktualisieren"""
         with get_db() as conn:
             conn.execute("""
                 UPDATE GeoDatum
@@ -62,7 +64,7 @@ class GeodatumOps:
 
     @staticmethod
     def delete(geodatum_id):
-        """Löscht ein GeoDatum"""
+        """GeoDatum anhand der ID löschen"""
         with get_db() as conn:
             conn.execute("DELETE FROM GeoDatum WHERE GeoDatumID = ?", (geodatum_id,))
             conn.commit()

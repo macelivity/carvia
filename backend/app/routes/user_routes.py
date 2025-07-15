@@ -3,13 +3,19 @@ from app.models.user_ops import UserOps
 from app.models.reservierung_ops import ReservierungOps
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
+"""
+Benutzer-Routes für das Carsharing-System.
+Verwaltet Benutzersuche, Reservierungshistorie und Benutzerverwaltung.
+"""
+
 bp = Blueprint("user", __name__, url_prefix="/user")
 
 @bp.route("/search", methods=["GET"])
 @jwt_required()
 def search_users():
-
+    """Sucht Benutzer nach Vor- und Nachnamen (nur für Mitarbeiter)"""
     if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
+        print("not authorized", get_jwt_identity())
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     vorname = request.args.get("vorname", "")
@@ -39,6 +45,7 @@ def get_user_reservations(user_id):
     return jsonify(reservierungen)
 
 @bp.route("/users", methods=["GET"])
+@jwt_required()
 def get_all_users():
     
     if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):

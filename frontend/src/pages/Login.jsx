@@ -14,6 +14,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
+/**
+ * Login Komponente - Benutzeranmeldung
+ * Ermöglicht es Benutzern, sich in das System einzuloggen
+ */
 export default function Login() {
     const { t } = useTranslation();
     const { user, login: contextLogin } = useAuth();
@@ -22,28 +26,41 @@ export default function Login() {
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
+    /**
+     * Behandelt Änderungen in Formularfeldern
+     * @param {Object} e - Event-Objekt
+     */
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
         setError('');
     };
 
+    /**
+     * Behandelt das Absenden des Login-Formulars
+     * @param {Object} e - Event-Objekt
+     */
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        
+        // Validierung: Überprüfe ob alle Felder ausgefüllt sind
         if (!form.username || !form.password) {
             setError(t('login.usernameRequired'));
             return;
         }
+        
         try {
             const response = await loginAPI(form);
-            // Check if user is not accepted
+            
+            // Überprüfe ob Benutzer noch nicht akzeptiert wurde
             if (response.data && response.data.Angenommen === 0) {
-                setError('Registration in progress, try again later');
+                setError(t('login.registrationPending'));
                 return;
             }
+            
             contextLogin(response.data);
         } catch (err) {
-            console.error("[Login.jsx] Login API error:", err);
+            // Behandle Login-Fehler
             if (err.response && err.response.data && err.response.data.msg) {
                 setError(err.response.data.msg);
             } else {
@@ -52,6 +69,14 @@ export default function Login() {
         }
     };
 
+    /**
+     * Behandelt das Umschalten der Passwort-Sichtbarkeit
+     */
+    const handleTogglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
+    // Umleitung falls Benutzer bereits eingeloggt ist
     useEffect(() => {
         if (user && user.role !== 'guest') {
             navigate('/'); 
@@ -73,7 +98,7 @@ export default function Login() {
                     overflow: 'hidden',
                     background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)'
                 }}>
-                    {/* Header */}
+                    {/* Header-Bereich */}
                     <Box sx={{
                         background: 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)',
                         color: 'white',

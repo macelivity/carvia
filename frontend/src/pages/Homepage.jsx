@@ -1,30 +1,28 @@
-import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import {
-  Container, Typography, Button, Card, CardContent, Box, Grid,
-  Paper, Avatar, IconButton, Chip
-} from '@mui/material';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import SearchIcon from '@mui/icons-material/Search';
-import PersonIcon from '@mui/icons-material/Person';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import LoginIcon from '@mui/icons-material/Login';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import { Container, Typography, Box } from '@mui/material';
+import GuestWelcomeCard from '../components/GuestWelcomeCard';
+import UserWelcomeCard from '../components/UserWelcomeCard';
+import ActionCards from '../components/ActionCards';
+import AdminStaffCard from '../components/AdminStaffCard';
+import QuickActions from '../components/QuickActions';
 
+/**
+ * Homepage Komponente - Startseite der Anwendung
+ * Zeigt unterschiedliche Inhalte basierend auf dem Benutzerstatus an
+ */
 export default function Homepage() {
     const { t } = useTranslation();
     const { user } = useAuth();
 
     return (
         <Box sx={{ 
-            minHeight: '100vh', // Ensure gradient covers full viewport height
+            minHeight: '100vh',
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             py: 4
         }}>
             <Container maxWidth="lg">
-                {/* Hero Section */}
+                {/* Hero-Bereich */}
                 <Box sx={{ textAlign: 'center', mb: 6 }}>
                     <Typography 
                         variant="h2" 
@@ -51,354 +49,19 @@ export default function Homepage() {
                     </Typography>
                 </Box>
 
+                {/* Benutzerspezifische Inhalte */}
                 {user.role === "guest" ? (
-                    <>
-                        {/* Guest Welcome Card */}
-                        <Card sx={{ 
-                            mb: 4, 
-                            borderRadius: 4, 
-                            boxShadow: 6,
-                            background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)'
-                        }}>
-                            <CardContent sx={{ p: 4 }}>
-                                <Box sx={{ textAlign: 'center', mb: 3 }}>
-                                    <Avatar sx={{ 
-                                        width: 80, 
-                                        height: 80, 
-                                        mx: 'auto', 
-                                        mb: 2,
-                                        background: 'linear-gradient(135deg, #1976d2 60%, #42a5f5 100%)'
-                                    }}>
-                                        <DirectionsCarIcon sx={{ fontSize: 40 }} />
-                                    </Avatar>
-                                    <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
-                                        {t('homepage.forGuests')}
-                                    </Typography>
-                                </Box>
-                                <Grid container spacing={3} justifyContent="center">
-                                    <Grid item xs={12} sm={6} md={4}>
-                                        <Button
-                                            component={Link}
-                                            to="/login"
-                                            variant="contained"
-                                            size="large"
-                                            fullWidth
-                                            startIcon={<LoginIcon />}
-                                            sx={{
-                                                py: 2,
-                                                fontWeight: 700,
-                                                borderRadius: 3,
-                                                background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-                                                boxShadow: 3,
-                                                '&:hover': {
-                                                    boxShadow: 6,
-                                                    transform: 'translateY(-2px)'
-                                                },
-                                                transition: 'all 0.3s ease'
-                                            }}
-                                        >
-                                            {t('homepage.loginButton')}
-                                        </Button>
-                                    </Grid>
-                                    <Grid item xs={12} sm={6} md={4}>
-                                        <Button
-                                            component={Link}
-                                            to="/register"
-                                            variant="contained"
-                                            size="large"
-                                            fullWidth
-                                            startIcon={<PersonAddIcon />}
-                                            sx={{
-                                                py: 2,
-                                                fontWeight: 700,
-                                                borderRadius: 3,
-                                                background: 'linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)',
-                                                boxShadow: 3,
-                                                '&:hover': {
-                                                    boxShadow: 6,
-                                                    transform: 'translateY(-2px)'
-                                                },
-                                                transition: 'all 0.3s ease'
-                                            }}
-                                        >
-                                            {t('homepage.registerButton')}
-                                        </Button>
-                                    </Grid>
-                                </Grid>
-                            </CardContent>
-                        </Card>
-                    </>
+                    <GuestWelcomeCard />
                 ) : (
                     <>
-                        {/* User Welcome Card */}
-                        <Card sx={{ 
-                            mb: 4, 
-                            borderRadius: 4, 
-                            boxShadow: 6,
-                            background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)'
-                        }}>
-                            <CardContent sx={{ p: 4 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                                    <Avatar sx={{ 
-                                        width: 64, 
-                                        height: 64, 
-                                        mr: 3,
-                                        background: 'linear-gradient(135deg, #1976d2 60%, #42a5f5 100%)',
-                                        fontSize: 24,
-                                        fontWeight: 700
-                                    }}>
-                                        {user.username?.[0]?.toUpperCase() || <PersonIcon />}
-                                    </Avatar>
-                                    <Box>
-                                        <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', mb: 0.5 }}>
-                                            {t('homepage.welcomeBack')} {user.username}!
-                                        </Typography>
-                                        <Chip
-                                            label={t(`roles.${user.role.toLowerCase()}`)}
-                                            color="primary" 
-                                            variant="outlined"
-                                            size="small"
-                                        />
-                                    </Box>
-                                </Box>
-                            </CardContent>
-                        </Card>
-
-                        {/* Main Action Cards */}
-                        <Box sx={{ display: 'flex', gap: 2, mb: 4, flexDirection: { xs: 'column', md: 'row' } }}>
-                            {/* Make New Reservation Card */}
-                            <Box sx={{ flex: 1 }}>
-                                <Card sx={{ 
-                                    height: '100%',
-                                    borderRadius: 4, 
-                                    boxShadow: 4,
-                                    background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
-                                    cursor: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'not-allowed' : 'pointer',
-                                    opacity: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 0.5 : 1,
-                                    filter: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'grayscale(0.5)' : 'none',
-                                    transition: 'all 0.3s ease',
-                                    '&:hover': {
-                                        boxShadow: 8,
-                                        transform: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'none' : 'translateY(-4px)'
-                                    }
-                                }}>
-                                    <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                                        <Avatar sx={{ 
-                                            width: 80, 
-                                            height: 80, 
-                                            mx: 'auto', 
-                                            mb: 3,
-                                            background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)'
-                                        }}>
-                                            <SearchIcon sx={{ fontSize: 40 }} />
-                                        </Avatar>
-                                        <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main', mb: 2 }}>
-                                            {t('homepage.makeNewReservation')}
-                                        </Typography>
-                                        <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
-                                            {t('homepage.searchDescription')}
-                                        </Typography>
-                                        <Button
-                                            component={Link}
-                                            to="/search"
-                                            variant="contained"
-                                            size="large"
-                                            fullWidth
-                                            startIcon={<SearchIcon />}
-                                            disabled={user.role === 'Mitarbeiter' || user.role === 'Admin'}
-                                            sx={{
-                                                py: 2,
-                                                fontWeight: 700,
-                                                borderRadius: 3,
-                                                background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-                                                boxShadow: 3,
-                                                opacity: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 0.7 : 1,
-                                                cursor: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'not-allowed' : 'pointer',
-                                            }}
-                                        >
-                                            {t('homepage.createReservationButton', 'Create Reservation')}
-                                        </Button>
-                                        {(user.role === 'Mitarbeiter' || user.role === 'Admin') && (
-                                            <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
-                                                {t('homepage.reservationDisabled', 'Admins and staff cannot make reservations for themselves.')}
-                                            </Typography>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </Box>
-
-                            {/* See Reservations Card */}
-                            <Box sx={{ flex: 1 }}>
-                                <Card sx={{ 
-                                    height: '100%',
-                                    borderRadius: 4, 
-                                    boxShadow: 4,
-                                    background: 'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%)',
-                                    cursor: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'not-allowed' : 'pointer',
-                                    opacity: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 0.5 : 1,
-                                    filter: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'grayscale(0.5)' : 'none',
-                                    transition: 'all 0.3s ease',
-                                    '&:hover': {
-                                        boxShadow: 8,
-                                        transform: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'none' : 'translateY(-4px)'
-                                    }
-                                }}>
-                                    <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                                        <Avatar sx={{ 
-                                            width: 80, 
-                                            height: 80, 
-                                            mx: 'auto', 
-                                            mb: 3,
-                                            background: 'linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%)'
-                                        }}>
-                                            <CalendarTodayIcon sx={{ fontSize: 40 }} />
-                                        </Avatar>
-                                        <Typography variant="h5" sx={{ fontWeight: 700, color: '#7b1fa2', mb: 2 }}>
-                                            {t('homepage.seeReservations')}
-                                        </Typography>
-                                        <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
-                                            {t('homepage.reservationsDescription')}
-                                        </Typography>
-                                        <Button
-                                            component={Link}
-                                            to="/reservations"
-                                            variant="contained"
-                                            size="large"
-                                            fullWidth
-                                            startIcon={<CalendarTodayIcon />}
-                                            disabled={user.role === 'Mitarbeiter' || user.role === 'Admin'}
-                                            sx={{
-                                                py: 2,
-                                                fontWeight: 700,
-                                                borderRadius: 3,
-                                                background: 'linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%)',
-                                                boxShadow: 3,
-                                                opacity: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 0.7 : 1,
-                                                cursor: (user.role === 'Mitarbeiter' || user.role === 'Admin') ? 'not-allowed' : 'pointer',
-                                            }}
-                                        >
-                                            {t('homepage.viewReservations')}
-                                        </Button>
-                                        {(user.role === 'Mitarbeiter' || user.role === 'Admin') && (
-                                            <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
-                                                {t('homepage.reservationDisabled', 'Admins and staff cannot view personal reservations.')}
-                                            </Typography>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </Box>
-                        </Box>
-
-                        {/* Admin/Staff Card */}
-                        {(user.role === 'Mitarbeiter' || user.role === 'Admin') && (
-                            <Card sx={{ 
-                                mb: 4, 
-                                borderRadius: 4, 
-                                boxShadow: 4,
-                                background: 'linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%)'
-                            }}>
-                                <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                                    <Avatar sx={{ 
-                                        width: 60, 
-                                        height: 60, 
-                                        mx: 'auto', 
-                                        mb: 2,
-                                        background: 'linear-gradient(135deg, #f57c00 0%, #ff9800 100%)'
-                                    }}>
-                                        <AdminPanelSettingsIcon sx={{ fontSize: 30 }} />
-                                    </Avatar>
-                                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#f57c00', mb: 3 }}>
-                                        {t('homepage.adminTools')}
-                                    </Typography>
-                                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-                                        <Button
-                                            component={Link}
-                                            to="/vehicle-management"
-                                            variant="contained"
-                                            startIcon={<AdminPanelSettingsIcon />}
-                                            sx={{
-                                                fontWeight: 700,
-                                                borderRadius: 3,
-                                                background: 'linear-gradient(135deg, #f57c00 0%, #ff9800 100%)',
-                                                boxShadow: 3,
-                                                minWidth: '180px'
-                                            }}
-                                        >
-                                            {t('homepage.vehicleManagementButton')}
-                                        </Button>
-                                        <Button
-                                            component={Link}
-                                            to="/user-reservations"
-                                            variant="contained"
-                                            startIcon={<PersonIcon />}
-                                            sx={{
-                                                fontWeight: 700,
-                                                borderRadius: 3,
-                                                background: 'linear-gradient(135deg, #f57c00 0%, #ff9800 100%)',
-                                                boxShadow: 3,
-                                                minWidth: '180px'
-                                            }}
-                                        >
-                                            {t('navbar.userReservations')}
-                                        </Button>
-                                        <Button
-                                            component={Link}
-                                            to="/accept"
-                                            variant="contained"
-                                            startIcon={<PersonAddIcon />}
-                                            sx={{
-                                                fontWeight: 700,
-                                                borderRadius: 3,
-                                                background: 'linear-gradient(135deg, #f57c00 0%, #ff9800 100%)',
-                                                boxShadow: 3,
-                                                minWidth: '180px'
-                                            }}
-                                        >
-                                            {t('homepage.manageApplicationsButton', 'Manage Applications')}
-                                        </Button>
-                                    </Box>
-                                </CardContent>
-                            </Card>
-                        )}
+                        <UserWelcomeCard user={user} />
+                        <ActionCards user={user} />
+                        <AdminStaffCard user={user} />
                     </>
                 )}
 
-                {/* Quick Actions Section */}
-                <Paper sx={{ 
-                    p: 4, 
-                    borderRadius: 4, 
-                    boxShadow: 6,
-                    background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)',
-                    textAlign: 'center'
-                }}>
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main', mb: 3 }}>
-                        {t('homepage.exploreVehicles')}
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
-                        {t('homepage.exploreDescription')}
-                    </Typography>
-                    <Button
-                        component={Link}
-                        to="/vehicles"
-                        variant="outlined"
-                        size="large"
-                        startIcon={<DirectionsCarIcon />}
-                        sx={{
-                            py: 2,
-                            px: 4,
-                            fontWeight: 700,
-                            borderRadius: 3,
-                            borderWidth: 2,
-                            '&:hover': {
-                                borderWidth: 2,
-                                transform: 'translateY(-2px)'
-                            },
-                            transition: 'all 0.3s ease'
-                        }}
-                    >
-                        {t('homepage.seeVehicles')}
-                    </Button>
-                </Paper>
+                {/* Schnelle Aktionen für alle Benutzer */}
+                <QuickActions />
             </Container>
         </Box>
     );

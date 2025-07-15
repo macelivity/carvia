@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext'
+import './App.css'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer';
 import Login from './pages/Login';
@@ -15,14 +16,17 @@ import Datenschutz from './pages/Datenschutz';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './pages/NotFound';
 import Account from './pages/Account';
-import UserReservations from './pages/UserReservations'; // Importiere die neue Seite
+import UserReservations from './pages/UserReservations';
 import Rechnung from './pages/Rechnung';
 import Accept from './pages/Accept';
 import { Box } from '@mui/material';
-import './i18n'; // Initialize i18n
-import VehicleResults from './pages/Vehicle_results'; // Importiere die VehicleResults-Seite
+import './i18n';
+import VehicleResults from './pages/Vehicle_results';
 
-
+/**
+ * Hauptkomponente der Carsharing-Anwendung
+ * Verwaltet das Routing und die allgemeine Layout-Struktur
+ */
 export default function App() {
 	return (
 		<AuthProvider>
@@ -36,24 +40,24 @@ export default function App() {
 
 					<Box sx={{ flex: 1 }}>
 						<Routes>
+							{/* Öffentliche Routen */}
 							<Route path="/" element={<Homepage />} />
 							<Route path="/login" element={<Login />} />
 							<Route path="/register" element={<Register />} />
 							<Route path='/account' element={<Account />} />
+							<Route path="/vehicles" element={<Vehicles />} />
+							<Route path="/rechnung" element={<Rechnung />} />
+							<Route path="/impressum" element={<Impressum />} />
+							<Route path="/datenschutz" element={<Datenschutz />} />
+							<Route path="/vehicle-results" element={<VehicleResults />} />
+
+							{/* Geschützte Routen für Mitglieder */}
 							<Route
 								path="/reservations"
 								element={
 									<ProtectedRoute allowedRoles={['Mitglied']}>
 										<Reservations />
 									</ProtectedRoute>
-								}
-							/>
-
-							{"//Vehicle Overview"}
-							<Route
-								path="/vehicles"
-								element={
-										<Vehicles />
 								}
 							/>
 							<Route
@@ -73,6 +77,16 @@ export default function App() {
 								}
 							/>
 							<Route
+								path="/search"
+								element={
+									<ProtectedRoute allowedRoles={['Mitglied']}>
+										<VehicleSearch />
+									</ProtectedRoute>
+								}
+							/>
+
+							{/* Geschützte Routen für Mitarbeiter */}
+							<Route
 								path="/vehicle-management"
 								element={
 									<ProtectedRoute allowedRoles={['Mitarbeiter']}>
@@ -88,7 +102,8 @@ export default function App() {
 									</ProtectedRoute>
 								}
 							/>
-							{"// Mitarbeiter can accept pending Applications"}
+
+							{/* Geschützte Routen für Mitarbeiter und Admins */}
 							<Route
 								path="/accept"
 								element={
@@ -98,22 +113,7 @@ export default function App() {
 								}
 							/>
 
-							<Route
-								path="/search"
-								element={
-									<ProtectedRoute allowedRoles={['Mitglied']}>
-										<VehicleSearch />
-									</ProtectedRoute>
-								}
-							/>
-
-							<Route path="/rechnung" element={<Rechnung />} />
-							<Route path="/impressum" element={<Impressum />} />
-							<Route path="/datenschutz" element={<Datenschutz />} />
-							<Route
-								path="/vehicle-results"
-								element={<VehicleResults />}
-							/>
+							{/* 404 Fallback */}
 							<Route path="*" element={<NotFound />} />
 						</Routes>
 					</Box>

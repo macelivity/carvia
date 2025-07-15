@@ -83,6 +83,7 @@
     "viewReservations": "View My Reservations",
     "adminTools": "Admin Tools",
     "manageApplicationsButton": "Manage Applications",
+    "staffManagementButton": "Manage Staff",
     "exploreVehicles": "Explore Our Fleet",
     "exploreDescription": "Browse all available vehicles without making a reservation."
   },
@@ -94,6 +95,7 @@
     "loginButton": "Sign In",
     "usernameRequired": "Username and password are required.",
     "loginFailed": "Login failed. Please try again.",
+    "registrationPending": "Registration is being processed, please try again later.",
     "usernamePlaceholder": "Username",
     "passwordPlaceholder": "Password",
     "noAccount": "Don't have an account yet?",
@@ -558,6 +560,7 @@
   },
   "datenschutz": {
     "title": "Privacy Policy",
+    "subtitle": "Your data is safe with us",
     "section1Title": "1. Data Protection at a Glance",
     "section1Content": "The following information provides a simple overview of what happens to your personal data when you visit our website.",
     "section2Title": "2. Responsible Party",
@@ -578,6 +581,7 @@
   },
   "impressum": {
     "title": "Imprint",
+    "subtitle": "Legal Information and Contact Data",
     "legalInfo": "Information according to § 5 TMG:",
     "companyName": "Carvia GmbH",
     "address": "Musterstraße 1",

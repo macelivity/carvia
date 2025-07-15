@@ -1,16 +1,22 @@
-from datetime import datetime # Sicherstellen, dass datetime importiert ist
+from datetime import datetime  # Sicherstellen, dass datetime importiert ist
 from flask import Blueprint, request, jsonify
 from app.models.fahrzeug_ops import FahrzeugOps
-from app.models.geodatum_ops import GeodatumOps # Import für Geodaten
-from app.models.rolle_ops import RolleOps # Import für Rollenoperationen
+from app.models.geodatum_ops import GeodatumOps  # Import für Geodaten
+from app.models.rolle_ops import RolleOps  # Import für Rollenoperationen
 from app.models.user_ops import UserOps
-from flask_jwt_extended import jwt_required, get_jwt_identity # Import für Autorisierung
+from flask_jwt_extended import jwt_required, get_jwt_identity  # Import für Autorisierung
 
-# Expose the blueprint as 'bp' for test imports
+"""
+Fahrzeug-Routes für das Carsharing-System.
+Verwaltet CRUD-Operationen für Fahrzeuge, Filterung und Standortabfragen.
+"""
+
+# Blueprint für Fahrzeugoperationen
 bp = Blueprint("fahrzeug", __name__, url_prefix="/fahrzeug")
 
-@bp.route("/", methods=["GET"])
+@bp.route("", methods=["GET"])
 def list_fahrzeuge():
+    """Gibt eine Liste aller Fahrzeuge zurück (optional mit detaillierten Informationen)"""
     detailed = request.args.get("detailed")
     if detailed and detailed.lower() == "true":
         fahrzeuge = FahrzeugOps.get_all_detailed()
@@ -40,12 +46,6 @@ def list_filtered_fahrzeuge():
         sitze_str = request.args.get("sitze")
         stundenpreis_str = request.args.get("stundenpreis")
         modell = request.args.get("modell")
-
-        # test endpoint TODO remove later
-        if hersteller == "test":
-            print("returning Testvehicles")
-            return jsonify(FahrzeugOps.get_all_detailed()), 200
-        
 
         sitze = int(sitze_str) if sitze_str else None
         stundenpreis = float(stundenpreis_str) if stundenpreis_str else None

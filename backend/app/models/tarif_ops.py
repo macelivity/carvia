@@ -3,21 +3,21 @@ from app.db import get_db
 class TarifOps:
     @staticmethod
     def get_all():
-        """Holt alle Tarife aus der Datenbank"""
+        """Alle Tarife aus der Datenbank abrufen"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Tarif").fetchall()
         return [dict(row) for row in result]
 
     @staticmethod
     def get_by_id(tarif_id):
-        """Holt einen Tarif nach ID"""
+        """Tarif anhand der ID abrufen"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Tarif WHERE TarifID = ?", (tarif_id,)).fetchone()
         return dict(result) if result else None
-        
+    
     @staticmethod
     def create(name, freikilometer, versicherungsschutz, multiplikator):
-        """Erstellt einen neuen Tarif"""
+        """Neuen Tarif anlegen"""
         with get_db() as conn:
             cursor = conn.execute("""
                 INSERT INTO Tarif (Name, Freikilometer, Versicherungsschutz, Multiplikator)
@@ -29,7 +29,7 @@ class TarifOps:
 
     @staticmethod
     def update(tarif_id, name, freikilometer, versicherungsschutz, multiplikator):
-        """Aktualisiert einen Tarif"""
+        """Tarif aktualisieren"""
         with get_db() as conn:
             conn.execute("""
                 UPDATE Tarif
@@ -40,7 +40,7 @@ class TarifOps:
 
     @staticmethod
     def delete(tarif_id):
-        """Löscht einen Tarif"""
+        """Tarif anhand der ID löschen"""
         with get_db() as conn:
             conn.execute("DELETE FROM Tarif WHERE TarifID = ?", (tarif_id,))
             conn.commit()

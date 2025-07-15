@@ -1,12 +1,18 @@
 from flask import Blueprint, request, jsonify
 from app.models.modell_ops import ModellOps
 from app.models.user_ops import UserOps
-from flask_jwt_extended import jwt_required, get_jwt_identity # Import für Autorisierung
+from flask_jwt_extended import jwt_required, get_jwt_identity  # Import für Autorisierung
+
+"""
+Modell-Routes für das Carsharing-System.
+Verwaltet CRUD-Operationen für Fahrzeugmodelle und deren Spezifikationen.
+"""
 
 bp = Blueprint("modell", __name__, url_prefix="/modell")
 
 @bp.route("/", methods=["GET"])
 def list_modells():
+    """Gibt eine Liste aller verfügbaren Fahrzeugmodelle zurück"""
     modells = ModellOps.get_all()
     return jsonify(modells)
 

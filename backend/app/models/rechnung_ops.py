@@ -3,21 +3,21 @@ from app.db import get_db
 class RechnungOps:
     @staticmethod
     def get_all():
-        """Holt alle Rechnungen aus der Datenbank"""
+        """Alle Rechnungen aus der Datenbank abrufen"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Rechnung").fetchall()
         return [dict(row) for row in result]
 
     @staticmethod
     def get_by_id(rechnung_id):
-        """Holt eine Rechnung nach ID"""
+        """Rechnung anhand der ID abrufen"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Rechnung WHERE RechnungID = ?", (rechnung_id,)).fetchone()
         return dict(result) if result else None
-        
+    
     @staticmethod
     def create(reservierung_id, user_id, fahrzeug_id, preis, bezahlt, austellungsdatum):
-        """Erstellt eine neue Rechnung"""
+        """Neue Rechnung anlegen"""
         with get_db() as conn:
             cursor = conn.execute("""
                 INSERT INTO Rechnung (ReservierungID, UserID, FahrzeugID, Preis, Bezahlt, Austellungsdatum)
@@ -29,7 +29,7 @@ class RechnungOps:
 
     @staticmethod
     def update(rechnung_id, reservierung_id, user_id, fahrzeug_id, preis, bezahlt, austellungsdatum):
-        """Aktualisiert eine Rechnung"""
+        """Rechnung aktualisieren"""
         with get_db() as conn:
             conn.execute("""
                 UPDATE Rechnung
@@ -40,21 +40,21 @@ class RechnungOps:
 
     @staticmethod
     def delete(rechnung_id):
-        """Löscht eine Rechnung"""
+        """Rechnung anhand der ID löschen"""
         with get_db() as conn:
             conn.execute("DELETE FROM Rechnung WHERE RechnungID = ?", (rechnung_id,))
             conn.commit()
-            
+    
     @staticmethod
     def get_by_reservierung_id(reservierung_id):
-        """Holt alle Rechnungen für eine Reservierung"""
+        """Rechnung zu einer bestimmten Reservierung abrufen"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Rechnung WHERE ReservierungID = ?", (reservierung_id,)).fetchone()
-        return dict(result)
-            
+        return dict(result) if result else None
+    
     @staticmethod
     def get_by_fahrzeug_id(fahrzeug_id):
-        """Holt alle Rechnungen für ein Fahrzeug"""
+        """Alle Rechnungen für ein bestimmtes Fahrzeug abrufen"""
         with get_db() as conn:
             result = conn.execute("SELECT * FROM Rechnung WHERE FahrzeugID = ?", (fahrzeug_id,)).fetchall()
         return [dict(row) for row in result]

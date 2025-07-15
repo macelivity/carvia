@@ -3,16 +3,22 @@ from app.models.user_ops import UserOps
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, create_refresh_token
 from datetime import timedelta
 
+"""
+Authentifizierungs-Routes für das Carsharing-System.
+Verwaltet Benutzerregistrierung, Login, Profilaktualisierung und JWT-Token-Management.
+"""
+
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 @bp.route("/register", methods=["POST"])
 @jwt_required(optional=True)
 def register():
-    """Registriert einen neuen Nutzer"""
+    """Registriert einen neuen Nutzer mit Validierung der Pflichtfelder"""
     data = request.get_json()
     
-    # Validate required fields
-    required_fields = ['email', 'username', 'password', 'vorname', 'nachname', 'geburtsdatum', 'iban', 'bic', 'plz', 'ort', 'strasse' ,'hausnummer']
+    # Pflichtfelder validieren
+    required_fields = ['email', 'username', 'password', 'vorname', 'nachname', 
+                      'geburtsdatum', 'iban', 'bic', 'plz', 'ort', 'strasse', 'hausnummer']
     for field in required_fields:
         if not data.get(field):
             return jsonify({"msg": f"Missing required field: {field}"}), 400
@@ -22,15 +28,16 @@ def register():
     password = data.get("password")
     angenommen = data.get("angenommen", False)
     
+    # Nur Mitarbeiter und Admins können Benutzer direkt genehmigen
     jwt_identity = get_jwt_identity()
     if not jwt_identity or not UserOps.is_authorized(int(jwt_identity), ["Mitarbeiter", "Admin"]):
         angenommen = False
     
-    # Check if username already exists
+    # Prüfen ob Benutzername bereits existiert
     if UserOps.username_exists(username):
         return jsonify({"msg": "Username already exists"}), 400
     
-    # Validate password strength (basic validation)
+    # Passwort-Stärke validieren (grundlegende Validierung)
     if len(password) < 6:
         return jsonify({"msg": "Password must be at least 6 characters long"}), 400
     
@@ -64,25 +71,24 @@ def login():
     
     username = data.get("username")
     password = data.get("password")
-
-    print(username)
-    print(password)
     
     if not username or not password:
         return jsonify({"msg": "Missing username or password"}), 400
     
-    # Get user from database
+    # Benutzer aus der Datenbank laden
     user = UserOps.get_user_by_username(username)
     if not user:
         return jsonify({"msg": "Invalid username or password"}), 401
     
+    # Prüfen ob der Benutzer genehmigt wurde
     if not user["Angenommen"]:
         return jsonify({"msg": "User not accepted yet"}), 403
 
-    # Check password
+    # Passwort verifizieren
     if not UserOps.check_password(user["PasswordHash"], password):
         return jsonify({"msg": "Invalid username or password"}), 401
-      # Create JWT tokens (convert user ID to string as required by Flask-JWT-Extended)
+        
+    # JWT-Token erstellen (UserID als String für Flask-JWT-Extended)
     access_token = create_access_token(
         identity=str(user["UserID"]), 
         expires_delta=timedelta(hours=1)
@@ -114,10 +120,11 @@ def get_all_users():
     try:
         users = UserOps.get_all_users()
         
+        # Entferne sensible Informationen für die Ausgabe
         user_list = []
         for user in users:
             user_data = user.copy()
-            user_data.pop("PasswordHash", None) # Passwort-Hash entfernen
+            user_data.pop("PasswordHash", None)  # Passwort-Hash entfernen
             user_list.append(user_data)
             
         return jsonify(user_list), 200
@@ -174,13 +181,13 @@ def refresh():
 @jwt_required()
 def get_profile():
     """Gibt das Profil des aktuell authentifizierten Nutzers zurück"""
-    user_id = int(get_jwt_identity())  # Convert back to int
+    user_id = int(get_jwt_identity())  # Zurück zu int konvertieren
     user = UserOps.get_user_by_id(user_id)
     
     if not user:
         return jsonify({"msg": "User not found"}), 404
     
-    # Remove sensitive information
+    # Sensible Informationen entfernen
     user_data = user.copy()
     user_data.pop("PasswordHash", None)
     
@@ -190,10 +197,10 @@ def get_profile():
 @jwt_required()
 def update_profile():
     """Aktualisiert das Profil des aktuell authentifizierten Nutzers"""
-    current_user_id = int(get_jwt_identity())  # Convert back to int
+    current_user_id = int(get_jwt_identity())  # Zurück zu int konvertieren
     data = request.get_json()
     
-    # Remove sensitive fields that shouldn't be updated via this endpoint
+    # Sensible Felder entfernen, die nicht über diesen Endpoint aktualisiert werden sollten
     data.pop("UserID", None)
     data.pop("PasswordHash", None)
     
@@ -210,7 +217,7 @@ def update_profile():
 @jwt_required()
 def change_password():
     """Ändert das Passwort des aktuell authentifizierten Nutzers"""
-    current_user_id = int(get_jwt_identity())  # Convert back to int
+    current_user_id = int(get_jwt_identity())  # Zurück zu int konvertieren
     data = request.get_json()
     
     current_password = data.get("current_password")
@@ -219,16 +226,16 @@ def change_password():
     if not current_password or not new_password:
         return jsonify({"msg": "Missing current_password or new_password"}), 400
     
-    # Validate new password
+    # Neues Passwort validieren
     if len(new_password) < 6:
         return jsonify({"msg": "New password must be at least 6 characters long"}), 400
     
-    # Get current user
+    # Aktuellen Benutzer laden
     user = UserOps.get_user_by_id(current_user_id)
     if not user:
         return jsonify({"msg": "User not found"}), 404
     
-    # Verify current password
+    # Aktuelles Passwort verifizieren
     if not UserOps.check_password(user["PasswordHash"], current_password):
         return jsonify({"msg": "Current password is incorrect"}), 401
     

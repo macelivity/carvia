@@ -3,6 +3,11 @@ from app.models.tarif_ops import TarifOps
 from app.models.user_ops import UserOps
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
+"""
+Tarif-Routes für das Carsharing-System.
+Verwaltet Preismodelle und Tarifstrukturen für die Fahrzeugmiete.
+"""
+
 bp = Blueprint("tarif", __name__, url_prefix="/tarif")
 
 @bp.route("/", methods=["GET"])

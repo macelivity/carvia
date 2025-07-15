@@ -1,3 +1,8 @@
+/**
+ * Fahrzeugverwaltungsseite - Administrative Verwaltung aller Fahrzeuge
+ * Ermöglicht das Erstellen, Bearbeiten und Verwalten von Fahrzeugen und Schäden
+ * Nur für Administratoren und Mitarbeiter zugänglich
+ */
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +26,7 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import de from 'date-fns/locale/de';
 
+// Standardwerte für neues Fahrzeug
 const initialNewVehicle = {
     Kennzeichen: '',
     Reperaturzustand: '',
@@ -43,11 +49,12 @@ const initialNewVehicle = {
     Kofferraumvolumen: ''
 };
 
+// Vordefinierte Optionen für Dropdown-Menüs
 const REPARATURZUSTAND_OPTIONS = [
   "Sehr gut", "Gut", "Befriedigend", "Ausreichend", "Mangelhaft"
 ];
 const REIFEN_OPTIONS = [
-  "Sommerreifen", "Winterreifen", "Allwetterreifen"
+  "Sommer", "Winter", "Ganzjahr"
 ];
 const GETRIEBEART_OPTIONS = [
   "Manuell", "Automatik"
@@ -73,9 +80,9 @@ export default function VehicleManagement() {
     ];
 
     const getTireOptions = () => [
-        { value: "Sommerreifen", label: t('vehicleManagement.summerTires') },
-        { value: "Winterreifen", label: t('vehicleManagement.winterTires') },
-        { value: "Allwetterreifen", label: t('vehicleManagement.allSeasonTires') }
+        { value: "Sommer", label: t('vehicleManagement.summerTires') },
+        { value: "Winter", label: t('vehicleManagement.winterTires') },
+        { value: "Ganzjahr", label: t('vehicleManagement.allSeasonTires') }
     ];
 
     const getTransmissionOptions = () => [
@@ -304,7 +311,7 @@ export default function VehicleManagement() {
             const damages = response.data.filter(damage => damage.FahrzeugID === vehicleId);
             setVehicleDamages(prev => ({ ...prev, [vehicleId]: damages }));
         } catch (error) {
-            console.error('Error fetching damages:', error);
+            // Fehler beim Laden der Schäden - stillschweigend behandeln
         }
     };
 
@@ -333,7 +340,7 @@ export default function VehicleManagement() {
             setNewDamage({ Beschreibung: '' });
             fetchVehicleDamages(selectedVehicleId);
         } catch (error) {
-            console.error('Error creating damage:', error);
+            // Fehler beim Erstellen des Schadens - stillschweigend behandeln
         }
         setDamageLoading(false);
     };
@@ -350,7 +357,7 @@ export default function VehicleManagement() {
             setEditingDamage(null);
             fetchVehicleDamages(selectedVehicleId);
         } catch (error) {
-            console.error('Error updating damage:', error);
+            // Fehler beim Aktualisieren des Schadens - stillschweigend behandeln
         }
         setDamageLoading(false);
     };
@@ -363,7 +370,7 @@ export default function VehicleManagement() {
             await deleteDamage(damageId);
             fetchVehicleDamages(selectedVehicleId);
         } catch (error) {
-            console.error('Error deleting damage:', error);
+            // Fehler beim Löschen des Schadens - stillschweigend behandeln
         }
         setDamageLoading(false);
     };
@@ -444,6 +451,9 @@ export default function VehicleManagement() {
                         </Button>
                     </Box>
 
+                    {/* Abstandselement zwischen Header und Inhalt */}
+                    <Box sx={{ height: '32px' }} />
+
                     <Box sx={{ display: 'flex', gap: 4, height: 'calc(100vh - 200px)' }}>
                         {/* Vehicle List Section */}
                         <Box sx={{ 
@@ -476,6 +486,7 @@ export default function VehicleManagement() {
                                                 sx={{ 
                                                     borderRadius: 3,
                                                     boxShadow: 2,
+                                                    mt: 3, // Oberen Abstand hinzufügen für bessere Optik
                                                     transition: 'all 0.3s ease',
                                                     '&:hover': {
                                                         boxShadow: 6,
@@ -513,6 +524,9 @@ export default function VehicleManagement() {
                                                                     </Typography>
                                                                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                                                         {vehicle.Kennzeichen} • {vehicle.Aktiv ? t('vehicleManagement.available') : t('vehicleManagement.unavailable')}
+                                                                    </Typography>
+                                                                    <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
+                                                                        TÜV: {vehicle.TuevDatum || 'Nicht angegeben'} • {vehicle.Reifen || 'Unbekannt'} • {vehicle.Kilometerstand ? `${vehicle.Kilometerstand.toLocaleString()} km` : 'N/A'}
                                                                     </Typography>
                                                                 </Box>
                                                             </Box>
@@ -623,7 +637,7 @@ export default function VehicleManagement() {
                                                                 <DatePicker
                                                                     label={t('vehicleManagement.lastTuev')}
                                                                     views={['year', 'month']}
-                                                                    value={edit.TuevDatum ? new Date(edit.TuevDatum + '-01') : (vehicle.TuevDatum ? new Date(vehicle.TuevDatum + '-01') : null)}
+                                                                    value={edit.TuevDatum ? new Date(edit.TuevDatum + '-01') : (vehicle.TuevDatum ? new Date(vehicle.TuevDatum.length === 7 ? vehicle.TuevDatum + '-01' : vehicle.TuevDatum) : null)}
                                                                     onChange={date => handleEditChange(vehicle.FahrzeugID, 'TuevDatum', date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` : '')}
                                                                     format="yyyy-MM"
                                                                     slotProps={{ 

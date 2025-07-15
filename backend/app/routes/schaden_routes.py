@@ -3,6 +3,11 @@ from app.models.schaden_ops import SchadenOps
 from app.models.user_ops import UserOps
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
+"""
+Schaden-Routes für das Carsharing-System.
+Verwaltet die Dokumentation und Nachverfolgung von Fahrzeugschäden.
+"""
+
 bp = Blueprint("schaden", __name__, url_prefix="/schaden")
 
 @bp.route("/", methods=["GET"])

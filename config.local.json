@@ -4,9 +4,9 @@
   "SECRET_KEY": "carvia-super-secret-key",
   "JWT_SECRET_KEY": "super-secret-cavia-project-key-this-has-to-be-changed-later",
 
-  "DB_PATH" : "/app/data/database.db",
-  "TEST_DB_PATH": "/app/data/test_database.db",
+  "DB_PATH" : "backend/database.db",
+  "TEST_DB_PATH": "backend/test_database.db",
   
-  "FLASK_HOST": "0.0.0.0",
+  "FLASK_HOST": "127.0.0.1",
   "FLASK_PORT": 5000
 }

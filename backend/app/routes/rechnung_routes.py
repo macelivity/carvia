@@ -3,6 +3,11 @@ from app.models.rechnung_ops import RechnungOps
 from app.models.user_ops import UserOps
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
+"""
+Rechnungs-Routes für das Carsharing-System.
+Verwaltet die Erstellung, Abfrage und Verwaltung von Abrechnungen für Reservierungen.
+"""
+
 bp = Blueprint("rechnung", __name__)
 
 @bp.route("/", methods=["GET"])

@@ -1,3 +1,8 @@
+/**
+ * Rechnungsseite - Zeigt detaillierte Rechnungsinformationen an
+ * Ermöglicht das Anzeigen und Herunterladen von Rechnungen als PDF
+ * Kann sowohl direkt über Rechnungs-ID als auch über Reservierungs-ID aufgerufen werden
+ */
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,21 +20,33 @@ import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import PersonIcon from '@mui/icons-material/Person';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 
+/**
+ * Hauptkomponente: Rechnungsanzeige
+ * Lädt und zeigt Rechnungsdetails mit PDF-Export-Funktionalität an
+ */
 export default function Rechnung() {
+  // URL-Parameter und Suchparameter
   const { rechnungID } = useParams();
   const [searchParams] = useSearchParams();
   const { t } = useTranslation();
   const reservierungsId = searchParams.get('reservation');
+  
+  // Zustandsvariablen für Rechnungsdaten
   const [rechnung, setRechnung] = useState(null);
   const [fahrzeug, setFahrzeug] = useState(null);
   const [kunde, setKunde] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * Effect: Lädt Rechnungs-, Fahrzeug- und Kundendaten beim Komponenten-Mount
+   * Kann sowohl mit Rechnungs-ID als auch mit Reservierungs-ID arbeiten
+   */
   useEffect(() => {
     let isMounted = true;
     const fetchData = async () => {
       setLoading(true);
       try {
+        // Rechnung laden - entweder direkt oder über Reservierungs-ID
         let rechnungRes;
         if (rechnungID) {
           rechnungRes = await getRechnung(rechnungID);
@@ -39,18 +56,19 @@ export default function Rechnung() {
         if (!isMounted) return;
         setRechnung(rechnungRes.data);
 
-        // Load vehicle data if available
+        // Fahrzeugdaten laden falls verfügbar
         if (rechnungRes.data?.FahrzeugID) {
           const fahrzeugRes = await getVehicleById(rechnungRes.data.FahrzeugID);
           if (!isMounted) return;
           setFahrzeug(fahrzeugRes.data);
         }
-        // Load customer data
+        
+        // Kundendaten laden
         const kundeRes = await getProfile();
         if (!isMounted) return;
         setKunde(kundeRes.data.user || kundeRes.data);
       } catch (error) {
-        console.error('Error loading invoice:', error);
+        // Fehler beim Laden der Rechnung - stillschweigend behandeln
       } finally {
         setLoading(false);
       }
@@ -195,7 +213,8 @@ export default function Rechnung() {
           borderRadius: 4,
           boxShadow: 6,
           overflow: 'hidden',
-          background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)'
+          background: 'linear-gradient(120deg, #ffffff 0%, #f8f9ff 100%)',
+          mt: 4 // Add margin-top for spacing from the header
         }}>
           <Box sx={{ p: 4 }}>
             {/* Company Info & Invoice ID Cards */}
@@ -486,7 +505,7 @@ export default function Rechnung() {
             </Box>
 
             {/* Total Amount & Download Section */}
-            <Grid container spacing={3} alignItems="stretch">
+            <Grid container spacing={3} alignItems="stretch" sx={{ mt: 4 }}>
               {/* Total Amount */}
               <Grid item xs={12} md={8}>
                 <Card sx={{ 

@@ -1,3 +1,8 @@
+/**
+ * Benutzerreservierungsseite - Administrative Verwaltung von Benutzerreservierungen
+ * Ermöglicht das Suchen von Benutzern und Verwalten ihrer Reservierungen
+ * Nur für Administratoren und Mitarbeiter zugänglich
+ */
 import { useState, useEffect, useCallback } from 'react';
 import {
   TextField, Button, Container, Typography, Card, CardContent, CardActions, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, Alert, MenuItem, Stepper, Step, StepLabel, Box, Grid
@@ -17,7 +22,10 @@ import {
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
-// --- Hilfskomponenten ---
+/**
+ * Komponente: Benutzerliste
+ * Zeigt Suchergebnisse von Benutzern zur Auswahl an
+ */
 function UserList({ users, onSelect, t }) {
   if (!users.length) return null;
   return (

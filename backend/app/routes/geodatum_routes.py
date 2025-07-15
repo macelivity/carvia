@@ -1,7 +1,12 @@
 from flask import Blueprint, request, jsonify
 from app.models.geodatum_ops import GeodatumOps
 from app.models.user_ops import UserOps
-from flask_jwt_extended import jwt_required, get_jwt_identity # Import für Autorisierung
+from flask_jwt_extended import jwt_required, get_jwt_identity  # Import für Autorisierung
+
+"""
+Geodaten-Routes für das Carsharing-System.
+Verwaltet GPS-Standortdaten der Fahrzeuge für Tracking und Navigation.
+"""
 
 bp = Blueprint("geodatum", __name__, url_prefix="/geodatum")
 

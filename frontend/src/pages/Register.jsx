@@ -1,3 +1,7 @@
+/**
+ * Registrierungsseite - Mehrstufiger Registrierungsprozess für neue Benutzer
+ * Sammelt Benutzerdaten, Adresse, Bankdaten und führt Dokumentenverifikation durch
+ */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -7,14 +11,16 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { register } from '../api/api';
 
+// Registrierungsschritte definieren
 const steps = [
   'register.steps.account',
-  'register.steps.personal',
+  'register.steps.personal', 
   'register.steps.address',
   'register.steps.billing',
   'register.steps.verification'
 ];
 
+// Upload-Felder für Dokumentenverifikation
 const uploadFields = [
   { name: 'idFront', labelKey: 'register.uploads.idFront', endpoint: '/api/user/identitycheck' },
   { name: 'idBack', labelKey: 'register.uploads.idBack', endpoint: '/api/user/identitycheck' },
@@ -22,10 +28,18 @@ const uploadFields = [
   { name: 'licenseBack', labelKey: 'register.uploads.licenseBack', endpoint: '/api/user/licensecheck' }
 ];
 
+/**
+ * Hauptkomponente: Registrierungsformular
+ * Verwaltet den mehrstufigen Registrierungsprozess mit Validierung und Dokumentenupload
+ */
 export default function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  
+  // Aktueller Schritt im Registrierungsprozess
   const [activeStep, setActiveStep] = useState(0);
+  
+  // Formulardaten für alle Schritte
   const [form, setForm] = useState({
     email: '', username: '', password: '', passwordConfirm: '',
     vorname: '', nachname: '', geburtsdatum: '',
@@ -33,6 +47,8 @@ export default function Register() {
     iban: '', bic: '',
     idFront: null, idBack: null, licenseFront: null, licenseBack: null
   });
+  
+  // Zustandsvariablen für UI-Feedback
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -43,6 +59,10 @@ export default function Register() {
     idFront: false, idBack: false, licenseFront: false, licenseBack: false
   });
 
+  /**
+   * Handler für Formularfeld-Änderungen
+   * Behandelt sowohl Textfelder als auch Datei-Uploads
+   */
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (files) {
@@ -53,17 +73,24 @@ export default function Register() {
     }
   };
 
-  // File upload handler
+  /**
+   * Handler für Datei-Uploads
+   * Speichert Datei temporär und markiert Upload als bereit
+   */
   const handleFileUpload = (field, file) => {
     setForm(f => ({ ...f, [field]: file }));
     setUploadProgress(p => ({ ...p, [field]: 0 }));
-    setUploadSuccess(s => ({ ...s, [field]: true })); // Mark as ready as soon as file is selected
-    // Only upload after registration (user_id known)
+    setUploadSuccess(s => ({ ...s, [field]: true }));
   };
 
+  /**
+   * Handler für die Navigation zum nächsten Schritt
+   * Validiert die aktuellen Eingaben bevor der nächste Schritt erreicht wird
+   */
   const handleNext = async () => {
     setError('');
-    // Validate required fields for each step
+    
+    // Validierung für jeden Schritt durchführen
     if (activeStep === 0) {
       if (!form.email || !form.username || !form.password || !form.passwordConfirm) {
         setError(t('register.validation.fillAllFields')); return;
@@ -97,18 +124,35 @@ export default function Register() {
         }
       }
     }
-    if (activeStep < 4) setActiveStep(s => s + 1);
-    else await handleRegister();
+    
+    // Weiter zum nächsten Schritt oder Registrierung abschließen
+    if (activeStep < 4) {
+      setActiveStep(s => s + 1);
+    } else {
+      await handleRegister();
+    }
   };
 
+  /**
+   * Navigation zurück zum vorherigen Schritt
+   */
   const handleBack = () => setActiveStep(s => Math.max(0, s - 1));
+  
+  /**
+   * Registrierung abbrechen und zur Startseite navigieren
+   */
   const handleCancel = () => navigate('/');
 
+  /**
+   * Handler für den finalen Registrierungsprozess
+   * Führt Benutzerregistrierung, Dokumentenupload und Bonitätsprüfung durch
+   */
   const handleRegister = async () => {
     setLoading(true);
     setError('');
+    
     try {
-      // 1. Register user
+      // 1. Benutzer registrieren
       const res = await register({
         email: form.email,
         username: form.username,
@@ -124,26 +168,29 @@ export default function Register() {
         hausnummer: form.hausnummer,
         fuehrerschein: ''
       });
+      
       if (!res || !res.data || (res.status !== 200 && res.status !== 201)) {
-        // Handle specific error responses from backend
+        // Spezifische Fehlermeldungen vom Backend behandeln
         if (res && res.data && res.data.msg) {
           if (res.data.msg.includes('Username already exists')) {
-            throw new Error('This username is already taken. Please choose a different one.');
+            throw new Error('Dieser Benutzername ist bereits vergeben. Bitte wählen Sie einen anderen.');
           } else if (res.data.msg.includes('Password must be at least 6 characters long')) {
-            throw new Error('Password must be at least 6 characters long.');
+            throw new Error('Das Passwort muss mindestens 6 Zeichen lang sein.');
           } else if (res.data.msg.includes('Missing required field')) {
-            throw new Error('Please fill in all required fields.');
+            throw new Error('Bitte füllen Sie alle Pflichtfelder aus.');
           } else {
             throw new Error(res.data.msg);
           }
         } else {
-          throw new Error('Registration failed. Please try again.');
+          throw new Error('Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.');
         }
       }
-      // 2. Get user_id from response
+      
+      // 2. Benutzer-ID aus der Antwort extrahieren
       const user_id = res.data.user_id || res.data.id || res.data.UserID;
-      if (!user_id) throw new Error('User ID missing after registration');
-      // 3. Now upload the files with user_id
+      if (!user_id) throw new Error('Benutzer-ID fehlt nach der Registrierung');
+      
+      // 3. Dokumente mit Benutzer-ID hochladen
       for (const field of uploadFields) {
         if (form[field.name]) {
           await new Promise((resolve, reject) => {
@@ -151,64 +198,75 @@ export default function Register() {
             const formData = new FormData();
             formData.append('file', form[field.name]);
             formData.append('user_id', user_id);
+            
             const xhr = new XMLHttpRequest();
             xhr.open('POST', endpoint, true);
+            
             xhr.upload.onprogress = (event) => {
               if (event.lengthComputable) {
                 setUploadProgress(p => ({ ...p, [field.name]: Math.round((event.loaded / event.total) * 100) }));
               }
             };
+            
             xhr.onload = () => {
               if (xhr.status === 200) {
                 setUploadSuccess(s => ({ ...s, [field.name]: true }));
                 setUploadProgress(p => ({ ...p, [field.name]: 100 }));
                 resolve();
               } else {
-                setError('Upload failed. Please try again.');
+                setError('Upload fehlgeschlagen. Bitte versuchen Sie es erneut.');
                 setUploadProgress(p => ({ ...p, [field.name]: 0 }));
                 reject();
               }
             };
+            
             xhr.onerror = () => {
-              setError('Upload failed. Please check your connection and try again.');
+              setError('Upload fehlgeschlagen. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
               setUploadProgress(p => ({ ...p, [field.name]: 0 }));
               reject();
             };
+            
             xhr.send(formData);
           });
         } else {
-          setError('Please upload all required images.');
+          setError('Bitte laden Sie alle erforderlichen Dokumente hoch.');
           return;
         }
       }
-      // 4. Run the credit check endpoint
+      
+      // 4. Bonitätsprüfung durchführen
       const creditCheckResponse = await fetch('/api/user/credidworthycheck', {
         method: 'POST',
-        body: JSON.stringify({ user_id, name: form.vorname + ' ' + form.nachname, bic: form.bic, iban: form.iban }),
+        body: JSON.stringify({ 
+          user_id, 
+          name: form.vorname + ' ' + form.nachname, 
+          bic: form.bic, 
+          iban: form.iban 
+        }),
         headers: { 'Content-Type': 'application/json' }
       });
       
       if (!creditCheckResponse.ok) {
-        throw new Error('Credit check failed. Please verify your banking information.');
+        throw new Error('Bonitätsprüfung fehlgeschlagen. Bitte überprüfen Sie Ihre Bankdaten.');
       }
       
       setSuccess(true);
     } catch (e) {
-      // Handle different types of errors
-      if (e.message.includes('Username already exists') || e.message.includes('username is already taken')) {
-        setError('This username is already taken. Please choose a different one.');
-        setActiveStep(0); // Go back to account step to change username
-      } else if (e.message.includes('Password must be at least 6 characters')) {
-        setError('Password must be at least 6 characters long.');
-        setActiveStep(0); // Go back to account step to change password
-      } else if (e.message.includes('upload') || e.message.includes('Upload')) {
+      // Verschiedene Fehlertypen behandeln und entsprechende Schritte anzeigen
+      if (e.message.includes('Benutzername') || e.message.includes('username')) {
+        setError('Dieser Benutzername ist bereits vergeben. Bitte wählen Sie einen anderen.');
+        setActiveStep(0);
+      } else if (e.message.includes('Passwort') || e.message.includes('Password')) {
+        setError('Das Passwort muss mindestens 6 Zeichen lang sein.');
+        setActiveStep(0);
+      } else if (e.message.includes('Upload')) {
         setError(e.message);
-        setActiveStep(4); // Stay on verification step for uploads
-      } else if (e.message.includes('Credit check')) {
+        setActiveStep(4);
+      } else if (e.message.includes('Bonitätsprüfung') || e.message.includes('Credit')) {
         setError(e.message);
-        setActiveStep(3); // Go back to billing step for banking info
+        setActiveStep(3);
       } else {
-        setError(e.message || 'Registration failed. Please check your information and try again.');
+        setError(e.message || 'Registrierung fehlgeschlagen. Bitte überprüfen Sie Ihre Angaben und versuchen Sie es erneut.');
       }
     } finally {
       setLoading(false);
@@ -451,44 +509,48 @@ export default function Register() {
               <Typography variant="subtitle1" sx={{ mb: 3, fontWeight: 600, color: 'primary.main' }}>
                 {t('register.uploads.title')}
               </Typography>
-              {uploadFields.map(field => (
-                <Box key={field.name} sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                  <Button
-                    variant={uploadSuccess[field.name] ? 'contained' : 'outlined'}
-                    color={uploadSuccess[field.name] ? 'success' : 'primary'}
-                    component="label"
-                    fullWidth
-                    sx={{ 
-                      mr: 2, 
-                      transition: 'all 0.3s',
-                      borderRadius: 2,
-                      py: 1.5,
-                      fontWeight: 600,
-                      ...(uploadSuccess[field.name] && {
-                        background: 'linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)'
-                      })
-                    }}
-                  >
-                    {t(field.labelKey)}
-                    <input type="file" name={field.name} accept="image/*" hidden onChange={handleChange} />
-                  </Button>
-                  <Box sx={{ width: 60, ml: 1 }}>
-                    <Collapse in={uploadProgress[field.name] > 0 && !uploadSuccess[field.name]}>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={uploadProgress[field.name]}
-                        sx={{
-                          borderRadius: 2,
-                          '& .MuiLinearProgress-bar': {
-                            background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)'
-                          }
-                        }}
-                      />
-                    </Collapse>
-                    <Fade in={uploadSuccess[field.name]}>
-                      <CheckCircleIcon color="success" />
-                    </Fade>
+              {uploadFields.map((field, index) => (
+                <Box key={field.name}>
+                  <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', p: 2, borderRadius: 2, background: 'rgba(0,0,0,0.02)' }}>
+                    <Button
+                      variant={uploadSuccess[field.name] ? 'contained' : 'outlined'}
+                      color={uploadSuccess[field.name] ? 'success' : 'primary'}
+                      component="label"
+                      fullWidth
+                      sx={{ 
+                        mr: 2, 
+                        transition: 'all 0.3s',
+                        borderRadius: 2,
+                        py: 1.5,
+                        fontWeight: 600,
+                        ...(uploadSuccess[field.name] && {
+                          background: 'linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)'
+                        })
+                      }}
+                    >
+                      {t(field.labelKey)}
+                      <input type="file" name={field.name} accept="image/*" hidden onChange={handleChange} />
+                    </Button>
+                    <Box sx={{ width: 60, ml: 1 }}>
+                      <Collapse in={uploadProgress[field.name] > 0 && !uploadSuccess[field.name]}>
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={uploadProgress[field.name]}
+                          sx={{
+                            borderRadius: 2,
+                            '& .MuiLinearProgress-bar': {
+                              background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)'
+                            }
+                          }}
+                        />
+                      </Collapse>
+                      <Fade in={uploadSuccess[field.name]}>
+                        <CheckCircleIcon color="success" />
+                      </Fade>
+                    </Box>
                   </Box>
+                  {/* Spacer zwischen Upload-Feldern */}
+                  {index < uploadFields.length - 1 && <Box sx={{ height: '8px' }} />}
                 </Box>
               ))}
             </Box>

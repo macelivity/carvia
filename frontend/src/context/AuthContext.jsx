@@ -1,10 +1,19 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import API, { getProfile } from '../api/api';
 
+/**
+ * Authentifizierungskontext für die Carsharing-Anwendung
+ * Verwaltet Benutzeranmeldung, Benutzerstate und Token-Management
+ */
+
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
-// Rollen-Mapping basierend auf der Datenbank
+/**
+ * Konvertiert die Rollen-ID aus der Datenbank in lesbare Rollennamen
+ * @param {number} rolleId - Die Rollen-ID aus der Datenbank
+ * @returns {string} Der entsprechende Rollenname
+ */
 const mapRolleIdToRole = (rolleId) => {
     switch (rolleId) {
         case 1: return 'Mitglied';
@@ -14,29 +23,41 @@ const mapRolleIdToRole = (rolleId) => {
     }
 };
 
+/**
+ * AuthProvider-Komponente
+ * Stellt Authentifizierungslogik für die gesamte Anwendung bereit
+ */
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState({ username: "Gast", role: 'guest', userID: null }); // userID hinzugefügt
+    const [user, setUser] = useState({ 
+        username: "Gast", 
+        role: 'guest', 
+        userID: null 
+    });
     const [loading, setLoading] = useState(true);
 
+    /**
+     * Initialisiert den Authentifizierungsstatus beim Laden der Anwendung
+     * Überprüft vorhandene Tokens und lädt Benutzerprofil
+     */
     useEffect(() => {
         const initializeAuth = async () => {
             const token = localStorage.getItem('accessToken');
             if (token) {
                 try {
-                    const response = await getProfile(); // Profil vom Backend laden
+                    const response = await getProfile();
                     const backendUser = response.data.user;
                     const initialUser = {
                         ...backendUser,
-                        username: backendUser.username, // Sicherstellen, dass username gesetzt ist
+                        username: backendUser.Username,
                         role: mapRolleIdToRole(backendUser.RolleID),
-                        userID: backendUser.UserID, // userID aus Backend-Daten übernehmen
+                        userID: backendUser.UserID,
                     };
                     setUser(initialUser);
                 } catch (error) {
-                    // console.error("[AuthContext] Fehler bei der Initialisierung des Auth-Status:", error); // Entfernt
+                    // Token ungültig - Benutzer ausloggen
                     localStorage.removeItem('accessToken');
                     localStorage.removeItem('refreshToken');
-                    setUser({ username: "Gast", role: "guest", userID: null }); // userID zurücksetzen
+                    setUser({ username: "Gast", role: "guest", userID: null });
                 }
             }
             setLoading(false);
@@ -44,33 +65,45 @@ export const AuthProvider = ({ children }) => {
         initializeAuth();
     }, []);
 
+    /**
+     * Meldet einen Benutzer an und speichert die Authentifizierungsdaten
+     * @param {Object} authData - Authentifizierungsdaten vom Backend
+     */
     const login = (authData) => {
         localStorage.setItem('accessToken', authData.access_token);
         localStorage.setItem('refreshToken', authData.refresh_token);
 
         const backendUser = authData.user;
         if (!backendUser) {
-            // console.error('[AuthContext] backendUser is undefined in authData:', authData); // Entfernt
-            setUser({ username: "Gast", role: "guest", userID: null }); // Fallback mit userID
+            setUser({ username: "Gast", role: "guest", userID: null });
             return;
         }
         
+        // Normalisiere die Datenstruktur (snake_case zu PascalCase)
         const newUserState = {
-            ...backendUser,
-            username: backendUser.username, // Explizit Username setzen, falls nicht direkt im Spread enthalten
-            role: mapRolleIdToRole(backendUser.rolle_id), // Korrigiert und sichergestellt
-            userID: backendUser.user_id, // userID aus Backend-Daten übernehmen
+            UserID: backendUser.user_id,
+            Username: backendUser.username,
+            Vorname: backendUser.vorname,
+            Nachname: backendUser.nachname,
+            RolleID: backendUser.rolle_id,
+            username: backendUser.username,
+            role: mapRolleIdToRole(backendUser.rolle_id),
+            userID: backendUser.user_id,
         };
         setUser(newUserState);
     };
 
+    /**
+     * Meldet den aktuellen Benutzer ab und löscht alle gespeicherten Daten
+     */
     const logout = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         delete API.defaults.headers.common['Authorization'];
-        setUser({ username: "Gast", role: "guest", userID: null }); // userID zurücksetzen
+        setUser({ username: "Gast", role: "guest", userID: null });
     };
 
+    // Ladebildschirm während der Initialisierung
     if (loading) {
         return <div>Laden...</div>;
     }

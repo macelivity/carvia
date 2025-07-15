@@ -8,6 +8,9 @@ import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import PrivacyTipIcon from '@mui/icons-material/PrivacyTip';
 import InfoIcon from '@mui/icons-material/Info';
 
+/**
+ * Footer Komponente - Zeigt die Fußzeile der Anwendung mit Links und Copyright-Informationen
+ */
 const Footer = () => {
     const { t } = useTranslation();
     
@@ -23,7 +26,7 @@ const Footer = () => {
         >
             <Container maxWidth="lg">
                 <Box sx={{ py: 4 }}>
-                    {/* Main Footer Content */}
+                    {/* Haupt-Footer-Inhalt */}
                     <Box sx={{ 
                         display: 'flex', 
                         flexDirection: { xs: 'column', md: 'row' },
@@ -31,7 +34,7 @@ const Footer = () => {
                         justifyContent: 'space-between',
                         mb: 3
                     }}>
-                        {/* Brand Section */}
+                        {/* Marken-Bereich */}
                         <Box sx={{ 
                             display: 'flex', 
                             alignItems: 'center', 
@@ -60,7 +63,7 @@ const Footer = () => {
                             </Typography>
                         </Box>
 
-                        {/* Links Section */}
+                        {/* Links-Bereich */}
                         <Box sx={{ 
                             display: 'flex', 
                             alignItems: 'center',
@@ -68,6 +71,7 @@ const Footer = () => {
                             flexWrap: 'wrap',
                             justifyContent: 'center'
                         }}>
+                            {/* Datenschutz-Link */}
                             <Chip
                                 component={Link}
                                 to="/datenschutz"
@@ -88,6 +92,7 @@ const Footer = () => {
                                 }}
                             />
                             
+                            {/* Impressum-Link */}
                             <Chip
                                 component={Link}
                                 to="/impressum"
@@ -115,7 +120,7 @@ const Footer = () => {
                         mb: 2 
                     }} />
 
-                    {/* Copyright Section */}
+                    {/* Copyright-Bereich */}
                     <Box sx={{ textAlign: 'center' }}>
                         <Typography 
                             variant="body2" 

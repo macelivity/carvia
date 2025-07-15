@@ -1,3 +1,8 @@
+/**
+ * Buchungsseite - Ermöglicht es Benutzern, Fahrzeuge zu reservieren
+ * Zeigt Fahrzeugdetails an, ermöglicht Datum-/Zeitauswahl und Tarifwahl
+ * Berechnet automatisch Preise und erstellt Reservierungen
+ */
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -15,27 +20,392 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { de } from 'date-fns/locale';
 import { getReservationData, calculateReservationPrice, createReservation } from '../api/api';
 
-// Helper function to format Date object to 'YYYY-MM-DDTHH:mm' string for API
+/**
+ * Hilfsfunktion: Formatiert Date-Objekt zu 'YYYY-MM-DDTHH:mm' String für API
+ * @param {Date} date - Das zu formatierende Datum
+ * @returns {string|null} - Formatierter ISO-String oder null bei ungültigem Datum
+ */
 function formatToISOStringForAPI(date) {
 	if (!date || !(date instanceof Date) || isNaN(date.getTime())) return null;
 	return date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
 }
 
+/**
+ * Komponente: Fahrzeugspezifikationen-Karte
+ * Zeigt detaillierte Informationen über das ausgewählte Fahrzeug
+ */
+function VehicleSpecsCard({ vehicle, model, t }) {
+	return (
+		<Grid item xs={12}>
+			<Box
+				sx={{
+					background: 'linear-gradient(120deg, #f5faff 0%, #e3f2fd 100%)',
+					borderRadius: 4,
+					boxShadow: 3,
+					p: 4
+				}}
+			>
+				<Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main', mb: 3, display: 'flex', alignItems: 'center' }}>
+					{t('booking.vehicleSpecs')}
+				</Typography>
+				<Grid container spacing={3}>
+					{/* Fahrzeugdaten in einem einheitlichen Layout */}
+					{[
+						{ label: t('booking.manufacturer'), value: model?.Hersteller },
+						{ label: t('booking.model'), value: model?.Name || model?.ModellName },
+						{ label: t('booking.vehicleType'), value: model?.Fahrzeugtyp },
+						{ label: t('booking.licensePlate'), value: vehicle?.Kennzeichen },
+						{ label: t('booking.transmission'), value: model?.Getriebeart },
+						{ label: t('booking.seats'), value: model?.Sitze },
+						{ label: t('booking.doors'), value: model?.Tueren ?? model?.Türen ?? model?.["Türen"] },
+						{ label: t('booking.fuel'), value: model?.Kraftstoffart },
+						{ label: t('booking.power'), value: model?.Leistung ? `${model.Leistung} PS` : null }
+					].map((spec, index) => (
+						<Grid item xs={12} sm={6} md={3} key={index}>
+							<Box sx={{ p: 2, background: 'rgba(255,255,255,0.6)', borderRadius: 2 }}>
+								<Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+									{spec.label}
+								</Typography>
+								<Typography variant="body1" sx={{ fontWeight: 600 }}>
+									{spec.value || '-'}
+								</Typography>
+							</Box>
+						</Grid>
+					))}
+				</Grid>
+			</Box>
+		</Grid>
+	);
+}
 
+/**
+ * Komponente: Datum- und Zeitauswahl
+ * Ermöglicht Benutzern die Auswahl von Start- und Enddatum/-zeit
+ */
+function DateTimeSelection({ startDate, endDate, setStartDate, setEndDate, t }) {
+	return (
+		<Box sx={{ mb: 4 }}>
+			<Typography variant="h6" sx={{ 
+				fontWeight: 700, 
+				color: 'primary.main', 
+				mb: 3,
+				display: 'flex',
+				alignItems: 'center',
+				gap: 1
+			}}>
+				{t('vehicleSearch.dateAndTime')}
+			</Typography>
+			<Grid container spacing={3}>
+				<Grid item xs={12} md={6}>
+					<DateTimePicker
+						label={t('booking.startDateTime')}
+						value={startDate}
+						onChange={(newValue) => setStartDate(newValue)}
+						ampm={false}
+						slotProps={{
+							actionBar: { actions: ["cancel", "today", "accept"] },
+							textField: { 
+								fullWidth: true,
+								sx: { 
+									'& .MuiOutlinedInput-root': { 
+										borderRadius: 2,
+										background: 'white'
+									}
+								}
+							}
+						}}
+					/>
+				</Grid>
+				<Grid item xs={12} md={6}>
+					<DateTimePicker
+						label={t('booking.endDateTime')}
+						value={endDate}
+						onChange={(newValue) => setEndDate(newValue)}
+						ampm={false}
+						slotProps={{
+							actionBar: { actions: ["cancel", "today", "accept"] },
+							textField: { 
+								fullWidth: true,
+								sx: { 
+									'& .MuiOutlinedInput-root': { 
+										borderRadius: 2,
+										background: 'white'
+									}
+								}
+							}
+						}}
+					/>
+				</Grid>
+			</Grid>
+		</Box>
+	);
+}
+
+/**
+ * Komponente: Standort-Eingabe
+ * Ermöglicht die Eingabe von Abhol- und Rückgabeorten
+ */
+function LocationInput({ 
+	abholPlz, setAbholPlz, abholort, setAbholort, 
+	rueckgabePlz, setRueckgabePlz, rueckgabeort, setRueckgabeort, 
+	t 
+}) {
+	return (
+		<Box sx={{ mb: 4 }}>
+			{/* Abholort */}
+			<Typography variant="h6" sx={{ 
+				fontWeight: 700, 
+				color: 'primary.main', 
+				mb: 3,
+				display: 'flex',
+				alignItems: 'center',
+				gap: 1
+			}}>
+				{t('vehicleSearch.pickupLocation')}
+			</Typography>
+			<Grid container spacing={3}>
+				<Grid item xs={12} sm={4}>
+					<TextField
+						label={t('booking.pickupPostalCode')}
+						id="abholPlz"
+						name="abholPlz"
+						value={abholPlz}
+						onChange={e => setAbholPlz(e.target.value)}
+						required
+						fullWidth
+						placeholder={t('booking.pickupPostalCodePlaceholder')}
+						sx={{ 
+							'& .MuiOutlinedInput-root': { 
+								borderRadius: 2,
+								background: 'white'
+							}
+						}}
+					/>
+				</Grid>
+				<Grid item xs={12} sm={8}>
+					<TextField
+						label={t('booking.pickupCity')}
+						id="abholort"
+						name="abholort"
+						value={abholort}
+						onChange={e => setAbholort(e.target.value)}
+						required
+						fullWidth
+						placeholder={t('booking.pickupCityPlaceholder')}
+						sx={{ 
+							'& .MuiOutlinedInput-root': { 
+								borderRadius: 2,
+								background: 'white'
+							}
+						}}
+					/>
+				</Grid>
+			</Grid>
+			
+			{/* Rückgabeort */}
+			<Typography variant="h6" sx={{ 
+				fontWeight: 700, 
+				color: 'primary.main', 
+				mt: 4,
+				mb: 3,
+				display: 'flex',
+				alignItems: 'center',
+				gap: 1
+			}}>
+				{t('vehicleSearch.returnLocation')}
+			</Typography>
+			<Grid container spacing={3}>
+				<Grid item xs={12} sm={4}>
+					<TextField
+						label={t('booking.returnPostalCode')}
+						id="rueckgabePlz"
+						name="rueckgabePlz"
+						value={rueckgabePlz}
+						onChange={e => setRueckgabePlz(e.target.value)}
+						required
+						fullWidth
+						placeholder={t('booking.returnPostalCodePlaceholder')}
+						sx={{ 
+							'& .MuiOutlinedInput-root': { 
+								borderRadius: 2,
+								background: 'white'
+							}
+						}}
+					/>
+				</Grid>
+				<Grid item xs={12} sm={8}>
+					<TextField
+						label={t('booking.returnCity')}
+						id="rueckgabeort"
+						name="rueckgabeort"
+						value={rueckgabeort}
+						onChange={e => setRueckgabeort(e.target.value)}
+						required
+						fullWidth
+						placeholder={t('booking.returnCityPlaceholder')}
+						sx={{ 
+							'& .MuiOutlinedInput-root': { 
+								borderRadius: 2,
+								background: 'white'
+							}
+						}}
+					/>
+				</Grid>
+			</Grid>
+		</Box>
+	);
+}
+
+/**
+ * Komponente: Tarifauswahl
+ * Ermöglicht die Auswahl verfügbarer Tarife und zeigt Details an
+ */
+function TariffSelection({ 
+	tarife, selectedTarifId, setSelectedTarifId, 
+	loadingVehicle, t 
+}) {
+	const selectedtarifDetails = tarife.find(t => t.TarifID === parseInt(selectedTarifId));
+
+	return (
+		<Box sx={{ mb: 4 }}>
+			<Typography variant="h6" sx={{ 
+				fontWeight: 700, 
+				color: 'primary.main', 
+				mb: 3,
+				display: 'flex',
+				alignItems: 'center',
+				gap: 1
+			}}>
+				{t('booking.selectTariffLabel')}
+			</Typography>
+			<Grid container spacing={3}>
+				<Grid item xs={12} md={6}>
+					<FormControl fullWidth required>
+						<InputLabel id="tarif-select-label">{t('booking.selectTariffLabel')}</InputLabel>
+						<Select
+							labelId="tarif-select-label"
+							id="tarif"
+							value={selectedTarifId}
+							label={t('booking.selectTariffLabel')}
+							onChange={e => setSelectedTarifId(e.target.value)}
+							disabled={loadingVehicle || tarife.length === 0}
+							sx={{ 
+								borderRadius: 2,
+								background: 'white'
+							}}
+						>
+							{loadingVehicle && <MenuItem value=""><em>{t('booking.loadingTariffs')}</em></MenuItem>}
+							{!loadingVehicle && tarife.length === 0 && <MenuItem value=""><em>{t('booking.noTariffsAvailable')}</em></MenuItem>}
+							{tarife.map(tarif => (
+								<MenuItem key={tarif.TarifID} value={tarif.TarifID}>
+									{tarif.Name}
+								</MenuItem>
+							))}
+						</Select>
+					</FormControl>
+				</Grid>
+				<Grid item xs={12} md={6}>
+					{/* Tarifdetails */}
+					<Box sx={{
+						background: 'linear-gradient(120deg, #f3e5f5 0%, #e1bee7 100%)',
+						borderRadius: 2,
+						p: 3,
+						height: '100%',
+						minHeight: 140
+					}}>
+						<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#7b1fa2', mb: 2 }}>
+							{t('booking.tariffDetails')}
+						</Typography>
+						{loadingVehicle && <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}><CircularProgress size={16} /><Typography variant="body2">Loading...</Typography></Box>}
+						{!loadingVehicle && tarife.length === 0 && <Typography variant="body2">{t('booking.noTariffsAvailable')}</Typography>}
+						{selectedtarifDetails ? (
+							<>
+								<Typography variant="body2" sx={{ mb: 1 }}>
+									<strong>{t('booking.tariffName')}:</strong> {selectedtarifDetails?.Name || '-'}
+								</Typography>
+								<Typography variant="body2" sx={{ mb: 1 }}>
+									<strong>{t('booking.freeKm')}:</strong> {selectedtarifDetails?.Freikilometer !== null && selectedtarifDetails?.Freikilometer !== undefined ? `${selectedtarifDetails.Freikilometer} km` : t('booking.unlimited')}
+								</Typography>
+								<Typography variant="body2">
+									<strong>{t('booking.insurance')}:</strong> {selectedtarifDetails?.Versicherungsschutz || '-'}
+								</Typography>
+							</>
+						) : (
+							!loadingVehicle && <Typography variant="body2">{t('booking.selectTariff')}</Typography>
+						)}
+					</Box>
+				</Grid>
+			</Grid>
+		</Box>
+	);
+}
+
+/**
+ * Komponente: Preisanzeige
+ * Zeigt den berechneten Gesamtpreis und Details zur Preisberechnung an
+ */
+function PriceDisplay({ loadingPrice, calculatedPrice, priceCalculationData, t }) {
+	return (
+		<Box sx={{ 
+			mt: 4, 
+			p: 3, 
+			background: 'linear-gradient(120deg, #e8f5e8 0%, #c8e6c9 100%)',
+			borderRadius: 3,
+			textAlign: 'center'
+		}}>
+			<Typography variant="h5" sx={{ fontWeight: 700, color: '#2e7d32', mb: 1 }}>
+				{t('booking.estimatedTotalPrice')}
+			</Typography>
+			{loadingPrice ? (
+				<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, my: 2 }}>
+					<CircularProgress size={24} sx={{ color: '#2e7d32' }} />
+					<Typography variant="h5" sx={{ fontWeight: 600, color: '#2e7d32' }}>
+						{t('booking.calculatingPrice')}
+					</Typography>
+				</Box>
+			) : (
+				<Typography variant="h3" sx={{ fontWeight: 800, color: '#1b5e20', mb: 1 }}>
+					{calculatedPrice.toFixed(2)} €
+				</Typography>
+			)}
+			{priceCalculationData && (
+				<Typography variant="body2" sx={{ color: '#388e3c', mt: 1 }}>
+					{t('booking.priceDetails', {
+						hours: priceCalculationData.duration_hours?.toFixed(1) || '0',
+						rate: priceCalculationData.hourly_rate || '0',
+						multiplier: priceCalculationData.tariff_multiplier || '1'
+					})}
+				</Typography>
+			)}
+			<Typography variant="body2" sx={{ color: '#388e3c' }}>
+				{t('booking.priceBasedOn')}
+			</Typography>
+		</Box>
+	);
+}
+
+/**
+ * Hauptkomponente: Buchungsseite
+ * Verwaltet den gesamten Buchungsprozess von der Fahrzeugauswahl bis zur Reservierung
+ */
 export default function Booking() {
-	const { vehicle_id } = useParams(); // This is FahrzeugID
+	// URL-Parameter und Navigation
+	const { vehicle_id } = useParams();
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { user } = useAuth();
 	const { t } = useTranslation();
 
-	const passedState = location.state; // Directly use location.state
+	// Übergebene Daten vom vorherigen Schritt
+	const passedState = location.state;
 
+	// Fahrzeug- und Modelldaten
 	const [vehicle, setVehicle] = useState(null);
 	const [model, setModel] = useState(null);
 	const [tarife, setTarife] = useState([]);
 	const [selectedTarifId, setSelectedTarifId] = useState('');
 
+	// Datum- und Zeitauswahl
 	const [startDate, setStartDate] = useState(
 		passedState?.start_datum && passedState.start_datum !== 'Jetzt'
 			? new Date(passedState.start_datum)
@@ -45,22 +415,24 @@ export default function Booking() {
 		passedState?.end_datum ? new Date(passedState.end_datum) : null
 	);
 
+	// Standortdaten
 	const [abholPlz, setAbholPlz] = useState(passedState?.abholort_plz || '');
 	const [abholort, setAbholort] = useState(passedState?.abholort_stadt || '');
 	const [rueckgabePlz, setRueckgabePlz] = useState(passedState?.rueckgabeort_plz || '');
 	const [rueckgabeort, setRueckgabeort] = useState(passedState?.rueckgabeort_stadt || '');
 
-
+	// Preisberechnung
 	const [calculatedPrice, setCalculatedPrice] = useState(0);
 	const [priceCalculationData, setPriceCalculationData] = useState(null);
 
+	// Ladezustände und Fehlermeldungen
 	const [loadingVehicle, setLoadingVehicle] = useState(true);
 	const [loadingPrice, setLoadingPrice] = useState(false);
 	const [error, setError] = useState('');
 	const [bookingMessage, setBookingMessage] = useState('');
 	const [bookingError, setBookingError] = useState('');
 
-	// Check if user is authenticated
+	// Prüfung der Benutzerauthentifizierung
 	useEffect(() => {
 		if (!user) {
 			setError(t('booking.loginRequired'));
@@ -68,7 +440,7 @@ export default function Booking() {
 		}
 	}, [user, t]);
 
-	// Fetch vehicle, model, and tariff data
+	// Laden der Fahrzeug-, Modell- und Tarifdaten
 	useEffect(() => {
 		const fetchReservationData = async () => {
 			if (!vehicle_id) return;
@@ -86,13 +458,11 @@ export default function Booking() {
 				setModel(response.data.model);
 				setTarife(response.data.tariffs);
 				
-				// Set default tariff if available
+				// Standard-Tarif setzen, falls verfügbar
 				if (response.data.tariffs.length > 0 && !selectedTarifId) {
 					setSelectedTarifId(response.data.tariffs[0].TarifID.toString());
 				}
 			} catch (err) {
-				console.error('Error fetching reservation data:', err);
-				console.error('Error response:', err.response?.data);
 				setError(err.response?.data?.error || err.message || t('booking.dataLoadError'));
 			} finally {
 				setLoadingVehicle(false);
@@ -100,9 +470,9 @@ export default function Booking() {
 		};
 
 		fetchReservationData();
-	}, [vehicle_id, t]); // Removed selectedTarifId from dependency array to prevent loops
+	}, [vehicle_id, t]);
 
-	// Calculate price when relevant data changes
+	// Preisberechnung bei Änderung relevanter Daten
 	const calculatePrice = useCallback(async () => {
 		if (!startDate || !endDate || !selectedTarifId || !vehicle_id) {
 			setCalculatedPrice(0);
@@ -126,7 +496,7 @@ export default function Booking() {
 		} catch (err) {
 			setCalculatedPrice(0);
 			setPriceCalculationData(null);
-			// Don't show error for price calculation failures, just reset to 0
+			// Keine Fehlermeldung für Preisberechnungsfehler anzeigen
 		} finally {
 			setLoadingPrice(false);
 		}
@@ -137,11 +507,16 @@ export default function Booking() {
 	}, [calculatePrice]);
 
 
+	/**
+	 * Handler für die Buchungsanfrage
+	 * Validiert Eingaben und erstellt eine neue Reservierung
+	 */
 	const handleBookingSubmit = async (e) => {
 		e.preventDefault();
 		setBookingMessage('');
 		setBookingError('');
 
+		// Eingabevalidierung
 		if (!user) {
 			setBookingError(t('booking.loginRequired'));
 			return;
@@ -156,6 +531,7 @@ export default function Booking() {
 			return;
 		}
 
+		// Reservierungsdaten vorbereiten
 		const reservationData = {
 			UserID: user.userID,
 			FahrzeugID: parseInt(vehicle_id),
@@ -167,7 +543,6 @@ export default function Booking() {
 			Abholort: abholort,
 			RueckgabePlz: rueckgabePlz,
 			Rueckgabeort: rueckgabeort
-			// Price will be calculated on the backend
 		};
 
 		try {
@@ -181,11 +556,11 @@ export default function Booking() {
 				navigate('/reservations');
 			}, 3000);
 		} catch (err) {
-			console.error('Fehler bei der Reservierung:', err.response?.data || err);
 			setBookingError(err.response?.data?.msg || err.response?.data?.error || t('booking.checkAvailability'));
 		}
 	};
 
+	// Ladeanzeige während Fahrzeugdaten geladen werden
 	if (loadingVehicle) {
 		return (
 			<Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
@@ -195,6 +570,7 @@ export default function Booking() {
 		);
 	}
 
+	// Fehleranzeige bei Datenladeproblemen
 	if (error && !vehicle) {
 		return (
 			<Container sx={{ textAlign: 'center', mt: 4 }}>
@@ -204,12 +580,13 @@ export default function Booking() {
 					variant="contained" 
 					sx={{ mt: 2 }}
 				>
-					Reload Page
+					{t('common.reload')}
 				</Button>
 			</Container>
 		);
 	}
 
+	// Warnung wenn Fahrzeug nicht gefunden
 	if (!loadingVehicle && (!vehicle || !model)) {
 		return (
 			<Container sx={{ textAlign: 'center', mt: 4 }}>
@@ -224,8 +601,6 @@ export default function Booking() {
 			</Container>
 		);
 	}
-
-	const selectedtarifDetails = tarife.find(t => t.TarifID === parseInt(selectedTarifId));
 
 	return (
 		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={de}>
@@ -273,114 +648,9 @@ export default function Booking() {
 					<Alert severity="error" sx={{ mb: 2, borderRadius: 3 }}>{error}</Alert>
 				)}
 
-				<Grid container spacing={4} sx={{ mb: 4 }}>
+				<Grid container spacing={4} sx={{ mb: 4, mt: 6 }}>
 					{/* Vehicle Specifications Card */}
-					<Grid item xs={12}>
-						<Box
-							sx={{
-								background: 'linear-gradient(120deg, #f5faff 0%, #e3f2fd 100%)',
-								borderRadius: 4,
-								boxShadow: 3,
-								p: 4
-							}}
-						>
-							<Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main', mb: 3, display: 'flex', alignItems: 'center' }}>
-								{t('booking.vehicleSpecs')}
-							</Typography>
-							<Grid container spacing={3}>
-								<Grid item xs={12} sm={6} md={3}>
-									<Box sx={{ p: 2, background: 'rgba(255,255,255,0.6)', borderRadius: 2 }}>
-										<Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-											{t('booking.manufacturer')}
-										</Typography>
-										<Typography variant="body1" sx={{ fontWeight: 600 }}>
-											{model?.Hersteller || '-'}
-										</Typography>
-									</Box>
-								</Grid>
-								<Grid item xs={12} sm={6} md={3}>
-									<Box sx={{ p: 2, background: 'rgba(255,255,255,0.6)', borderRadius: 2 }}>
-										<Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-											{t('booking.model')}
-										</Typography>
-										<Typography variant="body1" sx={{ fontWeight: 600 }}>
-											{model?.Name || model?.ModellName || '-'}
-										</Typography>
-									</Box>
-								</Grid>
-								<Grid item xs={12} sm={6} md={3}>
-									<Box sx={{ p: 2, background: 'rgba(255,255,255,0.6)', borderRadius: 2 }}>
-										<Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-											{t('booking.vehicleType')}
-										</Typography>
-										<Typography variant="body1" sx={{ fontWeight: 600 }}>
-											{model?.Fahrzeugtyp || '-'}
-										</Typography>
-									</Box>
-								</Grid>
-								<Grid item xs={12} sm={6} md={3}>
-									<Box sx={{ p: 2, background: 'rgba(255,255,255,0.6)', borderRadius: 2 }}>
-										<Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-											{t('booking.licensePlate')}
-										</Typography>
-										<Typography variant="body1" sx={{ fontWeight: 600 }}>
-											{vehicle?.Kennzeichen || '-'}
-										</Typography>
-									</Box>
-								</Grid>
-								<Grid item xs={12} sm={6} md={3}>
-									<Box sx={{ p: 2, background: 'rgba(255,255,255,0.6)', borderRadius: 2 }}>
-										<Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-											{t('booking.transmission')}
-										</Typography>
-										<Typography variant="body1" sx={{ fontWeight: 600 }}>
-											{model?.Getriebeart || '-'}
-										</Typography>
-									</Box>
-								</Grid>
-								<Grid item xs={12} sm={6} md={3}>
-									<Box sx={{ p: 2, background: 'rgba(255,255,255,0.6)', borderRadius: 2 }}>
-										<Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-											{t('booking.seats')}
-										</Typography>
-										<Typography variant="body1" sx={{ fontWeight: 600 }}>
-											{model?.Sitze || '-'}
-										</Typography>
-									</Box>
-								</Grid>
-								<Grid item xs={12} sm={6} md={3}>
-									<Box sx={{ p: 2, background: 'rgba(255,255,255,0.6)', borderRadius: 2 }}>
-										<Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-											{t('booking.doors')}
-										</Typography>
-										<Typography variant="body1" sx={{ fontWeight: 600 }}>
-											{model?.Tueren || '-'}
-										</Typography>
-									</Box>
-								</Grid>
-								<Grid item xs={12} sm={6} md={3}>
-									<Box sx={{ p: 2, background: 'rgba(255,255,255,0.6)', borderRadius: 2 }}>
-										<Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-											{t('booking.fuel')}
-										</Typography>
-										<Typography variant="body1" sx={{ fontWeight: 600 }}>
-											{model?.Kraftstoffart || '-'}
-										</Typography>
-									</Box>
-								</Grid>
-								<Grid item xs={12} sm={6} md={3}>
-									<Box sx={{ p: 2, background: 'rgba(255,255,255,0.6)', borderRadius: 2 }}>
-										<Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-											{t('booking.power')}
-										</Typography>
-										<Typography variant="body1" sx={{ fontWeight: 600 }}>
-											{model?.Leistung ? `${model.Leistung} PS` : '-'}
-										</Typography>
-									</Box>
-								</Grid>
-							</Grid>
-						</Box>
-					</Grid>
+					<VehicleSpecsCard vehicle={vehicle} model={model} t={t} />
 				</Grid>
 
 				{/* Booking Form */}
@@ -390,6 +660,7 @@ export default function Booking() {
 						borderRadius: 4,
 						boxShadow: 4,
 						p: { xs: 2, sm: 4 },
+						mt: 6, // Add margin-top to separate from VehicleSpecsCard
 					}}
 				>
 					<Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
@@ -406,270 +677,50 @@ export default function Booking() {
 
 					<Box component="form" onSubmit={handleBookingSubmit} noValidate>
 						{/* Date & Time Section */}
-						<Box sx={{ mb: 4 }}>
-							<Typography variant="h6" sx={{ 
-								fontWeight: 700, 
-								color: 'primary.main', 
-								mb: 3,
-								display: 'flex',
-								alignItems: 'center',
-								gap: 1
-							}}>
-								{t('vehicleSearch.dateAndTime')}
-							</Typography>
-							<Grid container spacing={3}>
-								<Grid item xs={12} md={6}>
-									<DateTimePicker
-										label={t('booking.startDateTime')}
-										value={startDate}
-										onChange={(newValue) => setStartDate(newValue)}
-										ampm={false}
-										slotProps={{
-											actionBar: { actions: ["cancel", "today", "accept"] },
-											textField: { 
-												fullWidth: true,
-												sx: { 
-													'& .MuiOutlinedInput-root': { 
-														borderRadius: 2,
-														background: 'white'
-													}
-												}
-											}
-										}}
-									/>
-								</Grid>
-								<Grid item xs={12} md={6}>
-									<DateTimePicker
-										label={t('booking.endDateTime')}
-										value={endDate}
-										onChange={(newValue) => setEndDate(newValue)}
-										ampm={false}
-										slotProps={{
-											actionBar: { actions: ["cancel", "today", "accept"] },
-											textField: { 
-												fullWidth: true,
-												sx: { 
-													'& .MuiOutlinedInput-root': { 
-														borderRadius: 2,
-														background: 'white'
-													}
-												}
-											}
-										}}
-									/>
-								</Grid>
-							</Grid>
+						<Box sx={{ mt: 4 }}>
+							<DateTimeSelection 
+								startDate={startDate} 
+								endDate={endDate} 
+								setStartDate={setStartDate} 
+								setEndDate={setEndDate} 
+								t={t} 
+							/>
 						</Box>
 
 						{/* Location Section */}
-						<Box sx={{ mb: 4 }}>
-							<Typography variant="h6" sx={{ 
-								fontWeight: 700, 
-								color: 'primary.main', 
-								mb: 3,
-								display: 'flex',
-								alignItems: 'center',
-								gap: 1
-							}}>
-								{t('vehicleSearch.pickupLocation')}
-							</Typography>
-							<Grid container spacing={3}>
-								<Grid item xs={12} sm={4}>
-									<TextField
-										label={t('booking.pickupPostalCode')}
-										id="abholPlz"
-										name="abholPlz"
-										value={abholPlz}
-										onChange={e => setAbholPlz(e.target.value)}
-										required
-										fullWidth
-										placeholder={t('booking.pickupPostalCodePlaceholder')}
-										sx={{ 
-											'& .MuiOutlinedInput-root': { 
-												borderRadius: 2,
-												background: 'white'
-											}
-										}}
-									/>
-								</Grid>
-								<Grid item xs={12} sm={8}>
-									<TextField
-										label={t('booking.pickupCity')}
-										id="abholort"
-										name="abholort"
-										value={abholort}
-										onChange={e => setAbholort(e.target.value)}
-										required
-										fullWidth
-										placeholder={t('booking.pickupCityPlaceholder')}
-										sx={{ 
-											'& .MuiOutlinedInput-root': { 
-												borderRadius: 2,
-												background: 'white'
-											}
-										}}
-									/>
-								</Grid>
-							</Grid>
-							
-							<Typography variant="h6" sx={{ 
-								fontWeight: 700, 
-								color: 'primary.main', 
-								mt: 4,
-								mb: 3,
-								display: 'flex',
-								alignItems: 'center',
-								gap: 1
-							}}>
-								{t('vehicleSearch.returnLocation')}
-							</Typography>
-							<Grid container spacing={3}>
-								<Grid item xs={12} sm={4}>
-									<TextField
-										label={t('booking.returnPostalCode')}
-										id="rueckgabePlz"
-										name="rueckgabePlz"
-										value={rueckgabePlz}
-										onChange={e => setRueckgabePlz(e.target.value)}
-										required
-										fullWidth
-										placeholder={t('booking.returnPostalCodePlaceholder')}
-										sx={{ 
-											'& .MuiOutlinedInput-root': { 
-												borderRadius: 2,
-												background: 'white'
-											}
-										}}
-									/>
-								</Grid>
-								<Grid item xs={12} sm={8}>
-									<TextField
-										label={t('booking.returnCity')}
-										id="rueckgabeort"
-										name="rueckgabeort"
-										value={rueckgabeort}
-										onChange={e => setRueckgabeort(e.target.value)}
-										required
-										fullWidth
-										placeholder={t('booking.returnCityPlaceholder')}
-										sx={{ 
-											'& .MuiOutlinedInput-root': { 
-												borderRadius: 2,
-												background: 'white'
-											}
-										}}
-									/>
-								</Grid>
-							</Grid>
+						<Box sx={{ mt: 4 }}>
+							<LocationInput 
+								abholPlz={abholPlz} 
+								setAbholPlz={setAbholPlz} 
+								abholort={abholort} 
+								setAbholort={setAbholort} 
+								rueckgabePlz={rueckgabePlz} 
+								setRueckgabePlz={setRueckgabePlz} 
+								rueckgabeort={rueckgabeort} 
+								setRueckgabeort={setRueckgabeort} 
+								t={t} 
+							/>
 						</Box>
 
 						{/* Tariff Selection Section */}
-						<Box sx={{ mb: 4 }}>
-							<Typography variant="h6" sx={{ 
-								fontWeight: 700, 
-								color: 'primary.main', 
-								mb: 3,
-								display: 'flex',
-								alignItems: 'center',
-								gap: 1
-							}}>
-								{t('booking.selectTariffLabel')}
-							</Typography>
-							<Grid container spacing={3}>
-								<Grid item xs={12} md={6}>
-									<FormControl fullWidth required>
-										<InputLabel id="tarif-select-label">{t('booking.selectTariffLabel')}</InputLabel>
-										<Select
-											labelId="tarif-select-label"
-											id="tarif"
-											value={selectedTarifId}
-											label={t('booking.selectTariffLabel')}
-											onChange={e => setSelectedTarifId(e.target.value)}
-											disabled={loadingVehicle || tarife.length === 0}
-											sx={{ 
-												borderRadius: 2,
-												background: 'white'
-											}}
-										>
-											{loadingVehicle && <MenuItem value=""><em>{t('booking.loadingTariffs')}</em></MenuItem>}
-											{!loadingVehicle && tarife.length === 0 && <MenuItem value=""><em>{t('booking.noTariffsAvailable')}</em></MenuItem>}
-											{tarife.map(tarif => (
-												<MenuItem key={tarif.TarifID} value={tarif.TarifID}>
-													{tarif.Name}
-												</MenuItem>
-											))}
-										</Select>
-									</FormControl>
-								</Grid>
-								<Grid item xs={12} md={6}>
-									{/* Tariff Details */}
-									<Box sx={{
-										background: 'linear-gradient(120deg, #f3e5f5 0%, #e1bee7 100%)',
-										borderRadius: 2,
-										p: 3,
-										height: '100%',
-										minHeight: 140
-									}}>
-										<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#7b1fa2', mb: 2 }}>
-											{t('booking.tariffDetails')}
-										</Typography>
-										{loadingVehicle && <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}><CircularProgress size={16} /><Typography variant="body2">Loading...</Typography></Box>}
-										{!loadingVehicle && tarife.length === 0 && <Typography variant="body2">{t('booking.noTariffsAvailable')}</Typography>}
-										{selectedtarifDetails ? (
-											<>
-												<Typography variant="body2" sx={{ mb: 1 }}>
-													<strong>{t('booking.tariffName')}:</strong> {selectedtarifDetails?.Name || '-'}
-												</Typography>
-												<Typography variant="body2" sx={{ mb: 1 }}>
-													<strong>{t('booking.freeKm')}:</strong> {selectedtarifDetails?.Freikilometer !== null && selectedtarifDetails?.Freikilometer !== undefined ? `${selectedtarifDetails.Freikilometer} km` : t('booking.unlimited')}
-												</Typography>
-												<Typography variant="body2">
-													<strong>{t('booking.insurance')}:</strong> {selectedtarifDetails?.Versicherungsschutz || '-'}
-												</Typography>
-											</>
-										) : (
-											!loadingVehicle && <Typography variant="body2">{t('booking.selectTariff')}</Typography>
-										)}
-									</Box>
-								</Grid>
-							</Grid>
+						<Box sx={{ mt: 4 }}>
+							<TariffSelection 
+								tarife={tarife} 
+								selectedTarifId={selectedTarifId} 
+								setSelectedTarifId={setSelectedTarifId} 
+								loadingVehicle={loadingVehicle} 
+								t={t} 
+							/>
 						</Box>
 
 						{/* Price Display */}
-						<Box sx={{ 
-							mt: 4, 
-							p: 3, 
-							background: 'linear-gradient(120deg, #e8f5e8 0%, #c8e6c9 100%)',
-							borderRadius: 3,
-							textAlign: 'center'
-						}}>
-							<Typography variant="h5" sx={{ fontWeight: 700, color: '#2e7d32', mb: 1 }}>
-								{t('booking.estimatedTotalPrice')}
-							</Typography>
-							{loadingPrice ? (
-								<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, my: 2 }}>
-									<CircularProgress size={24} sx={{ color: '#2e7d32' }} />
-									<Typography variant="h5" sx={{ fontWeight: 600, color: '#2e7d32' }}>
-										{t('booking.calculatingPrice')}
-									</Typography>
-								</Box>
-							) : (
-								<Typography variant="h3" sx={{ fontWeight: 800, color: '#1b5e20', mb: 1 }}>
-									{calculatedPrice.toFixed(2)} €
-								</Typography>
-							)}
-							{priceCalculationData && (
-								<Typography variant="body2" sx={{ color: '#388e3c', mt: 1 }}>
-									{t('booking.priceDetails', {
-										hours: priceCalculationData.duration_hours?.toFixed(1) || '0',
-										rate: priceCalculationData.hourly_rate || '0',
-										multiplier: priceCalculationData.tariff_multiplier || '1'
-									})}
-								</Typography>
-							)}
-							<Typography variant="body2" sx={{ color: '#388e3c' }}>
-								{t('booking.priceBasedOn')}
-							</Typography>
+						<Box sx={{ mt: 4 }}>
+							<PriceDisplay 
+								loadingPrice={loadingPrice} 
+								calculatedPrice={calculatedPrice} 
+								priceCalculationData={priceCalculationData} 
+								t={t} 
+							/>
 						</Box>
 
 						{bookingMessage && <Alert severity="success" sx={{ mt: 3, borderRadius: 3 }}>{bookingMessage}</Alert>}

@@ -1,3 +1,8 @@
+/**
+ * Fahrzeugübersichtsseite - Zeigt alle verfügbaren Fahrzeuge an
+ * Bietet sowohl Karten- als auch Listenansicht mit Suchfunktionen
+ * Ermöglicht Benutzern die Buchung von Fahrzeugen
+ */
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -39,10 +44,15 @@ import {
     CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 
-// Main Vehicles Component
+/**
+ * Hauptkomponente: Fahrzeugübersicht
+ * Verwaltet die Anzeige aller verfügbaren Fahrzeuge mit Such- und Filterfunktionen
+ */
 export default function Vehicles() {
     const { user } = useAuth();
     const { t } = useTranslation();
+    
+    // Zustandsvariablen für Fahrzeugdaten
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -60,7 +70,6 @@ export default function Vehicles() {
                 }));
                 setVehicles(vehiclesWithCoords);
             } catch (err) {
-                console.error('Error fetching vehicles:', err);
                 setError('Fehler beim Laden der Fahrzeuge');
             } finally {
                 setLoading(false);
@@ -169,7 +178,6 @@ const LocationSearchCard = ({ vehicles, loading, error, t }) => {
                 setSearchStatus('error');
             }
         } catch (error) {
-            console.error('Location search error:', error);
             setSearchStatus('error');
         } finally {
             setIsSearching(false);

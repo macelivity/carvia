@@ -83,6 +83,7 @@
     "viewReservations": "Meine Reservierungen ansehen",
     "adminTools": "Admin-Werkzeuge",
     "manageApplicationsButton": "Anträge verwalten",
+    "staffManagementButton": "Mitarbeiter verwalten",
     "exploreVehicles": "Unsere Flotte entdecken",
     "exploreDescription": "Durchstöbere alle verfügbaren Fahrzeuge, ohne eine Reservierung zu machen."
   },
@@ -94,6 +95,7 @@
     "loginButton": "Anmelden",
     "usernameRequired": "Benutzername und Passwort sind erforderlich.",
     "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "registrationPending": "Registrierung wird bearbeitet, bitte versuchen Sie es später erneut.",
     "usernamePlaceholder": "Benutzername",
     "passwordPlaceholder": "Passwort",
     "noAccount": "Haben Sie noch kein Konto?",
@@ -526,6 +528,7 @@
   },
   "datenschutz": {
     "title": "Datenschutzerklärung",
+    "subtitle": "Ihre Daten sind bei uns sicher",
     "section1Title": "1. Datenschutz auf einen Blick",
     "section1Content": "Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten passiert, wenn Sie unsere Website besuchen.",
     "section2Title": "2. Verantwortliche Stelle",
@@ -546,6 +549,7 @@
   },
   "impressum": {
     "title": "Impressum",
+    "subtitle": "Rechtliche Informationen und Kontaktdaten",
     "legalInfo": "Angaben gemäß § 5 TMG:",
     "companyName": "Carvia GmbH",
     "address": "Musterstraße 1",

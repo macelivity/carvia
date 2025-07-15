@@ -8,12 +8,17 @@ from app.models.tarif_ops import TarifOps
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 
+"""
+Reservierungs-Routes für das Carsharing-System.
+Verwaltet die Erstellung, Abfrage und Verwaltung von Fahrzeugreservierungen.
+"""
+
 bp = Blueprint("reservierung", __name__)
 
 @bp.route("/", methods=["GET"])
 @jwt_required()
 def list_reservierungen():
-
+    """Gibt alle Reservierungen zurück (nur für Mitarbeiter)"""
     if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
 

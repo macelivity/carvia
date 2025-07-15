@@ -3,6 +3,11 @@ from app.models.rolle_ops import RolleOps
 from app.models.user_ops import UserOps
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
+"""
+Rollen-Routes für das Carsharing-System.
+Verwaltet Benutzerrollen und Berechtigungen im System.
+"""
+
 bp = Blueprint("rolle", __name__)
 
 @bp.route("/", methods=["GET"])

@@ -12,7 +12,11 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { de } from 'date-fns/locale';
 
-// Helper function to format Date object to 'YYYY-MM-DDTHH:mm' string
+/**
+ * Hilfsfunktion - Formatiert Date-Objekt zu 'YYYY-MM-DDTHH:mm' String
+ * @param {Date} date - Das zu formatierende Datum
+ * @returns {string} Formatierter Datum-String
+ */
 function formatToDateTimeLocalString(date) {
     if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
     const year = date.getFullYear();
@@ -23,9 +27,15 @@ function formatToDateTimeLocalString(date) {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
+/**
+ * VehicleSearch Komponente - Fahrzeugsuche mit Filtern
+ * Ermöglicht es Benutzern, nach verfügbaren Fahrzeugen zu suchen
+ */
 export default function VehicleSearch() {
     const navigate = useNavigate();
     const { t } = useTranslation();
+    
+    // Initiale Suchfilter
     const initialSearchFilters = {
         start_datum: null,
         end_datum: null,
@@ -34,9 +44,14 @@ export default function VehicleSearch() {
         rueckgabeort_plz: '',
         rueckgabeort_stadt: '',
     };
+    
     const [searchFilters, setSearchFilters] = useState(initialSearchFilters);
     const [pageError, setPageError] = useState('');
 
+    /**
+     * Behandelt Änderungen in Eingabefeldern
+     * @param {Object} e - Event-Objekt
+     */
     const handleInputChange = (e) => {
         setSearchFilters({
             ...searchFilters,
@@ -45,20 +60,33 @@ export default function VehicleSearch() {
         setPageError('');
     };
 
+    /**
+     * Behandelt Änderungen des Startdatums
+     * @param {Date} newValue - Neues Startdatum
+     */
     const handleStartDateChange = (newValue) => {
         setSearchFilters(prev => ({ ...prev, start_datum: newValue }));
         setPageError('');
     };
 
+    /**
+     * Behandelt Änderungen des Enddatums
+     * @param {Date} newValue - Neues Enddatum
+     */
     const handleEndDateChange = (newValue) => {
         setSearchFilters(prev => ({ ...prev, end_datum: newValue }));
         setPageError('');
     };
 
+    /**
+     * Behandelt das Absenden des Suchformulars
+     * @param {Object} e - Event-Objekt
+     */
     const handleSearchSubmit = (e) => {
         e.preventDefault();
         setPageError('');
 
+        // Validierung: Überprüfe ob alle Felder ausgefüllt sind
         if (!searchFilters.start_datum || !searchFilters.end_datum ||
             !searchFilters.abholort_plz || !searchFilters.abholort_stadt ||
             !searchFilters.rueckgabeort_plz || !searchFilters.rueckgabeort_stadt) {
@@ -66,18 +94,21 @@ export default function VehicleSearch() {
             return;
         }
 
-        if (searchFilters.start_datum && searchFilters.end_datum && new Date(searchFilters.start_datum) >= new Date(searchFilters.end_datum)) {
+        // Validierung: Überprüfe Datumsbereich
+        if (searchFilters.start_datum && searchFilters.end_datum && 
+            new Date(searchFilters.start_datum) >= new Date(searchFilters.end_datum)) {
             setPageError(t('vehicleSearch.invalidDateRange'));
             return;
         }
 
+        // Bereite Suchfilter für Navigation vor
         const searchFilterForNavigation = {
             ...searchFilters,
             start_datum: formatToDateTimeLocalString(searchFilters.start_datum),
             end_datum: formatToDateTimeLocalString(searchFilters.end_datum),
         };
 
-        // Navigate to results page with search filter
+        // Navigiere zur Ergebnisseite mit Suchfiltern
         navigate('/vehicle-results', {
             state: {
                 searchFilter: searchFilterForNavigation,
@@ -86,6 +117,9 @@ export default function VehicleSearch() {
         });
     };
 
+    /**
+     * Setzt das Suchformular zurück
+     */
     const handleResetSearchForm = () => {
         setSearchFilters(initialSearchFilters);
         setPageError('');
@@ -130,10 +164,10 @@ export default function VehicleSearch() {
                             </Typography>
                         </Box>
 
-                        {/* Form */}
+                        {/* Formular-Bereich */}
                         <Box sx={{ p: 4 }}>
                             <Box component="form" onSubmit={handleSearchSubmit}>
-                                {/* Date & Time Section */}
+                                {/* Datum & Zeit Sektion */}
                                 <Typography variant="h6" sx={{ 
                                     fontWeight: 700, 
                                     color: 'primary.main', 
