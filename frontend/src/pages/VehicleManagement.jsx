@@ -6,14 +6,13 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { getAllVehicles, updateVehicle, getVehicleLocation, getAllDamages, createDamage, updateDamage, deleteDamage } from '../api/api';
-import API from '../api/api';
+import { getAllVehicles, updateVehicle, getVehicleLocation, getAllDamages, createDamage, updateDamage, deleteDamage, deleteVehicle, createModell, createVehicle } from '../api/api';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import {
     Container, Grid, Typography, TextField, Button, Switch, FormControlLabel, CircularProgress, Box,
     Dialog, DialogTitle, DialogContent, DialogActions, IconButton, MenuItem, Select, InputLabel, FormControl,
-    Card, CardContent, CardActions, Avatar, Accordion, AccordionSummary, AccordionDetails, List, ListItem, ListItemText, ListItemSecondaryAction
+    Card, Avatar, Accordion, AccordionSummary, AccordionDetails, List, ListItem, ListItemText, ListItemSecondaryAction
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -220,7 +219,7 @@ export default function VehicleManagement() {
     const handleDelete = async (id) => {
         if (!window.confirm(t('vehicleManagement.deleteConfirmation'))) return;
         try {
-            await API.delete(`/fahrzeug/${id}`);
+            await deleteVehicle(id);
             setVehicles(vehicles => vehicles.filter(v => v.FahrzeugID !== id));
         } catch {
             window.alert(t('vehicleManagement.errorDeleting'));
@@ -281,11 +280,11 @@ export default function VehicleManagement() {
                 Stundenpreis: Number(newVehicle.Stundenpreis),
                 Kofferraumvolumen: Number(newVehicle.Kofferraumvolumen)
             };
-            const modellRes = await API.post('/modell/', modellPayload);
+            const modellRes = await createModell(modellPayload);
             const modellId = modellRes.data.id;
 
             // 2. Fahrzeug anlegen
-            await API.post('/fahrzeug/', {
+            await createVehicle({
                 ModellID: modellId,
                 Kennzeichen: newVehicle.Kennzeichen,
                 Reperaturzustand: newVehicle.Reperaturzustand,

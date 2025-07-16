@@ -12,7 +12,7 @@ Verwaltet CRUD-Operationen für Fahrzeuge, Filterung und Standortabfragen.
 """
 
 # Blueprint für Fahrzeugoperationen
-bp = Blueprint("fahrzeug", __name__, url_prefix="/fahrzeug")
+bp = Blueprint("fahrzeug", __name__)
 
 @bp.route("", methods=["GET"])
 def list_fahrzeuge():

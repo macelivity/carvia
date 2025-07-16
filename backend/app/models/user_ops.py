@@ -54,13 +54,6 @@ class UserOps:
         return [dict(row) for row in result]
 
     @staticmethod
-    def get_all_not_approved_users():
-        """Alle nicht akzeptierten Nutzer abrufen"""
-        db = get_db()
-        result = db.execute("SELECT * FROM Nutzer WHERE Angenommen = 0").fetchall()
-        return [dict(row) for row in result]
-
-    @staticmethod
     def check_password(hashed_password, plain_password):
         """Passwort gegen Hash prüfen"""
         return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
@@ -138,20 +131,20 @@ class UserOps:
         return True
 
     @staticmethod
-    def licensecheck(user_id, license_data):
+    def licencecheck(user_id, license_data):
         """Setzt den Führerscheincheck für einen Nutzer auf gültig"""
         db = get_db()
         with db:
-            db.execute("UPDATE Nutzer SET licensecheck_valid = 1 WHERE UserID = ?", (user_id,))
+            db.execute("UPDATE Nutzer SET licencecheck_valid = 1 WHERE UserID = ?", (user_id,))
             db.commit()
         return True
 
     @staticmethod
-    def credidworthycheck(user_id, name, bic, iban):
+    def creditworthycheck(user_id, name, bic, iban):
         """Setzt den Bonitätscheck für einen Nutzer auf gültig"""
         db = get_db()
         with db:
-            db.execute("UPDATE Nutzer SET credidworthycheck_valid = 1 WHERE UserID = ?", (user_id,))
+            db.execute("UPDATE Nutzer SET creditworthycheck_valid = 1 WHERE UserID = ?", (user_id,))
             db.commit()
         return True
 

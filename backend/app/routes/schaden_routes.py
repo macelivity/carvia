@@ -8,7 +8,7 @@ Schaden-Routes für das Carsharing-System.
 Verwaltet die Dokumentation und Nachverfolgung von Fahrzeugschäden.
 """
 
-bp = Blueprint("schaden", __name__, url_prefix="/schaden")
+bp = Blueprint("schaden", __name__)
 
 @bp.route("/", methods=["GET"])
 @jwt_required()

@@ -18,6 +18,10 @@ from .routes.rolle_routes import bp as rolle_bp
 from .routes.tarif_routes import bp as tarif_bp
 from .routes.rechnung_routes import bp as rechnung_bp
 from .routes.user_routes import bp as user_bp
+from .routes.account_applications_routes import bp as account_applications_bp
+
+
+FRONTEND_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), '../frontend_build'))
 
 
 def create_app():
@@ -25,8 +29,8 @@ def create_app():
     Factory-Funktion zur Erstellung der Flask-Anwendung.
     Konfiguriert alle notwendigen Komponenten für das Carsharing-Backend.
     """
-    app = Flask(__name__)
-    
+    app = Flask(__name__, static_folder=FRONTEND_DIRECTORY, static_url_path="/")
+
     # CORS-Konfiguration für Frontend-Zugriff
     CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "*"}})
 
@@ -77,24 +81,15 @@ def create_app():
     def missing_token_callback(error):
         return jsonify({"msg": "Authorization token is required"}), 401
     
-    # Allgemeine Fehlerbehandlung
-    @app.errorhandler(404)
-    def not_found_error(error):
-        return jsonify({"error": "Not found"}), 404
 
-    @app.errorhandler(Exception)
-    def handle_exception(e):
-        logging.exception("Unhandled exception occurred")
-        return jsonify({"error": "Internal server error"}), 500
-    
-    # Health check endpoint for Docker
-    @app.route("/")
-    def health_check():
-        return jsonify({
-            "message": "Carvia Backend API is running",
-            "status": "healthy",
-            "api_base": "/api"
-        })
+    @app.route("/", strict_slashes=False, methods=['GET'])
+    def index():
+        return app.send_static_file('index.html')
+
+    @app.errorhandler(404)
+    def frontend_proxy(path):
+        logging.debug("Proxying to frontend...")
+        return app.send_static_file('index.html')
     
     @app.route("/health")
     def health():
@@ -115,15 +110,16 @@ def create_app():
 
     # Alle Route-Blueprints registrieren
     api.register_blueprint(auth_bp)  # Auth-Routes ohne Prefix
-    api.register_blueprint(schaden_bp, url_prefix="/schaden")
-    api.register_blueprint(fahrzeug_bp, url_prefix="/fahrzeug")
-    api.register_blueprint(modell_bp, url_prefix="/modell")
+    api.register_blueprint(schaden_bp, url_prefix="/damages")
+    api.register_blueprint(fahrzeug_bp, url_prefix="/cars")
+    api.register_blueprint(modell_bp, url_prefix="/models")
     api.register_blueprint(geodatum_bp, url_prefix="/geodatum")
-    api.register_blueprint(rolle_bp, url_prefix="/rolle")
-    api.register_blueprint(tarif_bp, url_prefix="/tarif")
-    api.register_blueprint(rechnung_bp, url_prefix="/rechnung")
-    api.register_blueprint(reservierung_bp, url_prefix="/reservierung")
-    api.register_blueprint(user_bp, url_prefix="/user")
+    api.register_blueprint(rolle_bp, url_prefix="/roles")
+    api.register_blueprint(tarif_bp, url_prefix="/tariffs")
+    api.register_blueprint(rechnung_bp, url_prefix="/invoices")
+    api.register_blueprint(reservierung_bp, url_prefix="/reservations")
+    api.register_blueprint(user_bp, url_prefix="/accounts")
+    api.register_blueprint(account_applications_bp, url_prefix="/account-applications")
 
     # API-Blueprint mit Hauptanwendung registrieren
     app.register_blueprint(api, url_prefix="/api")

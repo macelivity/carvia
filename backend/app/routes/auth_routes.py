@@ -8,61 +8,7 @@ Authentifizierungs-Routes für das Carsharing-System.
 Verwaltet Benutzerregistrierung, Login, Profilaktualisierung und JWT-Token-Management.
 """
 
-bp = Blueprint("auth", __name__, url_prefix="/auth")
-
-@bp.route("/register", methods=["POST"])
-@jwt_required(optional=True)
-def register():
-    """Registriert einen neuen Nutzer mit Validierung der Pflichtfelder"""
-    data = request.get_json()
-    
-    # Pflichtfelder validieren
-    required_fields = ['email', 'username', 'password', 'vorname', 'nachname', 
-                      'geburtsdatum', 'iban', 'bic', 'plz', 'ort', 'strasse', 'hausnummer']
-    for field in required_fields:
-        if not data.get(field):
-            return jsonify({"msg": f"Missing required field: {field}"}), 400
-
-    email = data.get("email")
-    username = data.get("username")
-    password = data.get("password")
-    angenommen = data.get("angenommen", False)
-    
-    # Nur Mitarbeiter und Admins können Benutzer direkt genehmigen
-    jwt_identity = get_jwt_identity()
-    if not jwt_identity or not UserOps.is_authorized(int(jwt_identity), ["Mitarbeiter", "Admin"]):
-        angenommen = False
-    
-    # Prüfen ob Benutzername bereits existiert
-    if UserOps.username_exists(username):
-        return jsonify({"msg": "Username already exists"}), 400
-    
-    # Passwort-Stärke validieren (grundlegende Validierung)
-    if len(password) < 6:
-        return jsonify({"msg": "Password must be at least 6 characters long"}), 400
-    
-    user_id = UserOps.create_user(
-        username=username,
-        password=password,
-        rolle_id=data.get("rolle_id", 1),
-        vorname=data.get("vorname"),
-        nachname=data.get("nachname"),
-        email=email,
-        geburtsdatum=data.get("geburtsdatum"),
-        fuehrerschein=data.get("fuehrerschein"),
-        iban=data.get("iban"),
-        bic=data.get("bic"),
-        hausnummer=data.get("hausnummer", ""),
-        plz=data.get("plz", ""),
-        ort=data.get("ort", ""),
-        strasse=data.get("strasse", ""),
-        angenommen=angenommen
-    )
-    
-    return jsonify({
-        "msg": "User created successfully", 
-        "user_id": user_id
-    }), 201
+bp = Blueprint("auth", __name__)
 
 @bp.route("/login", methods=["POST"])
 def login():
@@ -110,63 +56,7 @@ def login():
         }
     }), 200
 
-@bp.route("/users", methods=["GET"])
-@jwt_required()
-def get_all_users():
-    """Gibt eine Liste aller Nutzer zurück"""
-    if not UserOps.is_authorized(int(get_jwt_identity()), ["Mitarbeiter", "Admin"]):
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    try:
-        users = UserOps.get_all_users()
-        
-        # Entferne sensible Informationen für die Ausgabe
-        user_list = []
-        for user in users:
-            user_data = user.copy()
-            user_data.pop("PasswordHash", None)  # Passwort-Hash entfernen
-            user_list.append(user_data)
-            
-        return jsonify(user_list), 200
-    except Exception as e:
-        return jsonify({"msg": "Error retrieving users", "error": str(e)}), 500
-
-@bp.route("/users/not-approved", methods=["GET"])
-@jwt_required()
-def get_all_not_approved_users():
-    """Gibt eine Liste aller nicht akzeptierten Nutzer zurück"""
-
-    if not UserOps.is_authorized(int(get_jwt_identity()), ["Mitarbeiter"]):
-        return jsonify({"msg": "Unauthorized"}), 403
-        
-    try:
-        users = UserOps.get_all_not_approved_users()
-        
-        # Entferne sensible Informationen und bereite die Ausgabe vor
-        user_list = []
-        for user in users:
-            user_data = user.copy()
-            user_data.pop("PasswordHash", None)  # Passwort-Hash entfernen
-            user_list.append(user_data)
-            
-        return jsonify(user_list), 200
-    except Exception as e:
-        return jsonify({"msg": "Error retrieving not approved users", "error": str(e)}), 500
-    
-@bp.route("/users/<int:user_id>/approve", methods=["PUT"])
-@jwt_required()
-def approve_user(user_id):
-    """Genehmigt einen Nutzer"""
-    if not UserOps.is_authorized(int(get_jwt_identity()), ["Mitarbeiter"]):
-        return jsonify({"msg": "Unauthorized"}), 403
-
-    try:
-        UserOps.approve_user(user_id)
-        return jsonify({"msg": "User approved successfully"}), 200
-    except Exception as e:
-        return jsonify({"msg": "Error approving user", "error": str(e)}), 500
-
-@bp.route("/refresh", methods=["POST"])
+@bp.route("/auth/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh():
     """Erneuert den Access Token mit einem Refresh Token"""
@@ -177,7 +67,7 @@ def refresh():
     )
     return jsonify({"access_token": new_token}), 200
 
-@bp.route("/profile", methods=["GET"])
+@bp.route("/auth/profile", methods=["GET"])
 @jwt_required()
 def get_profile():
     """Gibt das Profil des aktuell authentifizierten Nutzers zurück"""
@@ -193,7 +83,7 @@ def get_profile():
     
     return jsonify({"user": user_data}), 200
 
-@bp.route("/profile", methods=["PUT"])
+@bp.route("/auth/profile", methods=["PUT"])
 @jwt_required()
 def update_profile():
     """Aktualisiert das Profil des aktuell authentifizierten Nutzers"""
@@ -213,7 +103,7 @@ def update_profile():
     except Exception as e:
         return jsonify({"msg": "Error updating profile", "error": str(e)}), 500
 
-@bp.route("/change-password", methods=["PUT"])
+@bp.route("/auth/change-password", methods=["PUT"])
 @jwt_required()
 def change_password():
     """Ändert das Passwort des aktuell authentifizierten Nutzers"""

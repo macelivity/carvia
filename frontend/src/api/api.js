@@ -14,58 +14,62 @@ API.interceptors.request.use((config) => {
     return config;
 });
 
-export const login = (data) => API.post('/auth/login', data);
-export const register = (data) => API.post('/auth/register', data);
+export const login = (data) => API.post('/login', data);
+export const register = (data) => API.post('/account-applications', data);
 export const getProfile = () => API.get('/auth/profile');
+export const putProfile = (data) => API.put("/auth/profile", data);
+export const changePassword = (data) => API.put('/auth/change-password', data);
 
 // Die Backend-Logout-Route existiert aktuell nicht in auth_routes.py.
 // JWT-Logout ist primär clientseitig (Token entfernen).
 // export const logout = () => API.post('/auth/logout'); 
 
-export const getReservations = () => API.get('/reservierung/');
-export const getUserReservations = (userId) => API.get(`/reservierung/user/${userId}`);
-export const createReservation = (data) => API.post('/reservierung/', data);
-export const getRechnung = (rechnungId) => API.get(`/rechnung/${rechnungId}`);
-export const getRechnungByReservierungsId = (reservierungsId) => API.get(`/reservierung/${reservierungsId}/rechnung`);
+export const getReservations = () => API.get('/reservations/');
+export const getUserReservations = (userId) => API.get(`/reservations/user/${userId}`);
+export const createReservation = (data) => API.post('/reservations/', data);
+export const getRechnung = (rechnungId) => API.get(`/invoices/${rechnungId}`);
+export const getRechnungByReservierungsId = (reservierungsId) => API.get(`/reservations/${reservierungsId}/invoices`);
 
 // Price calculation endpoints
-export const calculateReservationPrice = (data) => API.post('/reservierung/calculate-price', data);
-export const getReservationData = (fahrzeugId) => API.post('/reservierung/reservation-data', { FahrzeugID: fahrzeugId });
+export const calculateReservationPrice = (data) => API.post('/reservations/calculate-price', data);
+export const getReservationData = (fahrzeugId) => API.post('/reservations/reservation-data', { FahrzeugID: fahrzeugId });
 
 // Rechnung management endpoints  
-export const createRechnungFromReservation = (data) => API.post('/rechnung/from-reservation', data);
+export const createRechnungFromReservation = (data) => API.post('/invoices/from-reservation', data);
 
-export const getAllVehicles = () => API.get('/fahrzeug?detailed=true');
-export const getFilteredVehicles = (params) => API.get(`/fahrzeug/filter?${params.toString()}`);
-export const getVehicleLocation = (vehicle_id, date) => API.get(`/fahrzeug/${vehicle_id}/location${date ? `?date=${date}` : ''}`);
-export const getVehicleById = (fahrzeugId) => API.get(`/fahrzeug/${fahrzeugId}`);
-export const updateVehicle = (fahrzeugId, data) => API.put(`/fahrzeug/${fahrzeugId}`, data);
+export const getAllVehicles = () => API.get('/cars?detailed=true');
+export const getFilteredVehicles = (params) => API.get(`/cars/filter?${params.toString()}`);
+export const getVehicleLocation = (vehicle_id, date) => API.get(`/cars/${vehicle_id}/location${date ? `?date=${date}` : ''}`);
+export const getVehicleById = (fahrzeugId) => API.get(`/cars/${fahrzeugId}`);
+export const createVehicle = (data) => API.post('/cars/', data);
+export const updateVehicle = (fahrzeugId, data) => API.put(`/cars/${fahrzeugId}`, data);
+export const deleteVehicle = (fahrzeugId) => API.delete(`/cars/${fahrzeugId}`);
 
-export const getModellById = (modellId) => API.get(`/modell/${modellId}`);
+export const getModellById = (modellId) => API.get(`/models/${modellId}`);
+export const createModell = (data) => API.post('/models/', data);
 
-export const getTarife = () => API.get('/tarif/');
+export const getTarife = () => API.get('/tariffs/');
 
-export const reservieren = (data) => API.post('/reservierung/', data);
+export const reservieren = (data) => API.post('/reservations/', data);
 
 // Damage management endpoints
-export const getAllDamages = () => API.get('/schaden/');
-export const getDamageById = (schadenId) => API.get(`/schaden/${schadenId}`);
-export const createDamage = (data) => API.post('/schaden/', data);
-export const updateDamage = (schadenId, data) => API.put(`/schaden/${schadenId}`, data);
-export const deleteDamage = (schadenId) => API.delete(`/schaden/${schadenId}`);
+export const getAllDamages = () => API.get('/damages/');
+export const getDamageById = (schadenId) => API.get(`/damages/${schadenId}`);
+export const createDamage = (data) => API.post('/damages/', data);
+export const updateDamage = (schadenId, data) => API.put(`/damages/${schadenId}`, data);
+export const deleteDamage = (schadenId) => API.delete(`/damages/${schadenId}`);
 
 // User application management endpoints
-export const getPendingApplications = () => API.get('/user/pending_applications');
-export const updateApplicationStatus = (user_id, accepted) => API.post('/user/application_status', { user_id, accepted });
+export const getPendingApplications = () => API.get('/account-applications');
+export const updateApplicationStatus = (user_id, accepted) => API.put(`/account-applications/${user_id}`, { accepted });
+export const checkCreditworthiness = (data) => API.post('/accounts/creditworthycheck', data);
 
 // User search and management endpoints
-export const searchUsers = (vorname, nachname) => API.get(`/user/search?vorname=${vorname}&nachname=${nachname}`);
-export const getUserReservationsByUserId = (userId) => API.get(`/user/${userId}/reservations`);
-export const updateReservation = (reservationId, data) => API.put(`/reservierung/${reservationId}`, data);
-export const deleteReservation = (reservationId) => API.delete(`/reservierung/${reservationId}`);
-export const getFilteredVehiclesForReservation = (params) => API.get(`/fahrzeug/filter?${params.toString()}`);
-
-export default API;
+export const searchUsers = (vorname, nachname) => API.get(`/accounts/search?vorname=${vorname}&nachname=${nachname}`);
+export const getUserReservationsByUserId = (userId) => API.get(`/accounts/${userId}/reservations`);
+export const updateReservation = (reservationId, data) => API.put(`/reservations/${reservationId}`, data);
+export const deleteReservation = (reservationId) => API.delete(`/reservations/${reservationId}`);
+export const getFilteredVehiclesForReservation = (params) => API.get(`/cars/filter?${params.toString()}`);
 
 
 /**

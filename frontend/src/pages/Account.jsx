@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useTranslation } from 'react-i18next';
 import {
   Container, Typography, Card, CardContent, Button, TextField, Box, Grid,
   Alert, Dialog, DialogTitle, DialogContent, DialogActions, Avatar, 
   Table, TableBody, TableCell, TableRow, CircularProgress, Paper
 } from '@mui/material';
-import PersonIcon from '@mui/icons-material/Person';
 import EditIcon from '@mui/icons-material/Edit';
 import LockIcon from '@mui/icons-material/Lock';
 import SaveIcon from '@mui/icons-material/Save';
+import { getProfile } from "../api/api";
 
 /**
  * Account Komponente - Benutzerprofil-Verwaltung
@@ -48,11 +47,7 @@ export default function Account() {
    */
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
-    axios.get("/api/auth/profile", {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
+    getProfile()
       .then(res => {
         setProfile(res.data.user);
         setForm({
@@ -87,11 +82,7 @@ export default function Account() {
     setSuccessMsg("");
     const token = localStorage.getItem("accessToken");
     try {
-      await axios.put("/api/auth/profile", form, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      await putProfile(form)
       setProfile({ ...profile, ...form });
       setEdit(false);
       setSuccessMsg(t('account.profileUpdateSuccess'));
@@ -134,13 +125,9 @@ export default function Account() {
     
     const token = localStorage.getItem("accessToken");
     try {
-      await axios.put("/api/auth/change-password", {
+      await changePassword({
         current_password: pwForm.current_password,
         new_password: pwForm.new_password
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
       });
       setPwMsg(t('account.passwordChangeSuccess'));
       setPwForm({

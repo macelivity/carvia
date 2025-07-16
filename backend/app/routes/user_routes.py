@@ -8,7 +8,7 @@ Benutzer-Routes für das Carsharing-System.
 Verwaltet Benutzersuche, Reservierungshistorie und Benutzerverwaltung.
 """
 
-bp = Blueprint("user", __name__, url_prefix="/user")
+bp = Blueprint("user", __name__)
 
 @bp.route("/search", methods=["GET"])
 @jwt_required()
@@ -44,7 +44,7 @@ def get_user_reservations(user_id):
     reservierungen = ReservierungOps.get_by_user_id(user_id)
     return jsonify(reservierungen)
 
-@bp.route("/users", methods=["GET"])
+@bp.route("/", methods=["GET"])
 @jwt_required()
 def get_all_users():
     
@@ -80,8 +80,8 @@ def identity_check():
     result = UserOps.identitycheck(user_id, None, None)
     return jsonify({"success": result})
 
-@bp.route("/licensecheck", methods=["POST"])
-def license_check():
+@bp.route("/licencecheck", methods=["POST"])
+def licence_check():
 
     if 'file' not in request.files:
         return jsonify({"success": False, "error": "No file uploaded"}), 400
@@ -95,11 +95,11 @@ def license_check():
     if not file.filename.lower().endswith((".png", ".jpg", ".jpeg")):
         return jsonify({"success": False, "error": "Invalid file type"}), 415
     
-    result = UserOps.licensecheck(user_id, None)
+    result = UserOps.licencecheck(user_id, None)
     return jsonify({"success": result})
 
-@bp.route("/credidworthycheck", methods=["POST"])
-def credidworthy_check():
+@bp.route("/creditworthycheck", methods=["POST"])
+def creditworthy_check():
 
     data = request.json
     user_id = data.get("user_id")
@@ -107,34 +107,6 @@ def credidworthy_check():
     bic = data.get("bic")
     iban = data.get("iban")
 
-    result = UserOps.credidworthycheck(user_id, name, bic, iban)
+    result = UserOps.creditworthycheck(user_id, name, bic, iban)
 
     return jsonify({"success": result})
-
-
-@bp.route("/pending_applications", methods=["GET"])
-@jwt_required()
-def get_pending_applications():
-
-    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
-        return jsonify({"error": "Zugriff verweigert"}), 403
-
-    users = UserOps.get_pending_applications()
-    for user in users:
-        user.pop("PasswordHash", None)
-    return jsonify(users)
-
-@bp.route("/application_status", methods=["POST"])
-@jwt_required()
-def set_application_status():
-
-    if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
-        return jsonify({"error": "Zugriff verweigert"}), 403
-
-    data = request.json
-    user_id = data.get("user_id")
-    accepted = data.get("accepted")
-
-    UserOps.set_application_status(user_id, accepted)
-
-    return jsonify({"success": True})

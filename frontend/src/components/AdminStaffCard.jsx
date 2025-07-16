@@ -102,9 +102,6 @@ export default function AdminStaffCard({ user }) {
                         <Button
                             variant="contained"
                             startIcon={<PersonIcon />}
-                            onClick={() => {
-                                // Platzhalter - noch keine Funktionalität implementiert
-                            }}
                             sx={{
                                 fontWeight: 700,
                                 borderRadius: 3,

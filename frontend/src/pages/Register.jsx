@@ -9,12 +9,12 @@ import {
   Container, Paper, Typography, Button, TextField, Stepper, Step, StepLabel, Box, LinearProgress, Alert, Fade, Collapse
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { register } from '../api/api';
+import { checkCreditworthiness, register } from '../api/api';
 
 // Registrierungsschritte definieren
 const steps = [
   'register.steps.account',
-  'register.steps.personal', 
+  'register.steps.personal',
   'register.steps.address',
   'register.steps.billing',
   'register.steps.verification'
@@ -22,10 +22,10 @@ const steps = [
 
 // Upload-Felder für Dokumentenverifikation
 const uploadFields = [
-  { name: 'idFront', labelKey: 'register.uploads.idFront', endpoint: '/api/user/identitycheck' },
-  { name: 'idBack', labelKey: 'register.uploads.idBack', endpoint: '/api/user/identitycheck' },
-  { name: 'licenseFront', labelKey: 'register.uploads.licenseFront', endpoint: '/api/user/licensecheck' },
-  { name: 'licenseBack', labelKey: 'register.uploads.licenseBack', endpoint: '/api/user/licensecheck' }
+  { name: 'idFront', labelKey: 'register.uploads.idFront', endpoint: '/api/accounts/identitycheck' },
+  { name: 'idBack', labelKey: 'register.uploads.idBack', endpoint: '/api/accounts/identitycheck' },
+  { name: 'licenseFront', labelKey: 'register.uploads.licenseFront', endpoint: '/api/accounts/licencecheck' },
+  { name: 'licenseBack', labelKey: 'register.uploads.licenseBack', endpoint: '/api/accounts/licencecheck' }
 ];
 
 /**
@@ -35,10 +35,10 @@ const uploadFields = [
 export default function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  
+
   // Aktueller Schritt im Registrierungsprozess
   const [activeStep, setActiveStep] = useState(0);
-  
+
   // Formulardaten für alle Schritte
   const [form, setForm] = useState({
     email: '', username: '', password: '', passwordConfirm: '',
@@ -47,7 +47,7 @@ export default function Register() {
     iban: '', bic: '',
     idFront: null, idBack: null, licenseFront: null, licenseBack: null
   });
-  
+
   // Zustandsvariablen für UI-Feedback
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -89,7 +89,7 @@ export default function Register() {
    */
   const handleNext = async () => {
     setError('');
-    
+
     // Validierung für jeden Schritt durchführen
     if (activeStep === 0) {
       if (!form.email || !form.username || !form.password || !form.passwordConfirm) {
@@ -124,7 +124,7 @@ export default function Register() {
         }
       }
     }
-    
+
     // Weiter zum nächsten Schritt oder Registrierung abschließen
     if (activeStep < 4) {
       setActiveStep(s => s + 1);
@@ -137,7 +137,7 @@ export default function Register() {
    * Navigation zurück zum vorherigen Schritt
    */
   const handleBack = () => setActiveStep(s => Math.max(0, s - 1));
-  
+
   /**
    * Registrierung abbrechen und zur Startseite navigieren
    */
@@ -150,7 +150,7 @@ export default function Register() {
   const handleRegister = async () => {
     setLoading(true);
     setError('');
-    
+
     try {
       // 1. Benutzer registrieren
       const res = await register({
@@ -168,7 +168,7 @@ export default function Register() {
         hausnummer: form.hausnummer,
         fuehrerschein: ''
       });
-      
+
       if (!res || !res.data || (res.status !== 200 && res.status !== 201)) {
         // Spezifische Fehlermeldungen vom Backend behandeln
         if (res && res.data && res.data.msg) {
@@ -185,11 +185,11 @@ export default function Register() {
           throw new Error('Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.');
         }
       }
-      
+
       // 2. Benutzer-ID aus der Antwort extrahieren
       const user_id = res.data.user_id || res.data.id || res.data.UserID;
       if (!user_id) throw new Error('Benutzer-ID fehlt nach der Registrierung');
-      
+
       // 3. Dokumente mit Benutzer-ID hochladen
       for (const field of uploadFields) {
         if (form[field.name]) {
@@ -198,16 +198,16 @@ export default function Register() {
             const formData = new FormData();
             formData.append('file', form[field.name]);
             formData.append('user_id', user_id);
-            
+
             const xhr = new XMLHttpRequest();
             xhr.open('POST', endpoint, true);
-            
+
             xhr.upload.onprogress = (event) => {
               if (event.lengthComputable) {
                 setUploadProgress(p => ({ ...p, [field.name]: Math.round((event.loaded / event.total) * 100) }));
               }
             };
-            
+
             xhr.onload = () => {
               if (xhr.status === 200) {
                 setUploadSuccess(s => ({ ...s, [field.name]: true }));
@@ -219,13 +219,13 @@ export default function Register() {
                 reject();
               }
             };
-            
+
             xhr.onerror = () => {
               setError('Upload fehlgeschlagen. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
               setUploadProgress(p => ({ ...p, [field.name]: 0 }));
               reject();
             };
-            
+
             xhr.send(formData);
           });
         } else {
@@ -233,23 +233,19 @@ export default function Register() {
           return;
         }
       }
-      
+
       // 4. Bonitätsprüfung durchführen
-      const creditCheckResponse = await fetch('/api/user/credidworthycheck', {
-        method: 'POST',
-        body: JSON.stringify({ 
-          user_id, 
-          name: form.vorname + ' ' + form.nachname, 
-          bic: form.bic, 
-          iban: form.iban 
-        }),
-        headers: { 'Content-Type': 'application/json' }
+      const creditCheckResponse = await checkCreditworthiness({
+        user_id,
+        name: form.vorname + ' ' + form.nachname,
+        bic: form.bic,
+        iban: form.iban
       });
-      
+
       if (!creditCheckResponse.ok) {
         throw new Error('Bonitätsprüfung fehlgeschlagen. Bitte überprüfen Sie Ihre Bankdaten.');
       }
-      
+
       setSuccess(true);
     } catch (e) {
       // Verschiedene Fehlertypen behandeln und entsprechende Schritte anzeigen
@@ -279,14 +275,14 @@ export default function Register() {
         return (
           <Fade in>
             <Box>
-              <TextField 
-                label={t('register.fields.email')} 
-                name="email" 
-                value={form.email} 
-                onChange={handleChange} 
-                fullWidth 
+              <TextField
+                label={t('register.fields.email')}
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -294,14 +290,14 @@ export default function Register() {
                   }
                 }}
               />
-              <TextField 
-                label={t('register.fields.username')} 
-                name="username" 
-                value={form.username} 
-                onChange={handleChange} 
-                fullWidth 
+              <TextField
+                label={t('register.fields.username')}
+                name="username"
+                value={form.username}
+                onChange={handleChange}
+                fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -309,15 +305,15 @@ export default function Register() {
                   }
                 }}
               />
-              <TextField 
-                label={t('register.fields.password')} 
-                name="password" 
-                type="password" 
-                value={form.password} 
-                onChange={handleChange} 
-                fullWidth 
+              <TextField
+                label={t('register.fields.password')}
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+                fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -325,15 +321,15 @@ export default function Register() {
                   }
                 }}
               />
-              <TextField 
-                label={t('register.fields.confirmPassword')} 
-                name="passwordConfirm" 
-                type="password" 
-                value={form.passwordConfirm} 
-                onChange={handleChange} 
-                fullWidth 
+              <TextField
+                label={t('register.fields.confirmPassword')}
+                name="passwordConfirm"
+                type="password"
+                value={form.passwordConfirm}
+                onChange={handleChange}
+                fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -348,14 +344,14 @@ export default function Register() {
         return (
           <Fade in>
             <Box>
-              <TextField 
-                label={t('register.fields.firstName')} 
-                name="vorname" 
-                value={form.vorname} 
-                onChange={handleChange} 
-                fullWidth 
+              <TextField
+                label={t('register.fields.firstName')}
+                name="vorname"
+                value={form.vorname}
+                onChange={handleChange}
+                fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -363,14 +359,14 @@ export default function Register() {
                   }
                 }}
               />
-              <TextField 
-                label={t('register.fields.lastName')} 
-                name="nachname" 
-                value={form.nachname} 
-                onChange={handleChange} 
-                fullWidth 
+              <TextField
+                label={t('register.fields.lastName')}
+                name="nachname"
+                value={form.nachname}
+                onChange={handleChange}
+                fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -378,16 +374,16 @@ export default function Register() {
                   }
                 }}
               />
-              <TextField 
-                label={t('register.fields.birthdate')} 
-                name="geburtsdatum" 
-                type="date" 
-                value={form.geburtsdatum} 
-                onChange={handleChange} 
-                fullWidth 
-                margin="normal" 
+              <TextField
+                label={t('register.fields.birthdate')}
+                name="geburtsdatum"
+                type="date"
+                value={form.geburtsdatum}
+                onChange={handleChange}
+                fullWidth
+                margin="normal"
                 InputLabelProps={{ shrink: true }}
-                sx={{ 
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -402,14 +398,14 @@ export default function Register() {
         return (
           <Fade in>
             <Box>
-              <TextField 
-                label={t('register.fields.zipCode')} 
-                name="plz" 
-                value={form.plz} 
-                onChange={handleChange} 
-                fullWidth 
+              <TextField
+                label={t('register.fields.zipCode')}
+                name="plz"
+                value={form.plz}
+                onChange={handleChange}
+                fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -417,14 +413,14 @@ export default function Register() {
                   }
                 }}
               />
-              <TextField 
-                label={t('register.fields.city')} 
-                name="ort" 
-                value={form.ort} 
-                onChange={handleChange} 
-                fullWidth 
+              <TextField
+                label={t('register.fields.city')}
+                name="ort"
+                value={form.ort}
+                onChange={handleChange}
+                fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -432,14 +428,14 @@ export default function Register() {
                   }
                 }}
               />
-              <TextField 
-                label={t('register.fields.street')} 
-                name="strasse" 
-                value={form.strasse} 
-                onChange={handleChange} 
-                fullWidth 
+              <TextField
+                label={t('register.fields.street')}
+                name="strasse"
+                value={form.strasse}
+                onChange={handleChange}
+                fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -447,14 +443,14 @@ export default function Register() {
                   }
                 }}
               />
-              <TextField 
-                label={t('register.fields.houseNumber')} 
-                name="hausnummer" 
-                value={form.hausnummer} 
-                onChange={handleChange} 
-                fullWidth 
+              <TextField
+                label={t('register.fields.houseNumber')}
+                name="hausnummer"
+                value={form.hausnummer}
+                onChange={handleChange}
+                fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -469,14 +465,14 @@ export default function Register() {
         return (
           <Fade in>
             <Box>
-              <TextField 
-                label={t('register.fields.iban')} 
-                name="iban" 
-                value={form.iban} 
-                onChange={handleChange} 
-                fullWidth 
+              <TextField
+                label={t('register.fields.iban')}
+                name="iban"
+                value={form.iban}
+                onChange={handleChange}
+                fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -484,14 +480,14 @@ export default function Register() {
                   }
                 }}
               />
-              <TextField 
-                label={t('register.fields.bic')} 
-                name="bic" 
-                value={form.bic} 
-                onChange={handleChange} 
-                fullWidth 
+              <TextField
+                label={t('register.fields.bic')}
+                name="bic"
+                value={form.bic}
+                onChange={handleChange}
+                fullWidth
                 margin="normal"
-                sx={{ 
+                sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
@@ -517,8 +513,8 @@ export default function Register() {
                       color={uploadSuccess[field.name] ? 'success' : 'primary'}
                       component="label"
                       fullWidth
-                      sx={{ 
-                        mr: 2, 
+                      sx={{
+                        mr: 2,
                         transition: 'all 0.3s',
                         borderRadius: 2,
                         py: 1.5,
@@ -533,8 +529,8 @@ export default function Register() {
                     </Button>
                     <Box sx={{ width: 60, ml: 1 }}>
                       <Collapse in={uploadProgress[field.name] > 0 && !uploadSuccess[field.name]}>
-                        <LinearProgress 
-                          variant="determinate" 
+                        <LinearProgress
+                          variant="determinate"
                           value={uploadProgress[field.name]}
                           sx={{
                             borderRadius: 2,
@@ -563,7 +559,7 @@ export default function Register() {
 
   if (success) {
     return (
-      <Box sx={{ 
+      <Box sx={{
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         minHeight: '100vh',
         display: 'flex',
@@ -597,8 +593,8 @@ export default function Register() {
                 <Typography variant="h6" sx={{ mb: 3, color: 'text.primary' }}>
                   {t('register.success.title')}
                 </Typography>
-                <Button 
-                  variant="contained" 
+                <Button
+                  variant="contained"
                   onClick={() => navigate('/login')}
                   sx={{
                     py: 1.5,
@@ -625,7 +621,7 @@ export default function Register() {
   }
 
   return (
-    <Box sx={{ 
+    <Box sx={{
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       minHeight: '100vh',
       display: 'flex',
@@ -658,11 +654,11 @@ export default function Register() {
             <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3 }}>
               {steps.map(labelKey => <Step key={labelKey}><StepLabel>{t(labelKey)}</StepLabel></Step>)}
             </Stepper>
-            <LinearProgress 
-              variant="determinate" 
-              value={((activeStep + 1) / steps.length) * 100} 
-              sx={{ 
-                mb: 3, 
+            <LinearProgress
+              variant="determinate"
+              value={((activeStep + 1) / steps.length) * 100}
+              sx={{
+                mb: 3,
                 borderRadius: 2,
                 height: 8,
                 backgroundColor: 'rgba(25, 118, 210, 0.1)',
@@ -670,7 +666,7 @@ export default function Register() {
                   background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
                   borderRadius: 2
                 }
-              }} 
+              }}
             />
             {error && (
               <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
@@ -679,11 +675,11 @@ export default function Register() {
             )}
             {renderStep()}
           </Box>
-          
+
           <Box sx={{ p: 3, pt: 0, display: 'flex', justifyContent: 'space-between', gap: 2 }}>
-            <Button 
-              onClick={handleCancel} 
-              color="error" 
+            <Button
+              onClick={handleCancel}
+              color="error"
               disabled={loading}
               sx={{ borderRadius: 2 }}
             >
@@ -691,17 +687,17 @@ export default function Register() {
             </Button>
             <Box sx={{ display: 'flex', gap: 1 }}>
               {activeStep > 0 && (
-                <Button 
-                  onClick={handleBack} 
+                <Button
+                  onClick={handleBack}
                   disabled={loading}
                   sx={{ borderRadius: 2 }}
                 >
                   {t('register.buttons.back')}
                 </Button>
               )}
-              <Button 
-                onClick={handleNext} 
-                variant="contained" 
+              <Button
+                onClick={handleNext}
+                variant="contained"
                 disabled={loading}
                 sx={{
                   py: 1.5,
@@ -721,15 +717,15 @@ export default function Register() {
               </Button>
             </Box>
           </Box>
-          
+
           {loading && (
-            <LinearProgress 
-              sx={{ 
+            <LinearProgress
+              sx={{
                 width: '100%',
                 '& .MuiLinearProgress-bar': {
                   background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)'
                 }
-              }} 
+              }}
             />
           )}
         </Paper>

@@ -8,7 +8,7 @@ Modell-Routes für das Carsharing-System.
 Verwaltet CRUD-Operationen für Fahrzeugmodelle und deren Spezifikationen.
 """
 
-bp = Blueprint("modell", __name__, url_prefix="/modell")
+bp = Blueprint("modell", __name__)
 
 @bp.route("/", methods=["GET"])
 def list_modells():

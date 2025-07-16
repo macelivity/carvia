@@ -8,7 +8,7 @@ Tarif-Routes für das Carsharing-System.
 Verwaltet Preismodelle und Tarifstrukturen für die Fahrzeugmiete.
 """
 
-bp = Blueprint("tarif", __name__, url_prefix="/tarif")
+bp = Blueprint("tarif", __name__)
 
 @bp.route("/", methods=["GET"])
 @jwt_required()

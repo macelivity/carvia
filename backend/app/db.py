@@ -10,6 +10,7 @@ Version: 1.0
 
 import os
 import sqlite3
+import bcrypt
 import json
 from flask import g
 
@@ -175,6 +176,7 @@ class DatabaseSchema:
             cls._create_rechnung_table(db)
             cls._create_reservierung_table(db)
             cls._insert_default_roles(db)
+            cls.insert_admin_user(db)
             db.commit()
     
     @classmethod
@@ -276,8 +278,8 @@ class DatabaseSchema:
             Strasse TEXT NOT NULL,
             Angenommen {cls.BOOLEAN_TYPE} NOT NULL DEFAULT 0,
             identitycheck_valid {cls.BOOLEAN_TYPE} NOT NULL DEFAULT 0,
-            licensecheck_valid {cls.BOOLEAN_TYPE} NOT NULL DEFAULT 0,
-            credidworthycheck_valid {cls.BOOLEAN_TYPE} NOT NULL DEFAULT 0,
+            licencecheck_valid {cls.BOOLEAN_TYPE} NOT NULL DEFAULT 0,
+            creditworthycheck_valid {cls.BOOLEAN_TYPE} NOT NULL DEFAULT 0,
             FOREIGN KEY (RolleID) REFERENCES Rolle(RolleID)
         );
         """)
@@ -351,6 +353,59 @@ class DatabaseSchema:
                 "INSERT OR IGNORE INTO Rolle (RolleID, Bedeutung) VALUES (?, ?)",
                 (role_id, bedeutung)
             )
+
+
+    @classmethod
+    def insert_admin_user(cls, db):
+        """Fügt einen Standard-Admin-Benutzer ein, falls nicht vorhanden"""
+        admin_user = {
+            "RolleID": 2,  # Admin Rolle
+            "Username": "admin",
+            "PasswordHash": bcrypt.hashpw("admin".encode("utf-8"), bcrypt.gensalt()).decode("utf-8"),
+            "Vorname": "Admin",
+            "Nachname": "User",
+            "Email": "admin@example.com",
+            "Geburtsdatum": "1990-01-01",
+            "BeitrittsDatum": "2020-01-01",
+            "Führerschein": None,
+            "IBAN": None,
+            "BIC": None,
+            "HausNummer": "1",
+            "PLZ": "12345",
+            "Ort": "Stadt",
+            "Strasse": "Strasse",
+            "Angenommen": 1
+        }
+
+        db.execute(
+            "INSERT OR IGNORE INTO Nutzer (RolleID, Username, PasswordHash, Vorname, Nachname, Email, Geburtsdatum, BeitrittsDatum, Führerschein, IBAN, BIC, HausNummer, PLZ, Ort, Strasse, Angenommen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            tuple(admin_user.values())
+        )
+
+        """Fügt einen Mitarbeiter-Benutzer ein, falls nicht vorhanden"""
+        employee_user = {
+            "RolleID": 3,  # Mitarbeiter Rolle
+            "Username": "mitarbeiter",
+            "PasswordHash": bcrypt.hashpw("123456".encode("utf-8"), bcrypt.gensalt()).decode("utf-8"),
+            "Vorname": "Mitarbeiter",
+            "Nachname": "User",
+            "Email": "mitarbeiter@example.com",
+            "Geburtsdatum": "1990-01-01",
+            "BeitrittsDatum": "2020-01-01",
+            "Führerschein": None,
+            "IBAN": None,
+            "BIC": None,
+            "HausNummer": "1",
+            "PLZ": "12345",
+            "Ort": "Stadt",
+            "Strasse": "Strasse",
+            "Angenommen": 1
+        }
+
+        db.execute(
+            "INSERT OR IGNORE INTO Nutzer (RolleID, Username, PasswordHash, Vorname, Nachname, Email, Geburtsdatum, BeitrittsDatum, Führerschein, IBAN, BIC, HausNummer, PLZ, Ort, Strasse, Angenommen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            tuple(employee_user.values())
+        )
 
 
 def init_db():

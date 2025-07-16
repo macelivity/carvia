@@ -8,7 +8,7 @@ Geodaten-Routes für das Carsharing-System.
 Verwaltet GPS-Standortdaten der Fahrzeuge für Tracking und Navigation.
 """
 
-bp = Blueprint("geodatum", __name__, url_prefix="/geodatum")
+bp = Blueprint("geodatum", __name__)
 
 @bp.route("/", methods=["GET"])
 @jwt_required()
