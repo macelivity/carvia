@@ -15,6 +15,7 @@ API.interceptors.request.use((config) => {
 });
 
 export const login = (data) => API.post('/login', data);
+export const logout = () => delete API.defaults.headers.common['Authorization'];
 export const register = (data) => API.post('/account-applications', data);
 export const getProfile = () => API.get('/auth/profile');
 export const putProfile = (data) => API.put("/auth/profile", data);

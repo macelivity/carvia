@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import API, { getProfile } from '../api/api';
+import { getProfile, logout as apilogout } from '../api/api';
 
 /**
  * Authentifizierungskontext für die Carsharing-Anwendung
@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        delete API.defaults.headers.common['Authorization'];
+        apilogout();
         setUser({ username: "Gast", role: "guest", userID: null });
     };
 
