@@ -1,0 +1,53 @@
+{
+    "python.testing.pytestArgs": [
+        "backend"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "folder-color.pathColors": [
+        {
+            "folderPath": "carvia\\backend\\app\\models\\",
+            "color": "foldercolorizer.color_ff0000"
+        },
+        {
+            "folderPath": "carvia\\backend\\app\\routes\\",
+            "color": "foldercolorizer.color_33cc33"
+        },
+        {
+            "folderPath": "carvia\\backend\\app\\app.py\\",
+            "color": "foldercolorizer.color_cc6600"
+        },
+        {
+            "folderPath": "carvia\\backend\\app\\config.py\\",
+            "color": "foldercolorizer.color_cc6600"
+        },
+        {
+            "folderPath": "carvia\\backend\\app\\db.py\\",
+            "color": "foldercolorizer.color_cc6600"
+        },
+        {
+            "folderPath": "carvia\\backend\\app\\extensions.py\\",
+            "color": "foldercolorizer.color_cc6600"
+        },
+        {
+            "folderPath": "carvia\\backend\\app\\__init__.py\\",
+            "color": "foldercolorizer.color_cc6600"
+        },
+        {
+            "folderPath": "carvia\\backend\\test\\",
+            "color": "foldercolorizer.color_ff00cc"
+        },
+        {
+            "folderPath": "carvia\\backend\\movies.db\\",
+            "color": "foldercolorizer.color_ccff00"
+        },
+        {
+            "folderPath": "carvia\\backend\\requirements.txt\\",
+            "color": "foldercolorizer.color_ccff00"
+        },
+        {
+            "folderPath": "carvia\\backend\\run.py\\",
+            "color": "foldercolorizer.color_ccff00"
+        }
+    ]
+}

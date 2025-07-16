@@ -1,0 +1,22 @@
+FROM node:18-alpine
+
+# Install wget for health checks
+RUN apk add --no-cache wget
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy frontend source
+COPY frontend/ .
+
+# Expose port 5173 (Vite default)
+EXPOSE 5173
+
+# Command to run the application
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
