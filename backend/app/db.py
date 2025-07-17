@@ -386,7 +386,7 @@ class DatabaseSchema:
         employee_user = {
             "RolleID": 3,  # Mitarbeiter Rolle
             "Username": "mitarbeiter",
-            "PasswordHash": bcrypt.hashpw("123456".encode("utf-8"), bcrypt.gensalt()).decode("utf-8"),
+            "PasswordHash": bcrypt.hashpw("mitarbeiter".encode("utf-8"), bcrypt.gensalt()).decode("utf-8"),
             "Vorname": "Mitarbeiter",
             "Nachname": "User",
             "Email": "mitarbeiter@example.com",
@@ -405,6 +405,58 @@ class DatabaseSchema:
         db.execute(
             "INSERT OR IGNORE INTO Nutzer (RolleID, Username, PasswordHash, Vorname, Nachname, Email, Geburtsdatum, BeitrittsDatum, Führerschein, IBAN, BIC, HausNummer, PLZ, Ort, Strasse, Angenommen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             tuple(employee_user.values())
+        )
+
+
+        """Fügt einen Vehicle-Benutzer ein, falls nicht vorhanden"""
+        vehicle_user = {
+            "RolleID": 4,  # Vehicle Rolle
+            "Username": "vehicle",
+            "PasswordHash": bcrypt.hashpw("vehicle".encode("utf-8"), bcrypt.gensalt()).decode("utf-8"),
+            "Vorname": "Vehicle",
+            "Nachname": "User",
+            "Email": "vehicle@example.com",
+            "Geburtsdatum": "1990-01-01",
+            "BeitrittsDatum": "2020-01-01",
+            "Führerschein": None,
+            "IBAN": None,
+            "BIC": None,
+            "HausNummer": "1",
+            "PLZ": "12345",
+            "Ort": "Stadt",
+            "Strasse": "Strasse",
+            "Angenommen": 1
+        }
+
+        db.execute(
+            "INSERT OR IGNORE INTO Nutzer (RolleID, Username, PasswordHash, Vorname, Nachname, Email, Geburtsdatum, BeitrittsDatum, Führerschein, IBAN, BIC, HausNummer, PLZ, Ort, Strasse, Angenommen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            tuple(vehicle_user.values())
+        )
+
+
+        """Fügt einen Mitglied-Benutzer ein, falls nicht vorhanden"""
+        member_user = {
+            "RolleID": 1,  # Mitglied Rolle
+            "Username": "mitglied",
+            "PasswordHash": bcrypt.hashpw("mitglied".encode("utf-8"), bcrypt.gensalt()).decode("utf-8"),
+            "Vorname": "Mitglied",
+            "Nachname": "User",
+            "Email": "mitglied@example.com",
+            "Geburtsdatum": "1990-01-01",
+            "BeitrittsDatum": "2020-01-01",
+            "Führerschein": None,
+            "IBAN": None,
+            "BIC": None,
+            "HausNummer": "1",
+            "PLZ": "12345",
+            "Ort": "Stadt",
+            "Strasse": "Strasse",
+            "Angenommen": 1
+        }
+
+        db.execute(
+            "INSERT OR IGNORE INTO Nutzer (RolleID, Username, PasswordHash, Vorname, Nachname, Email, Geburtsdatum, BeitrittsDatum, Führerschein, IBAN, BIC, HausNummer, PLZ, Ort, Strasse, Angenommen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            tuple(member_user.values())
         )
 
 

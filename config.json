@@ -1,5 +1,5 @@
 {
-  "ENV_TYPE": "Dev",
+  "ENV_TYPE": "Test",
   "LOG_LEVEL": "DEBUG",
   "SECRET_KEY": "carvia-super-secret-key",
   "JWT_SECRET_KEY": "super-secret-cavia-project-key-this-has-to-be-changed-later",

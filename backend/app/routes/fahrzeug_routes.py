@@ -77,7 +77,7 @@ def create_fahrzeug():
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     data = request.get_json()
-    fahrzeug_id = FahrzeugOps.create(data["ModellID"], data["Kennzeichen"], data["Reperaturzustand"], data["Aktiv"],
+    fahrzeug_id = FahrzeugOps.create(data["ModellID"], data["Kennzeichen"], data["Reparaturzustand"], data["Aktiv"],
                      data["Reifen"], data["Kilometerstand"], data["LetzterService"], data["TuevDatum"],
                      data["ErstzulassungsDatum"])
     return jsonify({"msg": f"Fahrzeug with ID {fahrzeug_id} added", "id": fahrzeug_id}), 201
@@ -141,6 +141,8 @@ def get_fahrzeug_location(fahrzeug_id):
 
     user_id = int(jwt_identity)
     role_entry = RolleOps.get_by_user_id(user_id)
+    if not role_entry:
+        return jsonify({"error": "Zugriff verweigert"}), 401
     user_role = role_entry['Bedeutung']
 
     fahrzeug = FahrzeugOps.get_by_id(fahrzeug_id)

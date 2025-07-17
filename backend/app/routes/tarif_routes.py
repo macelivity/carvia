@@ -11,7 +11,6 @@ Verwaltet Preismodelle und Tarifstrukturen für die Fahrzeugmiete.
 bp = Blueprint("tarif", __name__)
 
 @bp.route("/", methods=["GET"])
-@jwt_required()
 def list_tarife():
     tarife = TarifOps.get_all()
     return jsonify(tarife)
@@ -27,7 +26,6 @@ def create_tarif():
     return jsonify({"msg": f"Tarif with ID {tarif_id} added", "id": tarif_id}), 201
 
 @bp.route("/<int:tarif_id>", methods=["GET"])
-@jwt_required()
 def get_tarif(tarif_id):
     tarif = TarifOps.get_by_id(tarif_id)
     if not tarif:

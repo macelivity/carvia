@@ -1,4 +1,5 @@
 # --- SQL to create test users (Mitglied, Mitarbeiter, Admin, Vehicle) ---
+import random
 import sqlite3
 import bcrypt
 
@@ -48,77 +49,88 @@ def create_test_users():
 # EXTENDED ENDPOINT OVERVIEW (all endpoints from all route files)
 endpoint_overview = [
     # USER ENDPOINTS
-    {"endpoint": "/user/search", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Search users by first and/or last name."},
-    {"endpoint": "/user/<int:user_id>/reservations", "method": "GET", "role": "Mitglied, Mitarbeiter", "expected_result": "200", "desc": "Get all reservations for a user (Mitarbeiter) Get own reservations (Mitglied)"},
-    {"endpoint": "/user/users", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all users"},
-    {"endpoint": "/user/identitycheck", "method": "POST", "role": "Alle", "expected_result": "200", "desc": "Upload identity check file for user."},
-    {"endpoint": "/user/licensecheck", "method": "POST", "role": "Alle", "expected_result": "200", "desc": "Upload license check file for user."},
-    {"endpoint": "/user/credidworthycheck", "method": "POST", "role": "Alle", "expected_result": "200", "desc": "Check creditworthiness for user."},
-    {"endpoint": "/user/pending_applications", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all users with pending applications."},
-    {"endpoint": "/user/application_status", "method": "POST", "role": "Mitarbeiter", "expected_result": "200", "desc": "Set application status for user."},
+    {"endpoint": "/accounts/search", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Search users by first and/or last name."},
+    {"endpoint": "/accounts/<int:user_id>/reservations", "method": "GET", "role": "Mitglied, Mitarbeiter", "expected_result": "200", "desc": "Get all reservations for a user (Mitarbeiter) Get own reservations (Mitglied)"},
+    {"endpoint": "/accounts/", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all users"},
+    {"endpoint": "/accounts/identitycheck", "method": "POST", "role": "Alle", "expected_result": "200", "desc": "Upload identity check file for user."},
+    {"endpoint": "/accounts/licencecheck", "method": "POST", "role": "Alle", "expected_result": "200", "desc": "Upload license check file for user."},
+    {"endpoint": "/accounts/creditworthycheck", "method": "POST", "role": "Alle", "expected_result": "200", "desc": "Check creditworthiness for user."},
+    
+    # ACCOUNT APPLICATIONS ENDPOINTS  
+    {"endpoint": "/account-applications/", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all users with pending applications."},
+    {"endpoint": "/account-applications/", "method": "POST", "role": "Alle", "expected_result": "201", "desc": "Register a new user."},
+    {"endpoint": "/account-applications/<int:user_id>", "method": "PUT", "role": "Mitarbeiter", "expected_result": "200", "desc": "Set application status for user."},
+    
     # TARIF ENDPOINTS
-    {"endpoint": "/tarif/", "method": "GET", "role": "Mitarbeiter, Admin, Mitglied", "expected_result": "200", "desc": "Get all tariffs."},
-    {"endpoint": "/tarif/", "method": "POST", "role": "Mitarbeiter", "expected_result": "201", "desc": "Create a new tariff."},
-    {"endpoint": "/tarif/<int:tarif_id>", "method": "GET", "role": "Mitarbeiter, Admin, Mitglied", "expected_result": "200", "desc": "Get tariff by ID."},
-    {"endpoint": "/tarif/<int:tarif_id>", "method": "PUT", "role": "Mitarbeiter", "expected_result": "200", "desc": "Update tariff by ID."},
-    {"endpoint": "/tarif/<int:tarif_id>", "method": "DELETE", "role": "Mitarbeiter", "expected_result": "204", "desc": "Delete tariff by ID."},
+    {"endpoint": "/tariffs/", "method": "GET", "role": "Alle", "expected_result": "200", "desc": "Get all tariffs."},
+    {"endpoint": "/tariffs/", "method": "POST", "role": "Mitarbeiter", "expected_result": "201", "desc": "Create a new tariff."},
+    {"endpoint": "/tariffs/<int:tarif_id>", "method": "GET", "role": "Alle", "expected_result": "200", "desc": "Get tariff by ID."},
+    {"endpoint": "/tariffs/<int:tarif_id>", "method": "PUT", "role": "Mitarbeiter", "expected_result": "200", "desc": "Update tariff by ID."},
+    {"endpoint": "/tariffs/<int:tarif_id>", "method": "DELETE", "role": "Mitarbeiter", "expected_result": "204", "desc": "Delete tariff by ID."},
+    
     # SCHADEN ENDPOINTS
-    {"endpoint": "/schaden/", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all damages."},
-    {"endpoint": "/schaden/", "method": "POST", "role": "Mitarbeiter, Vehicle", "expected_result": "201", "desc": "Create a new damage entry."},
-    {"endpoint": "/schaden/<int:schaden_id>", "method": "GET", "role": "Mitarbeiter, Vehicle", "expected_result": "200", "desc": "Get damage by ID."},
-    {"endpoint": "/schaden/<int:schaden_id>", "method": "PUT", "role": "Mitarbeiter, Vehicle", "expected_result": "200", "desc": "Update damage by ID."},
-    {"endpoint": "/schaden/<int:schaden_id>", "method": "DELETE", "role": "Mitarbeiter, Vehicle", "expected_result": "204", "desc": "Delete damage by ID."},
+    {"endpoint": "/damages/", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all damages."},
+    {"endpoint": "/damages/", "method": "POST", "role": "Mitarbeiter, Vehicle", "expected_result": "201", "desc": "Create a new damage entry."},
+    {"endpoint": "/damages/<int:schaden_id>", "method": "GET", "role": "Mitarbeiter, Vehicle", "expected_result": "200", "desc": "Get damage by ID."},
+    {"endpoint": "/damages/<int:schaden_id>", "method": "PUT", "role": "Mitarbeiter, Vehicle", "expected_result": "200", "desc": "Update damage by ID."},
+    {"endpoint": "/damages/<int:schaden_id>", "method": "DELETE", "role": "Mitarbeiter, Vehicle", "expected_result": "204", "desc": "Delete damage by ID."},
+    
     # ROLLE ENDPOINTS
-    {"endpoint": "/rolle/", "method": "GET", "role": "Mitarbeiter, Admin, Vehicle", "expected_result": "200", "desc": "Get all roles."},
-    {"endpoint": "/rolle/", "method": "POST", "role": "Admin", "expected_result": "201", "desc": "Create a new role."},
-    {"endpoint": "/rolle/<int:rolle_id>", "method": "GET", "role": "Mitarbeiter, Admin, Vehicle", "expected_result": "200", "desc": "Get role by ID."},
-    {"endpoint": "/rolle/<int:rolle_id>", "method": "PUT", "role": "Admin", "expected_result": "200", "desc": "Update role by ID."},
-    {"endpoint": "/rolle/<int:rolle_id>", "method": "DELETE", "role": "Admin", "expected_result": "204", "desc": "Delete role by ID."},
+    {"endpoint": "/roles/", "method": "GET", "role": "Mitarbeiter, Admin, Vehicle", "expected_result": "200", "desc": "Get all roles."},
+    {"endpoint": "/roles/", "method": "POST", "role": "Admin", "expected_result": "201", "desc": "Create a new role."},
+    {"endpoint": "/roles/<int:rolle_id>", "method": "GET", "role": "Mitarbeiter, Admin, Vehicle", "expected_result": "200", "desc": "Get role by ID."},
+    {"endpoint": "/roles/<int:rolle_id>", "method": "PUT", "role": "Admin", "expected_result": "200", "desc": "Update role by ID."},
+    {"endpoint": "/roles/<int:rolle_id>", "method": "DELETE", "role": "Admin", "expected_result": "204", "desc": "Delete role by ID."},
+    
     # RESERVIERUNG ENDPOINTS
-    {"endpoint": "/reservierung/", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all reservations."},
-    {"endpoint": "/reservierung/", "method": "POST", "role": "Mitglied, Mitarbeiter", "expected_result": "201", "desc": "Create a new reservation."},
-    {"endpoint": "/reservierung/<int:reservierung_id>", "method": "GET", "role": "Mitglied, Mitarbeiter", "expected_result": "200", "desc": "Get reservation by ID."},
-    {"endpoint": "/reservierung/<int:reservierung_id>", "method": "PUT", "role": "Mitglied, Mitarbeiter", "expected_result": "200", "desc": "Update reservation by ID."},
-    {"endpoint": "/reservierung/<int:reservierung_id>", "method": "DELETE", "role": "Mitglied, Mitarbeiter", "expected_result": "204", "desc": "Delete reservation by ID."},
-    {"endpoint": "/reservierung/user/<int:user_id>", "method": "GET", "role": "Mitglied, Mitarbeiter", "expected_result": "200", "desc": "Get all reservations for a user."},
-    {"endpoint": "/reservierung/fahrzeug/<int:fahrzeug_id>", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all reservations for a vehicle."},
-    {"endpoint": "/reservierung/<int:reservierung_id>/rechnung", "method": "GET", "role": "Mitglied, Mitarbeiter", "expected_result": "200", "desc": "Get invoice for reservation."},
+    {"endpoint": "/reservations/", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all reservations."},
+    {"endpoint": "/reservations/", "method": "POST", "role": "Mitglied, Mitarbeiter", "expected_result": "201", "desc": "Create a new reservation."},
+    {"endpoint": "/reservations/<int:reservierung_id>", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get reservation by ID."},
+    {"endpoint": "/reservations/<int:reservierung_id>", "method": "PUT", "role": "Mitarbeiter", "expected_result": "200", "desc": "Update reservation by ID."},
+    {"endpoint": "/reservations/<int:reservierung_id>", "method": "DELETE", "role": "Mitarbeiter", "expected_result": "204", "desc": "Delete reservation by ID."},
+    {"endpoint": "/reservations/account/<int:user_id>", "method": "GET", "role": "Mitglied, Mitarbeiter", "expected_result": "200", "desc": "Get all reservations for a user."},
+    {"endpoint": "/reservations/car/<int:fahrzeug_id>", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all reservations for a vehicle."},
+    {"endpoint": "/reservations/<int:reservierung_id>/invoice", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get invoice for reservation."},
+    {"endpoint": "/reservations/calculate-price", "method": "POST", "role": "Mitglied, Mitarbeiter", "expected_result": "200", "desc": "Calculate reservation price."},
+    {"endpoint": "/reservations/reservation-data", "method": "POST", "role": "Mitglied, Mitarbeiter", "expected_result": "200", "desc": "Get reservation data for vehicle."},
+    
     # RECHNUNG ENDPOINTS
-    {"endpoint": "/rechnung/", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all invoices."},
-    {"endpoint": "/rechnung/", "method": "POST", "role": "Mitarbeiter", "expected_result": "201", "desc": "Create a new invoice."},
-    {"endpoint": "/rechnung/<int:rechnung_id>", "method": "GET", "role": "User, Mitarbeiter", "expected_result": "200", "desc": "Get invoice by ID."},
-    {"endpoint": "/rechnung/<int:rechnung_id>", "method": "PUT", "role": "Mitarbeiter", "expected_result": "200", "desc": "Update invoice by ID."},
-    {"endpoint": "/rechnung/<int:rechnung_id>", "method": "DELETE", "role": "Mitarbeiter", "expected_result": "204", "desc": "Delete invoice by ID."},
+    {"endpoint": "/invoices/", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all invoices."},
+    {"endpoint": "/invoices/", "method": "POST", "role": "Mitarbeiter", "expected_result": "201", "desc": "Create a new invoice."},
+    {"endpoint": "/invoices/<int:rechnung_id>", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get invoice by ID."},
+    {"endpoint": "/invoices/<int:rechnung_id>", "method": "PUT", "role": "Mitarbeiter", "expected_result": "200", "desc": "Update invoice by ID."},
+    {"endpoint": "/invoices/<int:rechnung_id>", "method": "DELETE", "role": "Mitarbeiter", "expected_result": "204", "desc": "Delete invoice by ID."},
+    {"endpoint": "/invoices/from-reservation", "method": "POST", "role": "Mitarbeiter", "expected_result": "201", "desc": "Create invoice from reservation."},
+    
     # MODELL ENDPOINTS
-    {"endpoint": "/modell/", "method": "GET", "role": "Alle", "expected_result": "200", "desc": "Get all models."},
-    {"endpoint": "/modell/", "method": "POST", "role": "Mitarbeiter", "expected_result": "201", "desc": "Create a new model."},
-    {"endpoint": "/modell/<int:modell_id>", "method": "GET", "role": "Alle", "expected_result": "200", "desc": "Get model by ID."},
-    {"endpoint": "/modell/<int:modell_id>", "method": "PUT", "role": "Mitarbeiter", "expected_result": "200", "desc": "Update model by ID."},
-    {"endpoint": "/modell/<int:modell_id>", "method": "DELETE", "role": "Mitarbeiter", "expected_result": "204", "desc": "Delete model by ID."},
+    {"endpoint": "/models/", "method": "GET", "role": "Alle", "expected_result": "200", "desc": "Get all models."},
+    {"endpoint": "/models/", "method": "POST", "role": "Mitarbeiter", "expected_result": "201", "desc": "Create a new model."},
+    {"endpoint": "/models/<int:modell_id>", "method": "GET", "role": "Alle", "expected_result": "200", "desc": "Get model by ID."},
+    {"endpoint": "/models/<int:modell_id>", "method": "PUT", "role": "Mitarbeiter", "expected_result": "200", "desc": "Update model by ID."},
+    {"endpoint": "/models/<int:modell_id>", "method": "DELETE", "role": "Mitarbeiter", "expected_result": "204", "desc": "Delete model by ID."},
+    
     # GEODATUM ENDPOINTS
-    {"endpoint": "/geodatum/", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all geodata."},
-    {"endpoint": "/geodatum/", "method": "POST", "role": "Vehicle", "expected_result": "201", "desc": "Create a new geodatum entry."},
-    {"endpoint": "/geodatum/<int:geodatum_id>", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get geodatum by ID."},
-    {"endpoint": "/geodatum/<int:geodatum_id>", "method": "PUT", "role": "Mitarbeiter, Vehicle", "expected_result": "200", "desc": "Update geodatum by ID."},
-    {"endpoint": "/geodatum/<int:geodatum_id>", "method": "DELETE", "role": "Mitarbeiter, Vehicle", "expected_result": "204", "desc": "Delete geodatum by ID."},
+    {"endpoint": "/geodata/", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all geodata."},
+    {"endpoint": "/geodata/", "method": "POST", "role": "Vehicle", "expected_result": "201", "desc": "Create a new geodatum entry."},
+    {"endpoint": "/geodata/<int:geodatum_id>", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get geodatum by ID."},
+    {"endpoint": "/geodata/<int:geodatum_id>", "method": "PUT", "role": "Mitarbeiter, Vehicle", "expected_result": "200", "desc": "Update geodatum by ID."},
+    {"endpoint": "/geodata/<int:geodatum_id>", "method": "DELETE", "role": "Mitarbeiter, Vehicle", "expected_result": "204", "desc": "Delete geodatum by ID."},
+    
     # FAHRZEUG ENDPOINTS
-    {"endpoint": "/fahrzeug/", "method": "GET", "role": "Alle", "expected_result": "200", "desc": "Get all vehicles."},
-    {"endpoint": "/fahrzeug/filter", "method": "GET", "role": "Alle", "expected_result": "200", "desc": "Get filtered vehicles."},
-    {"endpoint": "/fahrzeug/", "method": "POST", "role": "Mitarbeiter", "expected_result": "201", "desc": "Create a new vehicle."},
-    {"endpoint": "/fahrzeug/<int:fahrzeug_id>", "method": "GET", "role": "Alle", "expected_result": "200", "desc": "Get vehicle by ID."},
-    {"endpoint": "/fahrzeug/<int:fahrzeug_id>", "method": "PUT", "role": "Mitarbeiter", "expected_result": "200", "desc": "Update vehicle by ID."},
-    {"endpoint": "/fahrzeug/<int:fahrzeug_id>", "method": "DELETE", "role": "Mitarbeiter", "expected_result": "204", "desc": "Delete vehicle by ID."},
-    {"endpoint": "/fahrzeug/<int:fahrzeug_id>/location", "method": "GET", "role": "Mitglied, Mitarbeiter, Admin", "expected_result": "200", "desc": "Get vehicle location by ID."},
+    {"endpoint": "/cars", "method": "GET", "role": "Alle", "expected_result": "200", "desc": "Get all vehicles."},
+    {"endpoint": "/cars/filter", "method": "GET", "role": "Alle", "expected_result": "200", "desc": "Get filtered vehicles."},
+    {"endpoint": "/cars/", "method": "POST", "role": "Mitarbeiter", "expected_result": "201", "desc": "Create a new vehicle."},
+    {"endpoint": "/cars/<int:fahrzeug_id>", "method": "GET", "role": "Alle", "expected_result": "200", "desc": "Get vehicle by ID."},
+    {"endpoint": "/cars/<int:fahrzeug_id>", "method": "PUT", "role": "Mitarbeiter", "expected_result": "200", "desc": "Update vehicle by ID."},
+    {"endpoint": "/cars/<int:fahrzeug_id>", "method": "DELETE", "role": "Mitarbeiter", "expected_result": "204", "desc": "Delete vehicle by ID."},
+    {"endpoint": "/cars/<int:fahrzeug_id>/location", "method": "GET", "role": "Mitglied, Mitarbeiter, Admin", "expected_result": "200", "desc": "Get vehicle location by ID."},
+    
     # AUTH ENDPOINTS
-    {"endpoint": "/auth/register", "method": "POST", "role": "Alle", "expected_result": "201", "desc": "Register a new user."},
-    {"endpoint": "/auth/login", "method": "POST", "role": "Alle", "expected_result": "200", "desc": "Login and get JWT token."},
-    {"endpoint": "/auth/users", "method": "GET", "role": "Mitarbeiter, Admin", "expected_result": "200", "desc": "Get all users (protected)."},
-    {"endpoint": "/auth/users/not-approved", "method": "GET", "role": "Mitarbeiter", "expected_result": "200", "desc": "Get all not approved users."},
-    {"endpoint": "/auth/users/<int:user_id>/approve", "method": "PUT", "role": "Mitarbeiter", "expected_result": "200", "desc": "Approve user by ID."},
-    {"endpoint": "/auth/refresh", "method": "POST", "role": "Alle (with refresh token)", "expected_result": "200", "desc": "Refresh JWT token."},
-    {"endpoint": "/auth/profile", "method": "GET", "role": "Authenticated", "expected_result": "200", "desc": "Get current user profile."},
-    {"endpoint": "/auth/profile", "method": "PUT", "role": "Authenticated", "expected_result": "200", "desc": "Update current user profile."},
-    {"endpoint": "/auth/change-password", "method": "PUT", "role": "Authenticated", "expected_result": "200", "desc": "Change password for current user."},
+    {"endpoint": "/login", "method": "POST", "role": "Alle", "expected_result": "200", "desc": "Login and get JWT token."},
+    {"endpoint": "/auth/refresh", "method": "POST", "role": "Alle", "expected_result": "200", "desc": "Refresh JWT token."},
+    {"endpoint": "/auth/profile", "method": "GET", "role": "Mitglied, Mitarbeiter, Admin", "expected_result": "200", "desc": "Get current user profile."},
+    {"endpoint": "/auth/profile", "method": "PUT", "role": "Mitglied, Mitarbeiter, Admin", "expected_result": "200", "desc": "Update current user profile."},
+    {"endpoint": "/auth/change-password", "method": "PUT", "role": "Mitglied, Mitarbeiter, Admin", "expected_result": "200", "desc": "Change password for current user."},
 ]
 
 import requests
@@ -133,19 +145,13 @@ USER_CREDENTIALS = {
     "vehicle": {"username": "vehicle", "password": "vehicle"},
 }
 
-def get_jwt_token(username, password):
-    resp = requests.post(f"{BASE_URL}/auth/login", json={"username": username, "password": password})
+def login(username, password):
+    resp = requests.post(f"{BASE_URL}/login", json={"username": username, "password": password})
     if resp.status_code == 200:
-        return resp.json()["access_token"]
+        return resp.json()
     return None
 
-def get_refresh_token(username, password):
-    resp = requests.post(f"{BASE_URL}/auth/login", json={"username": username, "password": password})
-    if resp.status_code == 200:
-        return resp.json().get("refresh_token")
-    return None
-
-def test_endpoint(endpoint_info, token=None, test_data=None):
+def test_endpoint(endpoint_info, token=None, user_id=None, test_data=None):
     """Test a single endpoint with appropriate authentication and data"""
     headers = {}
     if token:
@@ -153,7 +159,7 @@ def test_endpoint(endpoint_info, token=None, test_data=None):
     
     # Replace placeholders with test IDs
     url = endpoint_info["endpoint"]
-    url = url.replace("<int:user_id>", "1")
+    url = url.replace("<int:user_id>", str(user_id))
     url = url.replace("<int:fahrzeug_id>", "1") 
     url = url.replace("<int:reservierung_id>", "1")
     url = url.replace("<int:rechnung_id>", "1")
@@ -217,30 +223,30 @@ def test_endpoint(endpoint_info, token=None, test_data=None):
         print(f"Request failed for {full_url}: {e}")
         return None
 
-def get_test_data_for_endpoint(endpoint):
+def get_test_data_for_endpoint(endpoint, user_id):
     """Get appropriate test data for POST/PUT requests"""
     test_data = {}
     
-    if "/tarif" in endpoint:
+    if "/tariffs" in endpoint:
         test_data = {
-            "Name": "Test Tarif",
+            "Name": "Test Tarif" + str(random.randint(1, 1000000)),
             "Freikilometer": 100,
             "Versicherungsschutz": "Vollkasko",
             "Multiplikator": 1.2
         }
-    elif "/schaden" in endpoint:
+    elif "/damages" in endpoint:
         test_data = {
             "FahrzeugID": 1,
             "Beschreibung": "Test Schaden"
         }
-    elif "/rolle" in endpoint:
+    elif "/roles" in endpoint:
         test_data = {
-            "Bedeutung": "Test Rolle"
+            "Bedeutung": "Test Rolle" + str(random.randint(1, 1000000))
         }
-    elif "/reservierung" in endpoint:
+    elif "/reservations" in endpoint:
         test_data = {
             "FahrzeugID": 1,
-            "UserID": 1,
+            "UserID": user_id,
             "RechnungID": 1,
             "TarifID": 1,
             "StartDatum": "2025-07-15",
@@ -250,16 +256,16 @@ def get_test_data_for_endpoint(endpoint):
             "Rueckgabeort": "Test Ort",
             "RueckgabePlz": "12345"
         }
-    elif "/rechnung" in endpoint:
+    elif "/invoices" in endpoint:
         test_data = {
             "ReservierungID": 1,
-            "UserID": 1,
+            "UserID": user_id,
             "FahrzeugID": 1,
             "Preis": 99.99,
             "Bezahlt": False,
-            "Austellungsdatum": "2025-07-08"
+            "Ausstellungsdatum": "2025-07-08"
         }
-    elif "/modell" in endpoint:
+    elif "/models" in endpoint:
         test_data = {
             "ModellName": "Test Model",
             "Hersteller": "Test Manufacturer",
@@ -272,18 +278,18 @@ def get_test_data_for_endpoint(endpoint):
             "Kofferraumvolumen": 500,
             "Stundenpreis": 25.50
         }
-    elif "/geodatum" in endpoint:
+    elif "/geodata" in endpoint:
         test_data = {
             "FahrzeugID": 1,
             "Longitude": 11.5820,
             "Latitude": 48.1351,
             "Zeit": "2025-07-08T12:00:00"
         }
-    elif "/fahrzeug" in endpoint:
+    elif "/cars" in endpoint:
         test_data = {
-            "ModellID": 1,
+            "ModellID": 2,
             "Kennzeichen": "M-TEST-123",
-            "Reperaturzustand": "Gut",
+            "Reparaturzustand": "Gut",
             "Aktiv": True,
             "Reifen": "Sommerreifen",
             "Kilometerstand": 50000,
@@ -291,7 +297,12 @@ def get_test_data_for_endpoint(endpoint):
             "TuevDatum": "2026-07-01",
             "ErstzulassungsDatum": "2020-01-01"
         }
-    elif "/auth/register" in endpoint:
+    elif "/account-applications/<int:user_id>" in endpoint:
+        test_data = {
+            "user_id": 1,
+            "accepted": True
+        }
+    elif "/account-applications" in endpoint:
         test_data = {
             "username": "testuser",
             "password": "testpass123",
@@ -322,20 +333,13 @@ def get_test_data_for_endpoint(endpoint):
     elif "/user/identitycheck" in endpoint or "/user/licensecheck" in endpoint:
         # These endpoints use file uploads, handled in test_endpoint function
         test_data = None
-    elif "/user/credidworthycheck" in endpoint:
+    elif "/user/creditworthycheck" in endpoint:
         test_data = {
-            "user_id": 1,
+            "user_id": 2,
             "name": "Max Mustermann",
             "bic": "COBADEFFXXX",
             "iban": "DE89370400440532013000"
         }
-    elif "/user/application_status" in endpoint:
-        test_data = {
-            "user_id": 1,
-            "accepted": True
-        }
-    elif "/auth/users" in endpoint and "approve" in endpoint:
-        test_data = {}
     elif "/auth/refresh" in endpoint:
         test_data = {}
     
@@ -351,21 +355,13 @@ def should_role_have_access(endpoint_role_desc, role_name):
     if 'alle' in role_desc:
         return True
     
-    # Handle "Authenticated" - any logged in user
-    if 'authenticated' in role_desc:
-        return True
-    
     # Handle specific role mentions
     if role_name in role_desc:
         return True
     
-    # Handle "User" referring to "Mitglied"
-    if 'user' in role_desc and role_name == 'mitglied':
-        return True
-    
     return False
 
-def test_single_endpoint_role(endpoint_info, role_name, token, test_count):
+def test_single_endpoint_role(endpoint_info, role_name, token, user_id, test_count):
     """
     Test a single endpoint with a specific role and return detailed results
     """
@@ -375,17 +371,17 @@ def test_single_endpoint_role(endpoint_info, role_name, token, test_count):
     # Get test data for POST/PUT requests
     test_data = None
     if endpoint_info['method'] in ['POST', 'PUT']:
-        test_data = get_test_data_for_endpoint(endpoint_info['endpoint'])
+        test_data = get_test_data_for_endpoint(endpoint_info['endpoint'], user_id)
     
     # For endpoints that allow "Alle", we may test without token for some roles
     test_token = token
-    if 'alle' in endpoint_info['role'].lower() and role_name == 'mitglied':
-        test_token = None  # Test one role without token for public endpoints
+    if 'alle' in endpoint_info['role'].lower():
+        test_token = None
     
     # Make the request
-    response = test_endpoint(endpoint_info, test_token, test_data)
-    
-    if response:
+    response = test_endpoint(endpoint_info, test_token, user_id, test_data)
+
+    if response is not None:
         status = response.status_code
         
         # Determine if test passed based on authorization logic
@@ -416,7 +412,6 @@ def test_single_endpoint_role(endpoint_info, role_name, token, test_count):
                 test_passed = False
                 expected_behavior = f"DENIED (but got {status} instead of 403/401)"
         
-        # Color coding for display
         if test_passed:
             result_display = "✓ PASS"
             color = "\033[92m"  # Green
@@ -424,7 +419,7 @@ def test_single_endpoint_role(endpoint_info, role_name, token, test_count):
             result_display = "✗ FAIL"
             color = "\033[91m"  # Red
         
-        print(f"    [{test_count}] Role: {role_name.upper():<12} | {color}{result_display:<8}\033[0m | Status: {status:<3} | {expected_behavior}")
+        print(f"    [{test_count}] Role: {role_name.upper():<12} | {color}{result_display:<8}\033[0m\t| Status: {status:<3} | {expected_behavior}")
         
         # Show response for failures or interesting cases
         if not test_passed or status not in [200, 201, 204, 403, 401, 400, 404, 422]:
@@ -447,7 +442,7 @@ def test_single_endpoint_role(endpoint_info, role_name, token, test_count):
             'desc': endpoint_info['desc']
         }
     else:
-        print(f"    [{test_count}] Role: {role_name.upper():<12} | \033[91m✗ FAIL\033[0m     | ERROR | Request failed")
+        print(f"    [{test_count}] Role: {role_name.upper():<12} | \033[91m✗ FAIL\033[0m\t| ERROR | Request failed")
         return {
             'endpoint': endpoint_info['endpoint'],
             'method': endpoint_info['method'],
@@ -468,55 +463,57 @@ def test_all_endpoints():
     print("Testing each endpoint with 4 different roles to validate access control\n")
     
     # Get tokens for all user types
-    tokens = {}
-    print("🔑 Authenticating users...")
+    users = {}
+    print("Authenticating users...")
     for role, creds in USER_CREDENTIALS.items():
-        token = get_jwt_token(creds["username"], creds["password"])
-        if token:
-            tokens[role] = token
+        user_info = login(creds["username"], creds["password"])
+        if user_info:
+            users[role] = user_info
             print(f"   ✓ Successfully got token for {role}")
         else:
-            tokens[role] = None
+            users[role] = None
             print(f"   ✗ Failed to get token for {role}")
+            exit(1)
     
     total_endpoints = len(endpoint_overview)
     total_tests = total_endpoints * 4
-    print(f"\n🧪 Running {total_tests} authorization tests ({total_endpoints} endpoints × 4 roles)")
+    print(f"\nRunning {total_tests} authorization tests ({total_endpoints} endpoints × 4 roles)")
     print("=" * 80 + "\n")
     
     results = []
     test_count = 0
     
     for endpoint_idx, endpoint_info in enumerate(endpoint_overview, 1):
-        print(f"[{endpoint_idx}/{total_endpoints}] 🔍 Testing {endpoint_info['method']} {endpoint_info['endpoint']}")
-        print(f"    📋 Description: {endpoint_info['desc']}")
-        print(f"    🎭 Allowed Roles: {endpoint_info['role']}")
+        print(f"[{endpoint_idx}/{total_endpoints}] | Testing {endpoint_info['method']} {endpoint_info['endpoint']}")
+        print(f"    Description: {endpoint_info['desc']}")
+        print(f"    Allowed Roles: {endpoint_info['role']}")
         print()
         
         # Test with each role (4 tests per endpoint)
         for role_name in ['mitglied', 'mitarbeiter', 'admin', 'vehicle']:
             test_count += 1
-            token = tokens.get(role_name)
+            token = users.get(role_name)["access_token"]
+            user_id = users.get(role_name)["user"]["user_id"]
             
-            result = test_single_endpoint_role(endpoint_info, role_name, token, test_count)
+            result = test_single_endpoint_role(endpoint_info, role_name, token, user_id, test_count)
             results.append(result)
         
-        print()  # Empty line between endpoints
+        print()
     
     # Generate comprehensive summary
     passed = sum(1 for r in results if r['test_passed'])
     failed = len(results) - passed
     
     print("=" * 80)
-    print("🎯 COMPREHENSIVE AUTHORIZATION TEST SUMMARY")
+    print("COMPREHENSIVE AUTHORIZATION TEST SUMMARY")
     print("=" * 80)
-    print(f"📊 Total Tests Run: {len(results)}")
-    print(f"✅ Tests Passed: {passed}")
-    print(f"❌ Tests Failed: {failed}")
-    print(f"📈 Success Rate: {(passed/len(results))*100:.1f}%")
+    print(f"Total Tests Run: {len(results)}")
+    print(f"Tests Passed: {passed}")
+    print(f"Tests Failed: {failed}")
+    print(f"Success Rate: {(passed/len(results))*100:.1f}%")
     
     # Breakdown by role
-    print(f"\n🎭 BREAKDOWN BY ROLE")
+    print(f"\nBREAKDOWN BY ROLE")
     print("-" * 40)
     for role in ['mitglied', 'mitarbeiter', 'admin', 'vehicle']:
         role_results = [r for r in results if r['role_tested'] == role]
@@ -526,7 +523,7 @@ def test_all_endpoints():
         print(f"{role.upper():<12}: {role_passed:>2}/{len(role_results)} passed ({success_rate:>5.1f}%) | {role_failed} failed")
     
     # Breakdown by endpoint
-    print(f"\n🛡️ BREAKDOWN BY ENDPOINT")
+    print(f"\nBREAKDOWN BY ENDPOINT")
     print("-" * 60)
     for endpoint_info in endpoint_overview:
         endpoint_results = [r for r in results if 
@@ -572,7 +569,7 @@ def test_all_endpoints():
     print(f"\nPerfect Authorization: {perfect_count}/{total_endpoints} endpoints ({(perfect_count/total_endpoints)*100:.1f}%)")
     
     # Security assessment
-    print(f"\n🔐 SECURITY ASSESSMENT")
+    print(f"\nSECURITY ASSESSMENT")
     print("=" * 40)
     if failed == 0:
         print("EXCELLENT: All authorization rules are working correctly!")
@@ -635,8 +632,8 @@ Status Code 204 (No Content) is treated as a successful response for DELETE oper
     
     # Add endpoint breakdown
     summary_content += "## Endpoint Results\n\n"
-    summary_content += "| Status | Method | Endpoint | Passed | Success Rate |\n"
-    summary_content += "|--------|--------|----------|--------|-------------|\n"
+    summary_content += "| Status | Method | Endpoint                                         | Passed | Success Rate |\n"
+    summary_content += "|--------|--------|--------------------------------------------------|--------|--------------|\n"
     
     for endpoint_info in endpoint_overview:
         endpoint_results = [r for r in results if 
@@ -647,8 +644,8 @@ Status Code 204 (No Content) is treated as a successful response for DELETE oper
         success_rate = (endpoint_passed/len(endpoint_results))*100 if endpoint_results else 0
         
         status_icon = "✅" if endpoint_failed == 0 else "⚠️" if endpoint_failed <= 2 else "❌"
-        summary_content += f"| {status_icon} | {endpoint_info['method']} | {endpoint_info['endpoint']} | {endpoint_passed}/4 | {success_rate:.1f}% |\n"
-    
+        summary_content += f"| {status_icon:^5} | {endpoint_info['method']:<6} | {endpoint_info['endpoint']:<48} | {endpoint_passed:>4}/4 | {success_rate:.1f}% |\n"
+
     # Add failed tests details
     failed_tests = [r for r in results if not r['test_passed']]
     if failed_tests:
@@ -694,13 +691,13 @@ Status Code 204 (No Content) is treated as a successful response for DELETE oper
     
     # Add detailed test results
     summary_content += "\n## Detailed Test Results\n\n"
-    summary_content += "| Test # | Endpoint | Method | Role | Should Access | Status | Result | Expected Behavior |\n"
-    summary_content += "|--------|----------|--------|------|---------------|--------|--------|-----------------|\n"
+    summary_content += "| Test # | Endpoint                                         | Method | Role         | Should Access | Status | Result | Expected Behavior |\n"
+    summary_content += "|--------|--------------------------------------------------|--------|--------------|---------------|--------|--------|-------------------|\n"
     
     for i, result in enumerate(results, 1):
-        access_icon = "🔓" if result['should_have_access'] else "🔒"
+        access_icon = "Yes" if result['should_have_access'] else "No"
         result_icon = "✅" if result['test_passed'] else "❌"
-        summary_content += f"| {i} | {result['endpoint']} | {result['method']} | {result['role_tested'].upper()} | {access_icon} | {result['status_code']} | {result_icon} | {result['expected_behavior']} |\n"
+        summary_content += f"| {i:>6} | {result['endpoint']:<48} | {result['method']:<6} | {result['role_tested'].upper():<12} | {access_icon:<13} | {result['status_code']:^6} | {result_icon:^5} | {result['expected_behavior']} |\n"
     
     # Add footer
     summary_content += f"\n---\n*Report generated by CarVia API Test Suite on {timestamp}*\n"
@@ -711,10 +708,10 @@ Status Code 204 (No Content) is treated as a successful response for DELETE oper
     try:
         with open(filename, 'w', encoding='utf-8') as f:
             f.write(summary_content)
-        print(f"\n📄 Test summary file generated: {filename}")
+        print(f"\nTest summary file generated: {filename}")
         return filename
     except Exception as e:
-        print(f"\n❌ Error generating test summary file: {e}")
+        print(f"\nError generating test summary file: {e}")
         return None
 
 if __name__ == "__main__":
@@ -722,9 +719,9 @@ if __name__ == "__main__":
     print("=" * 50)
     
     # Create test users first
-    print("👥 Creating test users...")
+    print("Creating test users...")
     create_test_users()
-    print("✅ Test users setup complete!\n")
+    print("Test users setup complete!\n")
     
     # Run comprehensive authorization tests
     results = test_all_endpoints()
@@ -732,7 +729,7 @@ if __name__ == "__main__":
     # Generate test summary file
     summary_file = generate_test_summary_file(results)
     
-    print(f"\n🏁 Testing completed! Check the summary above for results.")
+    print(f"\nTesting completed! Check the summary above for results.")
     if summary_file:
-        print(f"📄 Detailed test summary saved to: {summary_file}")
+        print(f"Detailed test summary saved to: {summary_file}")
     print("=" * 80)

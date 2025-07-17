@@ -113,7 +113,7 @@ def create_app():
     api.register_blueprint(schaden_bp, url_prefix="/damages")
     api.register_blueprint(fahrzeug_bp, url_prefix="/cars")
     api.register_blueprint(modell_bp, url_prefix="/models")
-    api.register_blueprint(geodatum_bp, url_prefix="/geodatum")
+    api.register_blueprint(geodatum_bp, url_prefix="/geodata")
     api.register_blueprint(rolle_bp, url_prefix="/roles")
     api.register_blueprint(tarif_bp, url_prefix="/tariffs")
     api.register_blueprint(rechnung_bp, url_prefix="/invoices")

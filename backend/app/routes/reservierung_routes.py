@@ -103,10 +103,14 @@ def get_reservierung(reservierung_id):
 
     reservierung = ReservierungOps.get_by_id(reservierung_id)
     
+    if not reservierung:
+        if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
+            return jsonify({"error": "Zugriff verweigert"}), 403
+        else:
+            return jsonify({"error": "Not found"}), 404
+    
     if reservierung["UserID"] != int(get_jwt_identity()) and not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
-    if not reservierung:
-        return jsonify({"error": "Not found"}), 404
     return jsonify(reservierung)
 
 @bp.route("/<int:reservierung_id>", methods=["PUT"])
@@ -150,7 +154,7 @@ def delete_reservierung(reservierung_id):
     ReservierungOps.delete(reservierung_id)
     return jsonify({"msg": "Reservierung deleted"}), 204
 
-@bp.route("/user/<int:user_id>", methods=["GET"])
+@bp.route("/account/<int:user_id>", methods=["GET"])
 @jwt_required()
 def get_reservierungen_by_user(user_id):
     if not UserOps.is_authorized(get_jwt_identity(), ["Mitglied", "Mitarbeiter"]):
@@ -162,7 +166,7 @@ def get_reservierungen_by_user(user_id):
     reservierungen = ReservierungOps.get_by_user_id(user_id)
     return jsonify(reservierungen)
 
-@bp.route("/fahrzeug/<int:fahrzeug_id>", methods=["GET"])
+@bp.route("/car/<int:fahrzeug_id>", methods=["GET"])
 @jwt_required()
 def get_reservierungen_by_fahrzeug(fahrzeug_id):
     if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
@@ -171,7 +175,7 @@ def get_reservierungen_by_fahrzeug(fahrzeug_id):
     reservierungen = ReservierungOps.get_by_fahrzeug_id(fahrzeug_id)
     return jsonify(reservierungen)
 
-@bp.route("/<int:reservierung_id>/rechnung", methods=["GET"])
+@bp.route("/<int:reservierung_id>/invoice", methods=["GET"])
 @jwt_required()
 def get_rechnung_by_reservierung(reservierung_id):
     if not UserOps.is_authorized(get_jwt_identity(), ["Mitglied", "Mitarbeiter"]):

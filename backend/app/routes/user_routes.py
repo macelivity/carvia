@@ -15,7 +15,6 @@ bp = Blueprint("user", __name__)
 def search_users():
     """Sucht Benutzer nach Vor- und Nachnamen (nur für Mitarbeiter)"""
     if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
-        print("not authorized", get_jwt_identity())
         return jsonify({"error": "Zugriff verweigert"}), 403
 
     vorname = request.args.get("vorname", "")
@@ -30,9 +29,6 @@ def search_users():
 @bp.route("/<int:user_id>/reservations", methods=["GET"])
 @jwt_required()
 def get_user_reservations(user_id):
-
-    print(get_jwt_identity())
-
     if not UserOps.is_authorized(get_jwt_identity(), ["Mitglied", "Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
     

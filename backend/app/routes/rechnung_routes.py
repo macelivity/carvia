@@ -26,7 +26,7 @@ def create_rechnung():
         return jsonify({"error": "Zugriff verweigert"}), 403
     
     data = request.get_json()
-    rechnung_id = RechnungOps.create(data["FahrzeugID"], data["Bezahlt"], data["Austellungsdatum"])
+    rechnung_id = RechnungOps.create(data["FahrzeugID"], data["Bezahlt"], data["Austellungsdatum"], data["Preis"], data["Bezahlt"], data["Ausstellungsdatum"])
     return jsonify({"msg": f"Rechnung with ID {rechnung_id} added", "id": rechnung_id}), 201
 
 @bp.route("/<int:rechnung_id>", methods=["GET"])
@@ -37,11 +37,14 @@ def get_rechnung(rechnung_id):
 
     rechnung = RechnungOps.get_by_id(rechnung_id)
 
+    if not rechnung:
+        if not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
+            return jsonify({"error": "Zugriff verweigert"}), 403
+        else:
+            return jsonify({"error": "Not found"}), 404
+
     if rechnung["UserID"] != int(get_jwt_identity()) and not UserOps.is_authorized(get_jwt_identity(), ["Mitarbeiter"]):
         return jsonify({"error": "Zugriff verweigert"}), 403
-
-    if not rechnung:
-        return jsonify({"error": "Not found"}), 404
     return jsonify(rechnung)
 
 @bp.route("/<int:rechnung_id>", methods=["PUT"])
