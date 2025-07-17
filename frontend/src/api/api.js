@@ -18,10 +18,6 @@ export const login = (data) => API.post('/auth/login', data);
 export const register = (data) => API.post('/auth/register', data);
 export const getProfile = () => API.get('/auth/profile');
 
-// Die Backend-Logout-Route existiert aktuell nicht in auth_routes.py.
-// JWT-Logout ist primär clientseitig (Token entfernen).
-// export const logout = () => API.post('/auth/logout'); 
-
 export const getReservations = () => API.get('/reservierung/');
 export const getUserReservations = (userId) => API.get(`/reservierung/user/${userId}`);
 export const createReservation = (data) => API.post('/reservierung/', data);

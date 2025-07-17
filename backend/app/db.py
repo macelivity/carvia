@@ -46,7 +46,7 @@ class DatabaseConfig:
         # Fallback-Konfiguration wenn keine Datei gefunden wird
         return {
             "ENV_TYPE": "Dev",
-            "DB_PATH": "database.db",
+            "DB_PATH": "data/database.db",  # Docker: persistente Speicherung im Volume
             "TEST_DB_PATH": "test_database.db"
         }
     
