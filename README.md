@@ -40,3 +40,7 @@ HSB SWSYSPRO Labor-Projekt im Sommersemester 2025
  - Ein python venv erstellen und aktivieren
  - "pip install --no-cache-dir -r requirements.txt" ausführen
  - "python run.py" ausführen
+- Das Frontend kann ebenfalls im Development-Modus gestartet werden.
+ - Dazu in das Frontend-Verzeichnis gehen
+ - Ggf. npm installieren
+ - "npm run dev" ausführen
