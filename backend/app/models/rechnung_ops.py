@@ -16,13 +16,13 @@ class RechnungOps:
         return dict(result) if result else None
     
     @staticmethod
-    def create(reservierung_id, user_id, fahrzeug_id, preis, bezahlt, austellungsdatum):
+    def create(reservierung_id, user_id, fahrzeug_id, preis, bezahlt, ausstellungsdatum):
         """Neue Rechnung anlegen"""
         with get_db() as conn:
             cursor = conn.execute("""
                 INSERT INTO Rechnung (ReservierungID, UserID, FahrzeugID, Preis, Bezahlt, Austellungsdatum)
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (reservierung_id, user_id, fahrzeug_id, preis, bezahlt, austellungsdatum))
+            """, (reservierung_id, user_id, fahrzeug_id, preis, bezahlt, ausstellungsdatum))
             rechnung_id = cursor.lastrowid
             conn.commit()
             return rechnung_id

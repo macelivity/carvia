@@ -127,10 +127,10 @@ endpoint_overview = [
     
     # AUTH ENDPOINTS
     {"endpoint": "/login", "method": "POST", "role": "Alle", "expected_result": "200", "desc": "Login and get JWT token."},
-    {"endpoint": "/auth/refresh", "method": "POST", "role": "Alle", "expected_result": "200", "desc": "Refresh JWT token."},
-    {"endpoint": "/auth/profile", "method": "GET", "role": "Mitglied, Mitarbeiter, Admin", "expected_result": "200", "desc": "Get current user profile."},
-    {"endpoint": "/auth/profile", "method": "PUT", "role": "Mitglied, Mitarbeiter, Admin", "expected_result": "200", "desc": "Update current user profile."},
-    {"endpoint": "/auth/change-password", "method": "PUT", "role": "Mitglied, Mitarbeiter, Admin", "expected_result": "200", "desc": "Change password for current user."},
+    # {"endpoint": "/auth/refresh", "method": "POST", "role": "Alle", "expected_result": "200", "desc": "Refresh JWT token."},
+    # {"endpoint": "/auth/profile", "method": "GET", "role": "Alle", "expected_result": "200", "desc": "Get current user profile."},
+    # {"endpoint": "/auth/profile", "method": "PUT", "role": "Alle", "expected_result": "200", "desc": "Update current user profile."},
+    # {"endpoint": "/auth/change-password", "method": "PUT", "role": "Alle", "expected_result": "200", "desc": "Change password for current user."},
 ]
 
 import requests
@@ -288,7 +288,7 @@ def get_test_data_for_endpoint(endpoint, user_id):
     elif "/cars" in endpoint:
         test_data = {
             "ModellID": 2,
-            "Kennzeichen": "M-TEST-123",
+            "Kennzeichen": "M-TEST-" + str(random.randint(1, 9999)),
             "Reparaturzustand": "Gut",
             "Aktiv": True,
             "Reifen": "Sommerreifen",

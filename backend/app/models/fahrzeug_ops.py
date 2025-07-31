@@ -2,6 +2,11 @@ from datetime import datetime, timedelta
 from app.db import get_db
 from app.models.geodatum_ops import GeodatumOps
 
+COMPANY_ABREVIATIONS = {
+    "VW": "Volkswagen",
+    "Mercedes": "Mercedes-Benz"
+}
+
 class FahrzeugOps:
     @staticmethod
     def get_all():
@@ -44,8 +49,7 @@ class FahrzeugOps:
     def delete(fahrzeug_id):
         """Fahrzeug löschen"""
         with get_db() as conn:
-            conn.execute("DELETE FROM Fahrzeug WHERE FahrzeugID = ?", (fahrzeug_id,))
-            conn.commit()
+            conn.execute("DELETE FROM Fahrzeug WHERE FahrzeugID = ?", (fahrzeug_id,))  
 
     @staticmethod
     def get_all_detailed():
@@ -93,10 +97,8 @@ class FahrzeugOps:
             query += " WHERE "
             if hersteller:
                 # Einheitliche Herstellerbezeichnung
-                if hersteller == "VW":
-                    hersteller = "Volkswagen"
-                elif hersteller == "Mercedes":
-                    hersteller = "Mercedes-Benz"
+                if hersteller in COMPANY_ABREVIATIONS:
+                    hersteller = COMPANY_ABREVIATIONS[hersteller]
                 query += f"Modell.Hersteller = '{hersteller}' AND "
             if fahrzeugtyp:
                 query += f"Modell.Fahrzeugtyp = '{fahrzeugtyp}' AND "

@@ -26,7 +26,7 @@ def create_rechnung():
         return jsonify({"error": "Zugriff verweigert"}), 403
     
     data = request.get_json()
-    rechnung_id = RechnungOps.create(data["FahrzeugID"], data["Bezahlt"], data["Austellungsdatum"], data["Preis"], data["Bezahlt"], data["Ausstellungsdatum"])
+    rechnung_id = RechnungOps.create(data["ReservierungID"], data["UserID"], data["FahrzeugID"], data["Preis"], data["Bezahlt"], data["Ausstellungsdatum"])
     return jsonify({"msg": f"Rechnung with ID {rechnung_id} added", "id": rechnung_id}), 201
 
 @bp.route("/<int:rechnung_id>", methods=["GET"])
@@ -56,7 +56,7 @@ def update_rechnung(rechnung_id):
     data = request.get_json()
     if not RechnungOps.get_by_id(rechnung_id):
         return jsonify({"error": "Not found"}), 404
-    RechnungOps.update(rechnung_id, data["FahrzeugID"], data["Bezahlt"], data["Austellungsdatum"])
+    RechnungOps.update(rechnung_id, data["FahrzeugID"], data["Bezahlt"], data["Ausstellungsdatum"])
     return jsonify({"msg": "Rechnung updated"})
 
 @bp.route("/<int:rechnung_id>", methods=["DELETE"])

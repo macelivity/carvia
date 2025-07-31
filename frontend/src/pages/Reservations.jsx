@@ -42,7 +42,7 @@ function ReservationCard({ reservation, onViewInvoice, onDelete, t, isFuture = f
                 ? 'linear-gradient(120deg, #e3f2fd 0%, #f5faff 100%)' 
                 : 'linear-gradient(120deg, #f3e5f5 0%, #fce4ec 100%)',
             transition: 'all 0.3s ease',
-            mb: 4, // Add margin bottom for spacing between cards
+            mb: 4, 
             '&:hover': {
                 boxShadow: 6,
                 transform: 'translateY(-2px)'

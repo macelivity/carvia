@@ -101,7 +101,6 @@ export default function VehicleSearch() {
             return;
         }
 
-        // Bereite Suchfilter für Navigation vor
         const searchFilterForNavigation = {
             ...searchFilters,
             start_datum: formatToDateTimeLocalString(searchFilters.start_datum),

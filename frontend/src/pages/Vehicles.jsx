@@ -85,7 +85,6 @@ export default function Vehicles() {
             py: 4
         }}>
             <Container maxWidth="xl" sx={{ px: 0 }}>
-                {/* Hero Section */}
                 <HeroSection t={t} />
                 {/* Main Content Grid */}
                 <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
